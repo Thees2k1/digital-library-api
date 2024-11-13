@@ -1,0 +1,102 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Author{
+  id Int @id @default(autoincrement())
+  name String @db.VarChar(255)
+  bio String? @db.Text
+  books Book[]
+}
+
+model BookDigitalItem{
+  id Int @id @default(autoincrement())
+  bookId Int
+  book Book @relation(fields: [bookId], references: [id])
+  format String @db.VarChar(255)
+  url String @db.VarChar(255)
+  size Int
+  md5 String @db.VarChar(255)
+  sha256 String @db.VarChar(255)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Book{
+  id Int @id @default(autoincrement())
+  title String  @db.VarChar(255)
+  authorId Int
+  author Author @relation(fields: [authorId], references: [id])
+  categoryId Int
+  category Category @relation(fields: [categoryId], references: [id])
+  cover String @db.VarChar(255)
+  publisher String? @db.VarChar(255)
+  description String? @db.Text
+  digitalItems BookDigitalItem[]
+  pages Int
+  language String @db.VarChar(255)
+  createdAt DateTime @default(now())
+  updateAt DateTime?
+  reviews Review[]
+  readBooks UserReadBook[]
+}
+
+model Category{
+  id Int @id @default(autoincrement())
+  name String @db.VarChar(255)
+  books Book[]
+}
+
+model User {
+  id      Int      @id @default(autoincrement())
+  email   String   @unique
+  firstName    String  @db.VarChar(255)
+  lastName     String?  @db.VarChar(255)
+  password String  @db.VarChar(255)
+  permission Int @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  refreshToken RefreshToken[]
+  reviews Review[]
+  readBooks UserReadBook[]
+}
+
+model RefreshToken {
+  id      Int      @id @default(autoincrement())
+  userId  Int 
+  user    User     @relation(fields: [userId], references: [id])
+  token   String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Review {
+  id      Int      @id @default(autoincrement())
+  bookId  Int
+  book    Book     @relation(fields: [bookId], references: [id])
+  userId  Int
+  user    User     @relation(fields: [userId], references: [id])
+  rating  Int 
+  review  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserReadBook {
+  id      Int      @id @default(autoincrement())
+  bookId  Int
+  book    Book     @relation(fields: [bookId], references: [id])
+  userId  Int
+  user    User     @relation(fields: [userId], references: [id])
+  readAt  DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
