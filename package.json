@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
+    "prebuild": "npx prisma migrate deploy",
     "build": "webpack",
     "start": "node dist/app.js",
     "dev": "nodemon",
