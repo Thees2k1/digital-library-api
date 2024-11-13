@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
-    "build": "tsc",
+    "build": "webpack",
     "start": "node dist/app.js",
     "dev": "nodemon",
     "migrate": "prisma migrate dev",
@@ -20,6 +20,9 @@
     "express": "^4.21.1",
     "express-rate-limit": "^7.4.1",
     "http-status-codes": "^2.3.0",
+    "ts-loader": "^9.5.1",
+    "webpack": "^5.96.1",
+    "webpack-cli": "^5.1.4",
     "zod": "^3.23.8"
   },
   "devDependencies": {
