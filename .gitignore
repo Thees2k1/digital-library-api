@@ -3,8 +3,11 @@ prisma/migrations
 # Keep environment variables out of version control
 .env
 
+nodemon.json
+
 pnpm-lock.yaml
 
 docker-compose.yml
 
 dist
+Dockerfile
