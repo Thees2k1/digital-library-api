@@ -1,14 +1,17 @@
 # Stage 1: Build Stage
 FROM node:18 AS build
 
+# Install pnpm globally
+RUN npm install -g pnpm
+
 # Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json (if you use it)
-COPY package.json package-lock.json ./
+# Copy package.json, pnpm-lock.yaml, and .npmrc if it exists
+COPY package.json pnpm-lock.yaml* .npmrc* ./
 
-# Install dependencies
-RUN npm install
+# Install dependencies using pnpm
+RUN pnpm install
 
 # Copy the rest of the project files
 COPY . .
@@ -17,19 +20,22 @@ COPY . .
 RUN npx prisma migrate deploy
 
 # Build the application
-RUN npm run build
+RUN pnpm run build
 
 # Stage 2: Production Stage
 FROM node:18 AS production
 
+# Install pnpm globally
+RUN npm install -g pnpm
+
 # Set working directory
 WORKDIR /app
 
-# Copy the package.json and package-lock.json files
-COPY package.json package-lock.json ./
+# Copy the package.json, pnpm-lock.yaml, and .npmrc files
+COPY package.json pnpm-lock.yaml* .npmrc* ./
 
-# Install only production dependencies
-RUN npm install --only=production
+# Install only production dependencies using pnpm
+RUN pnpm install --prod
 
 # Copy build output and other necessary files from build stage
 COPY --from=build /app/dist /app/dist
