@@ -14,6 +14,7 @@ import { ErrorMiddleware } from "./features/shared/application/middlewares/error
 import helmet from "helmet";
 import cors, { CorsOptions } from "cors";
 import 'reflect-metadata';
+import './features/shared/infrastructure/utils/logger/global-logger';
 
 interface ServerOptions {
   port: number;
@@ -83,7 +84,7 @@ export class Server {
     this.routes.use(ErrorMiddleware.handleError);
 
     this.app.listen(this.port, () => {
-      console.log(`Server running on port ${this.port}`);
+      console.info(`Server running on port ${this.port}`);
     });
   }
 }

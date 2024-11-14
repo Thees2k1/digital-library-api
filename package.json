@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
-    "prebuild":"npx prisma generate",
+    "prebuild": "npx prisma generate",
     "build": "webpack",
     "start": "node dist/app.js",
     "dev": "nodemon",
@@ -30,6 +30,8 @@
     "ts-loader": "^9.5.1",
     "webpack": "^5.96.1",
     "webpack-cli": "^5.1.4",
+    "winston": "^3.17.0",
+    "winston-daily-rotate-file": "^5.0.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
