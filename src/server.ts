@@ -11,6 +11,9 @@ import { StatusCodes } from "http-status-codes";
 import { ONE_HUNDRED, ONE_THOUSAND, SIXTY } from "./core/constants/constants";
 import { AppError } from "./core/errors/custom-error";
 import { ErrorMiddleware } from "./features/shared/application/middlewares/error-middleware";
+import helmet from "helmet";
+import cors, { CorsOptions } from "cors";
+import 'reflect-metadata';
 
 interface ServerOptions {
   port: number;
@@ -32,6 +35,17 @@ export class Server {
   }
 
   async start(): Promise<void> {
+    var whitelist = ["http://localhost:3000","http://localhost:8080"];
+    var corsOptions: CorsOptions = {
+      origin: function (origin, callback) {
+        if (!origin || whitelist.indexOf(origin) !== -1) {
+          callback(null, true);
+        } else {
+          callback(new Error("Not allowed by CORS"));
+        }
+      },
+    };
+
     console.log("Starting server...");
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
@@ -43,21 +57,8 @@ export class Server {
         message: "Too many requests from this IP, please try again in one hour",
       })
     );
-
-    //CORS
-    this.app.use((req: Request, res: Response, next: NextFunction) => {
-      // Add your origins
-      const allowedOrigins = ["http://localhost:3000"];
-      const origin = req.headers.origin;
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      if (allowedOrigins.includes(origin!)) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        res.setHeader("Access-Control-Allow-Origin", origin!);
-      }
-      res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-      next();
-    });
+    this.app.use(helmet());
+    this.app.use(cors(corsOptions));
 
     this.app.use(this.apiPrefix, this.routes);
 
@@ -82,7 +83,7 @@ export class Server {
     this.routes.use(ErrorMiddleware.handleError);
 
     this.app.listen(this.port, () => {
-      console.log(`Server running on http://localhost:${this.port}`);
+      console.log(`Server running on port ${this.port}`);
     });
   }
 }
