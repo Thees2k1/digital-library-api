@@ -1,0 +1,40 @@
+import { Container } from "inversify";
+import { INTERFACE_TYPE } from "@src/core/constants/constants";
+import { AuthInteractor } from "@src/features/auth/application/interactor/auth-interactor";
+import { AuthUseCase } from "@src/features/auth/domain/use-cases/auth-use-case";
+import { AuthController } from "@src/features/auth/presentation/controller/auth-controller";
+import { UserInteractor } from "@src/features/user/application/interactor/user-interactor";
+import { UserRepository } from "@src/features/user/domain/repository/user-repository";
+import { UserUseCase } from "@src/features/user/domain/use-cases/user-use-case";
+import { PersistenceUserRepository } from "@src/features/user/infrastructure/repository/persitence-user-repository";
+import { UserController } from "@src/features/user/presentation/controller/user-controller";
+import { AuthRepository } from "@src/features/auth/domain/repository/auth-repository";
+import { JwtAuthRepository } from "@src/features/auth/infrastructure/repository/auth-repository-impl";
+import { PrismaClient } from "@prisma/client";
+
+export const container = new Container();
+
+   //binding services
+   container
+   .bind<PrismaClient>(INTERFACE_TYPE.PrismaClient)
+   .toConstantValue(new PrismaClient());
+
+ //binding repositories
+ container
+   .bind<UserRepository>(INTERFACE_TYPE.UserRepository)
+   .to(PersistenceUserRepository);
+ container.bind<AuthRepository>(INTERFACE_TYPE.AuthRepository).to(JwtAuthRepository);
+
+ //binding use cases
+ container
+   .bind<UserUseCase>(INTERFACE_TYPE.UserInteractor)
+   .to(UserInteractor);
+ container.bind<AuthUseCase>(INTERFACE_TYPE.AuthUseCase).to(AuthInteractor);
+
+ //binding controllers
+ container
+   .bind<UserController>(INTERFACE_TYPE.UserController)
+   .to(UserController);
+ container
+   .bind<AuthController>(INTERFACE_TYPE.AuthController)
+   .to(AuthController);

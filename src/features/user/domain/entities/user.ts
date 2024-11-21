@@ -1,11 +1,11 @@
 export class UserEntity {
   constructor(
-    public id: number,
+    public id: string,
     public firstName: string,
     public lastName: string | null,
     public email: string,
     public password: string,
-    public permission: number,
+    public role: 'user'|'admin',
     public createdAt: Date,
     public updatedAt: Date
   ) {}
@@ -19,10 +19,12 @@ export class UserEntity {
       data.lastName,
       data.email,
       data.password,
-      data.permission,
+      data.role,
       new Date(data.createdAt),
       new Date(data.updatedAt)
     );
   }
 }
+
+
 

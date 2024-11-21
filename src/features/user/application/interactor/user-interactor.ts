@@ -8,7 +8,7 @@ import { INTERFACE_TYPE } from "@src/core/constants/constants";
 export class UserInteractor implements UserUseCase {
   private repository: UserRepository;
 
-  constructor(@inject(INTERFACE_TYPE.ProductRepository) userRepository: UserRepository) {
+  constructor(@inject(INTERFACE_TYPE.UserRepository) userRepository: UserRepository) {
     this.repository = userRepository;
   }
     getUsers(): Promise<UserEntity[]> {

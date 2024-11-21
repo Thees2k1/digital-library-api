@@ -7,7 +7,7 @@ import { INTERFACE_TYPE } from "@src/core/constants/constants";
 @injectable()
 export class UserController {
     private readonly interactor: UserInteractor;
-    constructor(@inject(INTERFACE_TYPE.ProductInteractor ) interactor: UserInteractor) {
+    constructor(@inject(INTERFACE_TYPE.UserInteractor ) interactor: UserInteractor) {
         this.interactor = interactor;
         }
     async getAllUsers(req: Request, res: Response<UserEntity[] | any>, next: NextFunction) { 

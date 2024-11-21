@@ -1,29 +1,38 @@
 import { BaseRepository } from "@src/features/shared/domain/repository/base-repository";
-import {type UserEntity } from "../entities/user";
+import { type UserEntity } from "../entities/user";
+import { SessionDTO } from "../dtos/session-dto";
 
-export abstract class UserRepository implements BaseRepository<UserEntity, number> {
-  findById(
-    id: number
-  ): Promise<UserEntity> {
+export abstract class UserRepository
+  implements BaseRepository<UserEntity, string>
+{
+  findById(id: string): Promise<UserEntity | null> {
     throw new Error("Method not implemented.");
   }
-  findAll(): Promise<
-   UserEntity[]
-  > {
-    throw new Error("Method not implemented.");
-  }
-
-  create(entity: UserEntity): Promise<UserEntity> {
-    throw new Error("Method not implemented.");
-  }
-  update(entity: UserEntity): Promise<UserEntity> {
-    throw new Error("Method not implemented.");
-  }
-  delete(id: number): Promise<UserEntity> {
+  findAll(): Promise<UserEntity[]> {
     throw new Error("Method not implemented.");
   }
 
-  async findByEmail(email: string): Promise<UserEntity | null> {
+  create(data: any): Promise<UserEntity> {
+    throw new Error("Method not implemented. Yet");
+  }
+
+  update( data: any): Promise<UserEntity | null> {
+    throw new Error("Method not implemented.");
+  }
+
+  delete(id: string): Promise<string|null> {
+    throw new Error("Method not implemented.");
+  }
+
+  findByEmail(email: string): Promise<UserEntity | null> {
+    throw new Error("Method not implemented. yet");
+  }
+
+  saveSession(session: SessionDTO): Promise<any> {
+    throw new Error("Method not implemented.");
+  }
+  
+  deleteSession(refreshToken: string): Promise<any> {
     throw new Error("Method not implemented.");
   }
 }

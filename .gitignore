@@ -1,7 +1,10 @@
 node_modules
+logs
 prisma/migrations
 # Keep environment variables out of version control
 .env
+
+*.rest
 
 nodemon.json
 
