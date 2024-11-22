@@ -6,14 +6,23 @@ import { validate } from "@src/features/shared/application/middlewares/validate"
 import { RegisterBodySchema } from "../../domain/dtos/register-dto";
 import { LoginBodySchema } from "../../domain/dtos/login-dto";
 
-export class AuthRoutes {
+class AuthRoutes{
+  static login = "/login";
+  static register = "/register";
+  static refreshToken = "/refresh-token";
+  static logout = "/logout";
+}
+
+export class AuthRouter {
   static get routes(): Router {
     const router = Router();
     const controller = container.get<AuthController>(
       INTERFACE_TYPE.AuthController
     );
-    router.post("/register",validate(RegisterBodySchema), controller.register.bind(controller));
-    router.post("/login", validate(LoginBodySchema),controller.login.bind(controller));
+    router.post(AuthRoutes.register,validate(RegisterBodySchema), controller.register.bind(controller));
+    router.post(AuthRoutes.login, validate(LoginBodySchema),controller.login.bind(controller));
+    router.get(AuthRoutes.refreshToken, controller.refreshToken.bind(controller));
+    router.get(AuthRoutes.logout, controller.logout.bind(controller));
     return router;
   }
 }

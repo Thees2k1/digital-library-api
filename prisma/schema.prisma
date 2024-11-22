@@ -97,7 +97,7 @@ model UserSession {
   signature String   @unique @db.VarChar(255) // You can choose to store the entire token or just the signature
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamp(0)
-  expiresAt DateTime
+  expiresAt DateTime @map("expires_at") @db.Timestamp(0)
 
   @@index([userId], map: "user_id")
   @@map("user_session")
@@ -121,12 +121,13 @@ model Like {
   id        Bytes      @id @default(dbgenerated("(UUID_TO_BIN(UUID()))")) @db.Binary(16)
   user      User       @relation(fields: [userId], references: [id])
   book      Book       @relation(fields: [bookId], references: [id])
-  createdAt DateTime   @default(now())
-  status    LikeStatus @default(liked) // Mặc định là 'liked'
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamp(0)
+  status    LikeStatus @default(liked) 
   userId    Bytes    @db.Binary(16) @map("user_id")
   bookId    Bytes    @db.Binary(16) @map("book_id")
 
   @@unique([userId, bookId]) // Đảm bảo mỗi người dùng chỉ có thể thích một cuốn sách một lần
+  @@map("likes")
 }
 
 model UserReadBook {

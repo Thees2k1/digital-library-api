@@ -16,3 +16,14 @@ export const INTERFACE_TYPE ={
     PrismaClient: Symbol.for("PrismaClient"),
     AuthRepository: Symbol.for("AuthRepository"),
 }
+
+export const REFRESH_TOKEN = "refresh_token";
+
+export const IS_PRODUCTION = process.env.NODE_ENV === "production";
+
+export const REFRESH_TOKEN_EXPIRES_IN = 7 * 24 * 60 * 60 * 1000;
+
+export const INVALID_CREDENTIALS = "Invalid credentials";
+
+export const LOGOUT_SUCCESS = "Logout success";
+

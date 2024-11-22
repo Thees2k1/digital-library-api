@@ -1,6 +1,6 @@
 import { BaseRepository } from "@src/features/shared/domain/repository/base-repository";
 import { type UserEntity } from "../entities/user";
-import { SessionDTO } from "../dtos/session-dto";
+import { SessionDTO } from "../../../auth/domain/dtos/session-dto";
 
 export abstract class UserRepository
   implements BaseRepository<UserEntity, string>
@@ -26,13 +26,5 @@ export abstract class UserRepository
 
   findByEmail(email: string): Promise<UserEntity | null> {
     throw new Error("Method not implemented. yet");
-  }
-
-  saveSession(session: SessionDTO): Promise<any> {
-    throw new Error("Method not implemented.");
-  }
-  
-  deleteSession(refreshToken: string): Promise<any> {
-    throw new Error("Method not implemented.");
   }
 }

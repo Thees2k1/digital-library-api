@@ -1,41 +1,54 @@
-import { SessionDTO } from "@src/features/user/domain/dtos/session-dto";
-import { AuthRepository } from "../../domain/repository/auth-repository";
-import jwt from "jsonwebtoken";
-import { TokenData } from "@src/features/shared/domain/interfaces/token-data";
-import { config } from "@src/core/config/config";
-import { createClient, RedisClientType } from "redis";
+import { PrismaClient } from "@prisma/client";
+import { INTERFACE_TYPE } from "@src/core/constants/constants";
 import { AppError } from "@src/core/errors/custom-error";
+import { SessionDTO } from "@src/features/auth/domain/dtos/session-dto";
+import { calculateExpiryDate } from "@src/features/shared/infrastructure/utils/calculate-expiry-date";
+import { uuidToBinary } from "@src/features/shared/infrastructure/utils/utils";
+import { inject, injectable } from "inversify";
+import { AuthRepository } from "../../domain/repository/auth-repository";
+import { RedisService } from "@src/features/shared/infrastructure/services/redis-service";
 
+@injectable()
 export class JwtAuthRepository extends AuthRepository {
-  private readonly jwtService = jwt;
-  private readonly jwtSecret = config.accessTokenSecret;
-  private redisClient: RedisClientType | undefined;
-  constructor() {
+
+  private readonly prismaClient: PrismaClient;
+  private readonly redisService: RedisService;
+  constructor(@inject(INTERFACE_TYPE.PrismaClient) prismaClient: PrismaClient, @inject(RedisService) redisService: RedisService) {
     super();
-    this.initializeRedis();
+    this.prismaClient = prismaClient;
+    this.redisService = redisService;
   }
 
-  private async initializeRedis() {
-    this.redisClient = createClient({
-      url: config.redisUrl,
-    });
-
-    this.redisClient.on("error", (err) =>
-      console.error("Redis Client Error", err)
-    );
-
-    await this.redisClient.connect();
-  }
   async saveSession(session: SessionDTO): Promise<string> {
+    const experyDate = calculateExpiryDate(session.expiration);
     try {
-      await this.redisClient!.set(
-        `refreshToken:${session.userId}`,
-        session.refreshToken,
-        {
-          EX: session.expiration, // 7 days in seconds
-        }
-      );
-      return session.refreshToken;
+      const existedSession = await this.prismaClient.userSession.findUnique({
+        where: {
+          userId: uuidToBinary(session.userId),
+        },
+      });
+
+      if (existedSession) {
+        await this.prismaClient.userSession.update({
+          where: {
+            userId: uuidToBinary(session.userId),
+          },
+          data: {
+            signature: session.sessionIdentity,
+            expiresAt: experyDate,
+          },
+        });
+      } else {
+        await this.prismaClient.userSession.create({
+          data: {
+            userId: uuidToBinary(session.userId),
+            signature: session.sessionIdentity,
+            expiresAt: experyDate,
+          },
+        });
+      }
+
+      return session.sessionIdentity;
     } catch (e) {
       if (e instanceof Error) {
         throw AppError.internalServer("Error saving session, err:" + e.message);
@@ -43,21 +56,23 @@ export class JwtAuthRepository extends AuthRepository {
       throw e;
     }
   }
-  async deleteSession(refreshToken: string): Promise<boolean> {
+
+  async deleteSession(sessionIdentity: string): Promise<string> {
     try {
-      await this.redisClient!.del(`refreshToken:${refreshToken}`);
-      return true;
+
+      await this.prismaClient.userSession.delete({
+        where: {
+          signature: sessionIdentity,
+        },
+      });
+
+      // await this.redisClient!.del(`refreshToken:${sessionIdentity}`);
+      return "delete success";
     } catch (e) {
       if (e instanceof Error) {
         throw AppError.internalServer("Error delete session, err:" + e.message);
       }
       throw e;
     }
-  }
-  async createToken(payload: TokenData, expiresIn: string): Promise<string> {
-    return this.jwtService.sign(payload, this.jwtSecret, { expiresIn });
-  }
-  async verifyToken(token: string) {
-    return this.jwtService.verify(token, this.jwtSecret);
   }
 }

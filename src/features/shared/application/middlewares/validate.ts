@@ -1,5 +1,6 @@
+import { ValidationError } from "@src/core/errors/validation-error";
+import { type NextFunction, type Request, type Response } from "express";
 import { ZodError, ZodSchema } from "zod";
-import { type Request, type Response, type NextFunction } from "express";
 
 export const validate = (schema: ZodSchema<any>) => {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -8,12 +9,14 @@ export const validate = (schema: ZodSchema<any>) => {
       next();
     } catch (error) {
       if (error instanceof ZodError) {
-         res.status(400).json({ message: error.flatten() });
-         return;
-      }
-      if (error instanceof Error) {
-        const err = error as Error & { statusCode: number };
-        res.status(err.statusCode ||400).json({ message: error.message });
+        const validationErrors = error.issues.map((issue) => {
+          return {
+            fields: issue.path.map((path) => path.toString()),
+            constraint: issue.message,
+          };
+        });
+        next(new ValidationError(validationErrors));
+        return;
       }
       next(error);
     }

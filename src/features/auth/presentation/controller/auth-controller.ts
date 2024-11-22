@@ -1,16 +1,26 @@
-import { INTERFACE_TYPE } from "@src/core/constants/constants";
+import {
+  INTERFACE_TYPE,
+  REFRESH_TOKEN,
+  REFRESH_TOKEN_EXPIRES_IN,
+} from "@src/core/constants/constants";
+import { AppError } from "@src/core/errors/custom-error";
 import { NextFunction, Request, Response } from "express";
 import { inject, injectable } from "inversify";
+import {
+  LoginBodyDTO,
+  LoginResultDTO,
+  LoginResultSchema,
+} from "../../domain/dtos/login-dto";
+import { RefreshBodyDTO } from "../../domain/dtos/refresh-token";
 import {
   RegisterBodyDTO,
   RegisterResultDTO,
   RegisterResultSchema,
 } from "../../domain/dtos/register-dto";
 import { AuthUseCase } from "../../domain/use-cases/auth-use-case";
-import { LoginBodyDTO, LoginResultDTO, LoginResultSchema } from "../../domain/dtos/login-dto";
-import { AppError } from "@src/core/errors/custom-error";
-import logger from "@src/features/shared/infrastructure/utils/logger/logger";
-import { RefreshBodyDTO } from "../../domain/dtos/refresh-token";
+import { access } from "fs";
+
+const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
 @injectable()
 export class AuthController {
@@ -20,18 +30,16 @@ export class AuthController {
   }
 
   async register(
-    req: Request<any,RegisterResultDTO, RegisterBodyDTO>,
+    req: Request<any, RegisterResultDTO, RegisterBodyDTO>,
     res: Response<RegisterResultDTO>,
     next: NextFunction
   ) {
     try {
       const data = req.body;
       const result = await this.interactor.register(data);
-      const returnData: RegisterResultDTO =
-        RegisterResultSchema.parse(result);
+      const returnData: RegisterResultDTO = RegisterResultSchema.parse(result);
       res.json(returnData);
     } catch (error) {
-      logger.error(error);
       if (error instanceof Error) {
         next(AppError.badRequest(error.message));
       } else {
@@ -40,23 +48,26 @@ export class AuthController {
     }
   }
 
-  async login(req: Request<any, any, LoginBodyDTO>, res: Response ,next: NextFunction) {
+  async login(
+    req: Request<any, any, LoginBodyDTO>,
+    res: Response,
+    next: NextFunction
+  ) {
     try {
       const credentials = req.body;
       const result = await this.interactor.login(credentials);
-      const verifiedResult : LoginResultDTO = LoginResultSchema.parse(result);
-      
-      res.cookie('refresh_token', verifiedResult.refreshToken, {
+      const verifiedResult: LoginResultDTO = LoginResultSchema.parse(result);
+
+      res.cookie(REFRESH_TOKEN, verifiedResult.refreshToken, {
         httpOnly: true,
-        secure: true, // chỉ sử dụng HTTPS
+        secure: IS_PRODUCTION, // chỉ sử dụng HTTPS
         //sameSite: 'Strict', // ngăn chặn CSRF
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 ngày cho refresh token
+        maxAge: REFRESH_TOKEN_EXPIRES_IN, // 7 ngày cho refresh token
       });
 
       res.json({
-        access_token: verifiedResult.accessToken
+        access_token: verifiedResult.accessToken,
       });
-
     } catch (error) {
       if (error instanceof Error) {
         next(AppError.badRequest(error.message));
@@ -66,11 +77,24 @@ export class AuthController {
     }
   }
 
-  async refreshToken(req: Request<any,any,RefreshBodyDTO>, res: Response, next: NextFunction) {
+  async refreshToken(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
     try {
-      const refreshToken = req.cookies['refresh_token'];
+     
+      const refreshToken = req.cookies[REFRESH_TOKEN];
       const result = await this.interactor.refreshTokens(refreshToken);
-      res.json(result);
+
+      res.cookie(REFRESH_TOKEN, result.refreshToken, {
+        httpOnly: true,
+        secure: IS_PRODUCTION, // chỉ sử dụng HTTPS
+        //sameSite: 'Strict', // ngăn chặn CSRF
+        maxAge: REFRESH_TOKEN_EXPIRES_IN, // 7 ngày cho refresh token
+      });
+
+      res.json({access_token: result.accessToken});
     } catch (error) {
       if (error instanceof Error) {
         next(AppError.unauthorized(error.message));
@@ -80,4 +104,22 @@ export class AuthController {
     }
   }
 
+  async logout(
+    req: Request<any, any, RefreshBodyDTO>,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const refreshToken = req.cookies[REFRESH_TOKEN];
+      const result = await this.interactor.logout(refreshToken);
+      res.clearCookie(REFRESH_TOKEN);
+      res.json(result);
+    } catch (error) {
+      if (error instanceof Error) {
+        next(AppError.unauthorized(error.message));
+      } else {
+        next(error);
+      }
+    }
+  }
 }

@@ -1,13 +1,15 @@
 import { config } from "@src/core/config/config";
-import { INTERFACE_TYPE } from "@src/core/constants/constants";
+import {
+  INTERFACE_TYPE,
+  INVALID_CREDENTIALS,
+  REFRESH_TOKEN_EXPIRES_IN,
+} from "@src/core/constants/constants";
 import { AppError } from "@src/core/errors/custom-error";
 import { TokenData } from "@src/features/shared/domain/interfaces/token-data";
 import { UserRepository } from "@src/features/user/domain/repository/user-repository";
 import bcrypt from "bcrypt";
 import { inject, injectable } from "inversify";
-import jwt from "jsonwebtoken";
-import { AuthUseCase } from "../../domain/use-cases/auth-use-case";
-import { LoginBodyDTO, LoginResultDTO, LoginResultSchema } from "../../domain/dtos/login-dto";
+import { LoginBodyDTO, LoginResultDTO } from "../../domain/dtos/login-dto";
 import { RefreshResultDTO } from "../../domain/dtos/refresh-token";
 import {
   RegisterBodyDTO,
@@ -15,17 +17,23 @@ import {
   RegisterResultSchema,
 } from "../../domain/dtos/register-dto";
 import { AuthRepository } from "../../domain/repository/auth-repository";
+import { AuthUseCase } from "../../domain/use-cases/auth-use-case";
+import logger from "@src/features/shared/infrastructure/utils/logger/logger";
+import { JwtService } from "@src/features/shared/infrastructure/services/jwt-service";
 
 @injectable()
 export class AuthInteractor implements AuthUseCase {
   private readonly userRepository: UserRepository;
   private readonly authRepository: AuthRepository;
+  private readonly JwtService;
   constructor(
     @inject(INTERFACE_TYPE.UserRepository) userRepository: UserRepository,
-    @inject(INTERFACE_TYPE.AuthRepository) authRepository: AuthRepository
+    @inject(INTERFACE_TYPE.AuthRepository) authRepository: AuthRepository,
+    @inject(JwtService) JwtService: JwtService
   ) {
     this.userRepository = userRepository;
     this.authRepository = authRepository;
+    this.JwtService = JwtService;
   }
 
   async login(data: LoginBodyDTO): Promise<LoginResultDTO> {
@@ -33,12 +41,12 @@ export class AuthInteractor implements AuthUseCase {
     try {
       const user = await this.userRepository.findByEmail(email);
       if (!user) {
-        throw AppError.notFound("User not found");
+        throw AppError.unauthorized(INVALID_CREDENTIALS);
       }
       const isPasswordValid = await bcrypt.compare(password, user.password);
 
       if (!isPasswordValid) {
-        throw AppError.unauthorized("Invalid password");
+        throw AppError.unauthorized(INVALID_CREDENTIALS);
       }
 
       const Result: TokenData = {
@@ -48,13 +56,17 @@ export class AuthInteractor implements AuthUseCase {
         lastName: user.lastName ?? undefined,
       };
 
-      const accessToken = jwt.sign(Result, config.accessTokenSecret, {
-        expiresIn: "15m",
+      const accessToken = await this.JwtService.generate(Result, "15m");
+      const refreshToken = await this.JwtService.generate(Result, "7d");
+
+      const sessionIdentity = refreshToken.split(".")[2];
+
+      await this.authRepository.saveSession({
+        userId: user.id,
+        sessionIdentity,
+        expiration: REFRESH_TOKEN_EXPIRES_IN,
       });
-      const refreshToken = jwt.sign(Result, config.refreshTokenSecret, {
-        expiresIn: "7d",
-      });
-      //await this.authRepository.saveSession({userId:user.id,refreshToken,expiration:7*24*60*60});
+
       return { accessToken, refreshToken };
     } catch (error) {
       throw error;
@@ -80,30 +92,43 @@ export class AuthInteractor implements AuthUseCase {
   }
 
   async logout(refreshToken: string): Promise<string> {
-    await this.userRepository.deleteSession(refreshToken);
-    return Promise.resolve("Logout successfully");
+    try {
+      const res = this.JwtService.verify(refreshToken);
+      if (!res.success) {
+        throw AppError.unauthorized(res.error);
+      }
+      const sessionIdentity = refreshToken.split(".")[2];
+      await this.authRepository.deleteSession(sessionIdentity);
+      return "Logout success";
+    } catch (error) {
+      throw error;
+    }
   }
 
   async refreshTokens(refreshToken: string): Promise<RefreshResultDTO> {
-    const verificationRes = (await jwt.verify(
-      refreshToken,
-      config.refreshTokenSecret
-    )) as TokenData;
-    if (!verificationRes) {
-      throw AppError.unauthorized("Invalid refresh token");
+    const res = this.JwtService.verify(refreshToken);
+
+    if (!res.success) {
+      throw AppError.unauthorized(res.error);
     }
+
+    const resData = res.data as TokenData;
     const Result: TokenData = {
-      id: verificationRes.id,
-      email: verificationRes.email,
-      firstName: verificationRes.firstName,
-      lastName: verificationRes.lastName,
+      id: resData.id,
+      email: resData.email,
+      firstName: resData.firstName,
+      lastName: resData.lastName,
     };
 
-    const newAccessToken = jwt.sign(Result, config.accessTokenSecret, {
-      expiresIn: "15m",
-    });
-    const newRefreshToken = jwt.sign(Result, config.refreshTokenSecret, {
-      expiresIn: "7d",
+    const newAccessToken = this.JwtService.generate(Result, "15m");
+    const newRefreshToken = this.JwtService.generate(Result, "7d");
+
+    const sessionIdentity = newRefreshToken.split(".")[2];
+
+    await this.authRepository.saveSession({
+      userId: resData.id,
+      sessionIdentity,
+      expiration: REFRESH_TOKEN_EXPIRES_IN,
     });
 
     return { accessToken: newAccessToken, refreshToken: newRefreshToken };

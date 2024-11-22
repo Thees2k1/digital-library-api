@@ -11,30 +11,40 @@ import { UserController } from "@src/features/user/presentation/controller/user-
 import { AuthRepository } from "@src/features/auth/domain/repository/auth-repository";
 import { JwtAuthRepository } from "@src/features/auth/infrastructure/repository/auth-repository-impl";
 import { PrismaClient } from "@prisma/client";
+import { RedisService } from "../services/redis-service";
+import { JwtService } from "../services/jwt-service";
 
 export const container = new Container();
 
-   //binding services
-   container
-   .bind<PrismaClient>(INTERFACE_TYPE.PrismaClient)
-   .toConstantValue(new PrismaClient());
+export function initializeInfrastucture() {
+  //binding services
+  container
+    .bind<PrismaClient>(INTERFACE_TYPE.PrismaClient)
+    .toConstantValue(new PrismaClient());
+  container.bind<RedisService>(RedisService).toSelf();
+  container
+    .bind<JwtService>(JwtService)
+    .toConstantValue(
+      new JwtService({ issuer: "chyra-library", audience: "guest" })
+    );
 
- //binding repositories
- container
-   .bind<UserRepository>(INTERFACE_TYPE.UserRepository)
-   .to(PersistenceUserRepository);
- container.bind<AuthRepository>(INTERFACE_TYPE.AuthRepository).to(JwtAuthRepository);
+  //binding repositories
+  container
+    .bind<UserRepository>(INTERFACE_TYPE.UserRepository)
+    .to(PersistenceUserRepository);
+  container
+    .bind<AuthRepository>(INTERFACE_TYPE.AuthRepository)
+    .to(JwtAuthRepository);
 
- //binding use cases
- container
-   .bind<UserUseCase>(INTERFACE_TYPE.UserInteractor)
-   .to(UserInteractor);
- container.bind<AuthUseCase>(INTERFACE_TYPE.AuthUseCase).to(AuthInteractor);
+  //binding use cases
+  container.bind<UserUseCase>(INTERFACE_TYPE.UserInteractor).to(UserInteractor);
+  container.bind<AuthUseCase>(INTERFACE_TYPE.AuthUseCase).to(AuthInteractor);
 
- //binding controllers
- container
-   .bind<UserController>(INTERFACE_TYPE.UserController)
-   .to(UserController);
- container
-   .bind<AuthController>(INTERFACE_TYPE.AuthController)
-   .to(AuthController);
+  //binding controllers
+  container
+    .bind<UserController>(INTERFACE_TYPE.UserController)
+    .to(UserController);
+  container
+    .bind<AuthController>(INTERFACE_TYPE.AuthController)
+    .to(AuthController);
+}
