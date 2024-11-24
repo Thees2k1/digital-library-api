@@ -1,7 +1,10 @@
 node_modules
+prisma/migrations
+
 dist
 Dockerfile
 docker-compose.yml
+.dockerignore
 *.md
 .git
 .env

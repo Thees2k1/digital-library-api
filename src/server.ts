@@ -1,4 +1,5 @@
 import compression from "compression";
+import cors, { CorsOptions } from "cors";
 import express, {
   Application,
   NextFunction,
@@ -7,10 +8,17 @@ import express, {
   type Router,
 } from "express";
 import rateLimit from "express-rate-limit";
+import helmet from "helmet";
+import cookieParser from "cookie-parser";
 import { StatusCodes } from "http-status-codes";
 import { ONE_HUNDRED, ONE_THOUSAND, SIXTY } from "./core/constants/constants";
 import { AppError } from "./core/errors/custom-error";
 import { ErrorMiddleware } from "./features/shared/application/middlewares/error-middleware";
+
+// import "./features/shared/infrastructure/utils/logger/global-logger";
+import "reflect-metadata";
+import logger from "./features/shared/infrastructure/utils/logger/logger";
+import { config } from "./core/config/config";
 
 interface ServerOptions {
   port: number;
@@ -29,13 +37,27 @@ export class Server {
     this.port = port;
     this.routes = routes;
     this.apiPrefix = apiPrefix;
+
+    // this.initializeInfrastucture();
+    this.initializeMiddlewares();
+    this.initializeRoutes();
+    this.initializeErrorHandling();
   }
 
-  async start(): Promise<void> {
-    console.log("Starting server...");
-    this.app.use(express.json());
-    this.app.use(express.urlencoded({ extended: true }));
-    this.app.use(compression());
+  private initializeMiddlewares(): void {
+    var whitelist = ["http://localhost:3000", "http://localhost:8080"];
+    var corsOptions: CorsOptions = {
+      origin: function (origin, callback) {
+        if (!origin || whitelist.indexOf(origin) !== -1) {
+          callback(null, true);
+        } else {
+          callback(new Error("Not allowed by CORS"));
+        }
+      },
+    };
+
+    this.app.use(helmet());
+    this.app.use(cors(corsOptions));
     this.app.use(
       rateLimit({
         max: ONE_HUNDRED,
@@ -43,24 +65,13 @@ export class Server {
         message: "Too many requests from this IP, please try again in one hour",
       })
     );
+    this.app.use(express.json());
+    this.app.use(express.urlencoded({ extended: true }));
+    this.app.use(cookieParser());
+    this.app.use(compression());
+  }
 
-    //CORS
-    this.app.use((req: Request, res: Response, next: NextFunction) => {
-      // Add your origins
-      const allowedOrigins = ["http://localhost:3000"];
-      const origin = req.headers.origin;
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      if (allowedOrigins.includes(origin!)) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        res.setHeader("Access-Control-Allow-Origin", origin!);
-      }
-      res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-      next();
-    });
-
-    this.app.use(this.apiPrefix, this.routes);
-
+  private initializeRoutes(): void {
     this.app.get("/", (_req: Request, res: Response) => {
       res.status(StatusCodes.OK).send({
         message: `Welcome to Chyra API! \n Endpoints available at http://localhost:${this.port}/`,
@@ -77,12 +88,16 @@ export class Server {
         next(AppError.notFound(`Cant find ${req.originalUrl} on this server!`));
       }
     );
+    this.app.use(this.apiPrefix, this.routes);
+  }
 
-    // Handle errors middleware
+  private initializeErrorHandling(): void {
     this.routes.use(ErrorMiddleware.handleError);
-
+  }
+  async start(): Promise<void> {
     this.app.listen(this.port, () => {
-      console.log(`Server running on http://localhost:${this.port}`);
+      console.info(`Server running on port ${this.port}`);
     });
+    logger.info(`App configs: ${JSON.stringify(config)}`);
   }
 }

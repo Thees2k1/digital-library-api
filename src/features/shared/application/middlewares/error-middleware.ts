@@ -6,15 +6,15 @@ import { StatusCodes } from "http-status-codes";
 export class ErrorMiddleware {  
     public static handleError = (error: unknown, _: Request, res: Response, next: NextFunction): void => {  
      if (error && error instanceof ValidationError) {  
-      const { message, name, validationErrors, stack } = error;  
+      const { message, name, validationErrors } = error;  
       const statusCode = error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR;  
       res.statusCode = statusCode;  
-      res.json({ name, message, validationErrors, stack });  
+      res.json({ name, message, validationErrors });  
      } else if (error instanceof AppError) {  
-      const { message, name, stack } = error;  
+      const { message, name } = error;  
       const statusCode = error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR;  
       res.statusCode = statusCode;  
-      res.json({ name, message, stack });  
+      res.json({ name, message });  
      } else {  
       const name = 'InternalServerError';  
       const message = 'An internal server error occurred';  
