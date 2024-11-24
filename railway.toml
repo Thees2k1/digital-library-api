@@ -1,2 +1,18 @@
-[services.digital-library-api]
+# railway.toml
+
+[project]
+name = "respectful-purpose"
+
+[[services]]
+name = "digital-library-api"
+serviceName = "digital-library-api"
 dockerfile = "Dockerfile.railway"
+
+[services.digital-library-api.envs]
+DATABASE_URL = "${{ MYSQL_URL }}"
+PORT = "8080"
+
+# Set variables in the [services.envs] section to include any environment-specific details
+[services.envs]
+# Environment variables to be used during build
+NODE_ENV = "production"
