@@ -50,6 +50,8 @@ COPY --from=build /app/dist /app/dist
 COPY --from=build /app/node_modules/@prisma /app/node_modules/@prisma
 COPY --from=build /app/prisma /app/prisma
 
+RUN npx prisma generate
+
 # Expose the application port (change if needed)
 EXPOSE 8080
 
