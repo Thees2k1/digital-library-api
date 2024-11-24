@@ -21,10 +21,9 @@ ARG DATABASE_URL
 ENV DATABASE_URL=${DATABASE_URL}
 ENV PRISMA_LOG_LEVEL=debug
 
-RUN echo "DATABASE_URL is set to: $DATABASE_URL"
 
 # # Run Prisma migrations (before the build)
-RUN sleep 5 && npx prisma migrate deploy && npx prisma generate
+RUN npx prisma migrate deploy && npx prisma generate
 
 # Build the application
 RUN pnpm run build
@@ -48,7 +47,7 @@ RUN pnpm install --prod
 COPY --from=build /app/dist /app/dist
 
 # Copy any Prisma files needed in production (e.g., Prisma client)
-COPY --from=build /app/node_modules/.prisma /app/node_modules/.prisma
+COPY --from=build /app/node_modules/@prisma /app/node_modules/@prisma
 COPY --from=build /app/prisma /app/prisma
 
 # Expose the application port (change if needed)
