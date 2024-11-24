@@ -6,7 +6,9 @@ import { calculateExpiryDate } from "@src/features/shared/infrastructure/utils/c
 import { uuidToBinary } from "@src/features/shared/infrastructure/utils/utils";
 import { inject, injectable } from "inversify";
 import { AuthRepository } from "../../domain/repository/auth-repository";
+
 // import { RedisService } from "@src/features/shared/infrastructure/services/redis-service";
+
 
 @injectable()
 export class PersistenceAuthRepository extends AuthRepository {
@@ -19,6 +21,7 @@ export class PersistenceAuthRepository extends AuthRepository {
     super();
     this.prismaClient = prismaClient;
     //this.redisService = redisService;
+
   }
 
   async saveSession(session: SessionDTO): Promise<string> {
