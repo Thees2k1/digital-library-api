@@ -1,0 +1,2 @@
+[services.digital-library-api]
+dockerfile = "Dockerfile.railway"
