@@ -95,7 +95,10 @@ model UserSession {
   id        Bytes    @id @default(dbgenerated("(UUID_TO_BIN(UUID()))")) @db.Binary(16)
   userId    Bytes    @unique @db.Binary(16) @map("user_id") // Đánh index vào trường này
   user      User     @relation(fields: [userId], references: [id])
-  signature String   @unique @db.VarChar(255) // You can choose to store the entire token or just the signature
+  signature String   @unique @db.VarChar(255)
+  ipAddress   String?  @db.VarChar(45)  @map("ip_address")         // IP Address (supports IPv6)
+  userAgent   String?  @db.VarChar(255)  @map("user_agent")       // User-Agent info
+  deviceInfo  String?  @db.VarChar(255)  @map("device_info")       // Device information, if needed
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamp(0)
   expiresAt DateTime @map("expires_at") @db.Timestamp(0)

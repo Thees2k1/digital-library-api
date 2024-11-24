@@ -10,7 +10,7 @@ export class UserController {
     constructor(@inject(INTERFACE_TYPE.UserInteractor ) interactor: UserInteractor) {
         this.interactor = interactor;
         }
-    async getAllUsers(req: Request, res: Response<UserEntity[] | any>, next: NextFunction) { 
+    async getAllUsers(_: Request, res: Response<UserEntity[] | any>, next: NextFunction) { 
         try{
             const users = await this.interactor.getUsers();
             res.status(200).json(users);

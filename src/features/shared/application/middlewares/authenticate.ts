@@ -10,11 +10,12 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
             next(AppError.unauthorized("Unauthorized"));
             return;
         }
-        const verificationRes = jwt.verify(token, config.accessTokenSecret);
-        if(!verificationRes){
-             next(AppError.unauthorized("Unauthorized"));
+        try {
+            const decoded = jwt.verify(token, config.accessTokenSecret);
+            req.body = decoded;
+            next();
+        } catch (error) {
+            logger.error("Error verifying token: ", error);
+            next(AppError.unauthorized("Unauthorized"));
         }
-        logger.info('User payload',verificationRes);
-        req.body = verificationRes;
-        next();
 };

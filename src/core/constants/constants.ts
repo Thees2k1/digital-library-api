@@ -27,3 +27,4 @@ export const INVALID_CREDENTIALS = "Invalid credentials";
 
 export const LOGOUT_SUCCESS = "Logout success";
 
+export const DEFAULT_TOKEN_ISSUER = "Chyra-API";

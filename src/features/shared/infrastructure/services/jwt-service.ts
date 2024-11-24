@@ -1,46 +1,22 @@
 import { config } from "@src/core/config/config";
-import jwt from "jsonwebtoken";
+import { DEFAULT_TOKEN_ISSUER } from "@src/core/constants/constants";
+import jwt, { JwtPayload } from "jsonwebtoken";
 
-export interface JwtServiceMetaData {
-  audience: string;
-  issuer: string;
-}
+
 export class JwtService {
-  private readonly jwtSecret = {
+  private readonly jwtMetadata = {
+    issuer: DEFAULT_TOKEN_ISSUER,
     accessToken: config.accessTokenSecret,
     refreshToken: config.refreshTokenSecret,
   };
 
-
-  private readonly metaData: JwtServiceMetaData;
-  constructor(metaData: JwtServiceMetaData) {
-    this.metaData = metaData;
-  }
-
-  generate(payload: string | Buffer | object, expiresIn: string) {
-    return jwt.sign(payload, this.jwtSecret.accessToken, {
-      expiresIn: expiresIn,
-      audience: this.metaData.audience,
-      issuer: this.metaData.issuer,
-    });
-  }
-  generateTokensPair(payload: string | Buffer | object, expiresIn: string) {
-    const access = jwt.sign(payload, this.jwtSecret.accessToken, {
-      expiresIn: expiresIn,
-      audience: this.metaData.audience,
-      issuer: this.metaData.issuer,
-    });
-    const refresh = jwt.sign(payload, this.jwtSecret.accessToken, {
-      expiresIn: expiresIn,
-      audience: this.metaData.audience,
-      issuer: this.metaData.issuer,
-    });
-    return { accessToken: access, refreshToken: refresh };
+  generate(payload: string | JwtPayload, options: jwt.SignOptions) {
+    return jwt.sign(payload, this.jwtMetadata.accessToken, {...options,issuer:this.jwtMetadata.issuer});
   }
 
   verify(token: string) {
     try {
-      return { success: true, data: jwt.verify(token, this.jwtSecret.accessToken) };
+      return { success: true, data: jwt.verify(token, this.jwtMetadata.accessToken) };
     } catch (error:any) {
       return { 
         success: false,

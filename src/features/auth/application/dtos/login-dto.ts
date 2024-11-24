@@ -10,5 +10,8 @@ export const LoginResultSchema = z.object({
     refreshToken: z.string(),
 });
 
-export type LoginBodyDTO = z.infer<typeof LoginBodySchema>;
+export type LoginBodyDTO = z.infer<typeof LoginBodySchema> &{
+    ipAddress?: string;
+    userAgent?: string;
+};
 export type LoginResultDTO = z.infer<typeof LoginResultSchema>;

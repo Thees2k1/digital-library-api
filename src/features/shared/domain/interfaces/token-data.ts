@@ -1,8 +1,11 @@
-interface TokenData {
-    id: string;
-    email: string;
-    firstName: string;
-    lastName?: string;
-}
+// import { JwtPayload } from 'jsonwebtoken';
 
-export type { TokenData };
+
+// interface TokenData extends JwtPayload {
+//     id: string;
+//     email: string;
+//     firstName: string;
+//     lastName?: string;
+// }
+
+// export type { TokenData };

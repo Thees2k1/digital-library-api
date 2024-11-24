@@ -1,7 +1,7 @@
 import { Container } from "inversify";
 import { INTERFACE_TYPE } from "@src/core/constants/constants";
 import { AuthInteractor } from "@src/features/auth/application/interactor/auth-interactor";
-import { AuthUseCase } from "@src/features/auth/domain/use-cases/auth-use-case";
+import { AuthUseCase } from "@src/features/auth/application/use-cases/auth-use-case";
 import { AuthController } from "@src/features/auth/presentation/controller/auth-controller";
 import { UserInteractor } from "@src/features/user/application/interactor/user-interactor";
 import { UserRepository } from "@src/features/user/domain/repository/user-repository";
@@ -9,7 +9,7 @@ import { UserUseCase } from "@src/features/user/domain/use-cases/user-use-case";
 import { PersistenceUserRepository } from "@src/features/user/infrastructure/repository/persitence-user-repository";
 import { UserController } from "@src/features/user/presentation/controller/user-controller";
 import { AuthRepository } from "@src/features/auth/domain/repository/auth-repository";
-import { JwtAuthRepository } from "@src/features/auth/infrastructure/repository/auth-repository-impl";
+import { PersistenceAuthRepository } from "@src/features/auth/infrastructure/repository/persitence-auth-repository";
 import { PrismaClient } from "@prisma/client";
 import { RedisService } from "../services/redis-service";
 import { JwtService } from "../services/jwt-service";
@@ -23,10 +23,8 @@ export function initializeInfrastucture() {
     .toConstantValue(new PrismaClient());
   container.bind<RedisService>(RedisService).toSelf();
   container
-    .bind<JwtService>(JwtService)
-    .toConstantValue(
-      new JwtService({ issuer: "chyra-library", audience: "guest" })
-    );
+    .bind<JwtService>(JwtService).toSelf();
+  container.bind<RedisService>(RedisService).toSelf();
 
   //binding repositories
   container
@@ -34,7 +32,7 @@ export function initializeInfrastucture() {
     .to(PersistenceUserRepository);
   container
     .bind<AuthRepository>(INTERFACE_TYPE.AuthRepository)
-    .to(JwtAuthRepository);
+    .to(PersistenceAuthRepository);
 
   //binding use cases
   container.bind<UserUseCase>(INTERFACE_TYPE.UserInteractor).to(UserInteractor);

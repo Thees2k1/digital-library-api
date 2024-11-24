@@ -10,15 +10,14 @@ import {
   LoginBodyDTO,
   LoginResultDTO,
   LoginResultSchema,
-} from "../../domain/dtos/login-dto";
-import { RefreshBodyDTO } from "../../domain/dtos/refresh-token";
+} from "../../application/dtos/login-dto";
+import { RefreshBodyDTO } from "../../application/dtos/refresh-token";
 import {
   RegisterBodyDTO,
   RegisterResultDTO,
   RegisterResultSchema,
-} from "../../domain/dtos/register-dto";
-import { AuthUseCase } from "../../domain/use-cases/auth-use-case";
-import { access } from "fs";
+} from "../../application/dtos/register-dto";
+import { AuthUseCase } from "../../application/use-cases/auth-use-case";
 
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
@@ -55,7 +54,20 @@ export class AuthController {
   ) {
     try {
       const credentials = req.body;
-      const result = await this.interactor.login(credentials);
+      const ip = (req.headers["x-forwarded-for"] || req.connection.remoteAddress) ; // Get the IP address
+      let ipAddress :string|undefined;
+       if(ip && typeof ip === "string") {
+          ipAddress = ip;
+       }else if(ip && Array.isArray(ip)){
+          ipAddress = ip[0];
+       }
+      const userAgent = req.headers["user-agent"]; // Get the user-agent
+      const result = await this.interactor.login({
+        ...credentials,
+        ipAddress,
+        userAgent,
+      });
+
       const verifiedResult: LoginResultDTO = LoginResultSchema.parse(result);
 
       res.cookie(REFRESH_TOKEN, verifiedResult.refreshToken, {
@@ -77,13 +89,8 @@ export class AuthController {
     }
   }
 
-  async refreshToken(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) {
+  async refreshToken(req: Request, res: Response, next: NextFunction) {
     try {
-     
       const refreshToken = req.cookies[REFRESH_TOKEN];
       const result = await this.interactor.refreshTokens(refreshToken);
 
@@ -94,7 +101,7 @@ export class AuthController {
         maxAge: REFRESH_TOKEN_EXPIRES_IN, // 7 ngày cho refresh token
       });
 
-      res.json({access_token: result.accessToken});
+      res.json({ access_token: result.accessToken });
     } catch (error) {
       if (error instanceof Error) {
         next(AppError.unauthorized(error.message));

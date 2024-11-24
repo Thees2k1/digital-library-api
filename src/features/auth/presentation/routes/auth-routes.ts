@@ -3,8 +3,8 @@ import { Router } from "express";
 import { AuthController } from "../controller/auth-controller";
 import { container } from "@src/features/shared/infrastructure/utils/inversify-config";
 import { validate } from "@src/features/shared/application/middlewares/validate";
-import { RegisterBodySchema } from "../../domain/dtos/register-dto";
-import { LoginBodySchema } from "../../domain/dtos/login-dto";
+import { RegisterBodySchema } from "../../application/dtos/register-dto";
+import { LoginBodySchema } from "../../application/dtos/login-dto";
 
 class AuthRoutes{
   static login = "/login";
