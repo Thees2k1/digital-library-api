@@ -1,4 +1,3 @@
-import { config } from "@src/core/config/config";
 import {
   INTERFACE_TYPE,
   INVALID_CREDENTIALS,
@@ -6,8 +5,8 @@ import {
 } from "@src/core/constants/constants";
 import { AppError } from "@src/core/errors/custom-error";
 import { TokenData } from "@src/features/shared/domain/interfaces/token-data";
+import { JwtService } from "@src/features/shared/infrastructure/services/jwt-service";
 import { UserRepository } from "@src/features/user/domain/repository/user-repository";
-import bcrypt from "bcrypt";
 import { inject, injectable } from "inversify";
 import { LoginBodyDTO, LoginResultDTO } from "../../domain/dtos/login-dto";
 import { RefreshResultDTO } from "../../domain/dtos/refresh-token";
@@ -18,8 +17,7 @@ import {
 } from "../../domain/dtos/register-dto";
 import { AuthRepository } from "../../domain/repository/auth-repository";
 import { AuthUseCase } from "../../domain/use-cases/auth-use-case";
-import logger from "@src/features/shared/infrastructure/utils/logger/logger";
-import { JwtService } from "@src/features/shared/infrastructure/services/jwt-service";
+import argon2 from "argon2";
 
 @injectable()
 export class AuthInteractor implements AuthUseCase {
@@ -43,7 +41,7 @@ export class AuthInteractor implements AuthUseCase {
       if (!user) {
         throw AppError.unauthorized(INVALID_CREDENTIALS);
       }
-      const isPasswordValid = await bcrypt.compare(password, user.password);
+      const isPasswordValid = await argon2.verify(user.password, password);
 
       if (!isPasswordValid) {
         throw AppError.unauthorized(INVALID_CREDENTIALS);
@@ -79,7 +77,7 @@ export class AuthInteractor implements AuthUseCase {
       if (existedUser) {
         throw AppError.unauthorized("Email already exists");
       }
-      const hashedPassword = await bcrypt.hash(data.password, 10);
+      const hashedPassword = await argon2.hash(data.password);
       const user = await this.userRepository.create({
         ...data,
         password: hashedPassword,

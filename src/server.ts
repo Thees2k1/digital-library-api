@@ -17,6 +17,8 @@ import { ErrorMiddleware } from "./features/shared/application/middlewares/error
 
 // import "./features/shared/infrastructure/utils/logger/global-logger";
 import "reflect-metadata";
+import logger from "./features/shared/infrastructure/utils/logger/logger";
+import { config } from "./core/config/config";
 
 interface ServerOptions {
   port: number;
@@ -96,5 +98,6 @@ export class Server {
     this.app.listen(this.port, () => {
       console.info(`Server running on port ${this.port}`);
     });
+    logger.info(`App configs: ${JSON.stringify(config)}`);
   }
 }
