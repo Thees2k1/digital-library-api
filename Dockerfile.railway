@@ -19,9 +19,12 @@ COPY . .
 # # Ensure the DATABASE_URL environment variable is available during the build
 ARG DATABASE_URL
 ENV DATABASE_URL=${DATABASE_URL}
+ENV PRISMA_LOG_LEVEL=debug
+
+RUN echo "DATABASE_URL is set to: $DATABASE_URL"
 
 # # Run Prisma migrations (before the build)
-RUN npx prisma migrate deploy
+RUN sleep 5 && npx prisma migrate deploy && npx prisma generate
 
 # Build the application
 RUN pnpm run build
