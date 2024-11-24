@@ -11,7 +11,8 @@ import { UserController } from "@src/features/user/presentation/controller/user-
 import { AuthRepository } from "@src/features/auth/domain/repository/auth-repository";
 import { PersistenceAuthRepository } from "@src/features/auth/infrastructure/repository/persitence-auth-repository";
 import { PrismaClient } from "@prisma/client";
-import { RedisService } from "../services/redis-service";
+
+// import { RedisService } from "../services/redis-service";
 import { JwtService } from "../services/jwt-service";
 
 export const container = new Container();
@@ -21,10 +22,11 @@ export function initializeInfrastucture() {
   container
     .bind<PrismaClient>(INTERFACE_TYPE.PrismaClient)
     .toConstantValue(new PrismaClient());
-  container.bind<RedisService>(RedisService).toSelf();
+
+  // container.bind<RedisService>(RedisService).toSelf();
   container
     .bind<JwtService>(JwtService).toSelf();
-  container.bind<RedisService>(RedisService).toSelf();
+
 
   //binding repositories
   container
