@@ -13,4 +13,5 @@ pnpm-lock.yaml
 docker-compose.yml
 
 dist
-Dockerfile
+
+Dockerfile.local
