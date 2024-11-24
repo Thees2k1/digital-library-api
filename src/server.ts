@@ -38,10 +38,14 @@ export class Server {
     this.routes = routes;
     this.apiPrefix = apiPrefix;
 
-    // this.initializeInfrastucture();
+    this.initializeConfigs();
     this.initializeMiddlewares();
     this.initializeRoutes();
     this.initializeErrorHandling();
+  }
+
+  private initializeConfigs(): void {
+    this.app.set('trust proxy', true);
   }
 
   private initializeMiddlewares(): void {
