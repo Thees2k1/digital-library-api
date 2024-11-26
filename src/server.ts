@@ -36,18 +36,13 @@ export class Server {
     this.routes = routes;
     this.apiPrefix = apiPrefix;
 
-    this.initializeConfigs();
     this.initializeMiddlewares();
     this.initializeRoutes();
     this.initializeErrorHandling();
   }
 
-  private initializeConfigs(): void {
-    this.app.set('trust proxy', process.env.NODE_ENV === 'production');
-  }
-
   private initializeMiddlewares(): void {
-    var whitelist = ["http://localhost:3000", "http://localhost:8080"];
+    var whitelist = ["http://localhost:3000", "http://localhost:8080","https://chyra.vercel.app/"];
     var corsOptions: CorsOptions = {
       origin: function (origin, callback) {
         if (!origin || whitelist.indexOf(origin) !== -1) {
