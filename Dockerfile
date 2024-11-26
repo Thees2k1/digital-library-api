@@ -16,12 +16,6 @@ RUN pnpm install
 # Copy the rest of the project files
 COPY . .
 
-# # Ensure the DATABASE_URL environment variable is available during the build
-ARG DATABASE_URL
-ENV DATABASE_URL=${DATABASE_URL}
-
-RUN echo $DATABASE_URL
-
 # Build the application
 RUN pnpm run build
 
@@ -47,6 +41,12 @@ COPY --from=build /app/dist /app/dist
 COPY --from=build /app/node_modules/@prisma /app/node_modules/@prisma
 COPY --from=build /app/prisma /app/prisma
 COPY --from=build /app/tsconfig.json /app/tsconfig.json
+
+# # Ensure the DATABASE_URL environment variable is available during the build
+ARG DATABASE_URL
+ENV DATABASE_URL=${DATABASE_URL}
+
+RUN echo $DATABASE_URL
 
 RUN npx prisma migrate deploy && npx prisma generate
 
