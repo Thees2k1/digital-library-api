@@ -40,7 +40,6 @@ export class UserController {
     next: NextFunction
   ) {
     try {
-      console.log('this been call')
       const userId = req.params.id;
       const user = await this.interactor.getUserById(userId);
       if (!user) {
@@ -63,7 +62,6 @@ export class UserController {
     next: NextFunction
   ) {
     try {
-      console.log('get email')
       const email = req.query.email as string;
       if(!email){
         next(AppError.badRequest("Email is required."));

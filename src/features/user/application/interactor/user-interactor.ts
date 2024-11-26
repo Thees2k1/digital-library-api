@@ -67,11 +67,9 @@ export class UserInteractor implements UserUseCase {
         avatarUrl: user.avatarUrl,
       };
     } catch (error) {
-      console.log('at getUserById');  
       if (error instanceof Error) {
         throw AppError.internalServer(error.message);
       }
-
       throw error;
     }
   }
