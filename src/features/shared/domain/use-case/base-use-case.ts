@@ -1,4 +1,4 @@
 
-export interface BaseUseCase<T,X> {
-  execute(param : T): Promise<X>;
+export interface BaseUseCase<X,T> {
+  execute(param : X): Promise<T>;
 }

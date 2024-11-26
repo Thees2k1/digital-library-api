@@ -15,6 +15,7 @@ export const INTERFACE_TYPE ={
     AuthController: Symbol.for("AuthController"),
     PrismaClient: Symbol.for("PrismaClient"),
     AuthRepository: Symbol.for("AuthRepository"),
+    Logger: Symbol.for("Logger"),
 }
 
 export const REFRESH_TOKEN = "refresh_token";
@@ -28,3 +29,9 @@ export const INVALID_CREDENTIALS = "Invalid credentials";
 export const LOGOUT_SUCCESS = "Logout success";
 
 export const DEFAULT_TOKEN_ISSUER = "Chyra-API";
+
+//MESSAGES
+
+export const SUCCESSFUL = "Successful";
+export const FAILED = "Failed";
+

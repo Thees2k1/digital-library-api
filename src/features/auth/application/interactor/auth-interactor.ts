@@ -18,6 +18,7 @@ import { AuthRepository } from "../../domain/repository/auth-repository";
 import { AuthUseCase } from "../use-cases/auth-use-case";
 import argon2 from "argon2";
 import { JwtPayload } from "jsonwebtoken";
+import { CreateUserDto } from "@src/features/user/application/dtos/user-dto";
 //import { RedisService } from "@src/features/shared/infrastructure/services/redis-service";
 
 @injectable()
@@ -73,8 +74,7 @@ export class AuthInteractor implements AuthUseCase {
       });
 
       return { accessToken, refreshToken };
-    } catch (error) {
-      console.log("ineractor error", error);
+    } catch (error) {;
       throw error;
     }
   }
@@ -86,10 +86,17 @@ export class AuthInteractor implements AuthUseCase {
         throw AppError.unauthorized("Email already exists");
       }
       const hashedPassword = await argon2.hash(data.password);
-      const user = await this.userRepository.create({
-        ...data,
+
+      const input : CreateUserDto = {
+        email: data.email,
         password: hashedPassword,
-      });
+        firstName: data.firstName,
+        lastName: data.lastName,
+        avatar: '',
+        role: data.role,
+      }
+
+      const user = await this.userRepository.create(input);
 
       return RegisterResultSchema.parse(user);
     } catch (error) {
@@ -134,8 +141,6 @@ export class AuthInteractor implements AuthUseCase {
     const newPayload: JwtPayload = {
       userId: payload.userId,
     }
-
-    console.log(payload);
 
     const newAccessToken = this.JwtService.generate(newPayload, {
       expiresIn: "15m",

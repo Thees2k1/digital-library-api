@@ -8,5 +8,5 @@ export const RefreshTokenResultSchema = z.object({
     refreshToken: z.string(),
 });
 
-export type RefreshBodyDTO = z.infer<typeof RefreshTokenBodySchema>;
-export type RefreshResultDTO = z.infer<typeof RefreshTokenResultSchema>;
+export interface RefreshBodyDTO extends z.infer<typeof RefreshTokenBodySchema>{};
+export interface RefreshResultDTO extends z.infer<typeof RefreshTokenResultSchema>{};
