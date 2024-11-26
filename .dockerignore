@@ -1,9 +1,14 @@
 node_modules
-
+logs
 dist
 Dockerfile
+Dockerfile.local
 docker-compose.yml
 .dockerignore
 *.md
 .git
 .env
+.env.staging
+nodemon.json
+
+

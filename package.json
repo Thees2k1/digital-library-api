@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "prebuild": "npx prisma generate",
     "build": "tsup",
     "start": "node -r tsconfig-paths/register -r dotenv/config dist/index.js",
     "dev": "nodemon",
