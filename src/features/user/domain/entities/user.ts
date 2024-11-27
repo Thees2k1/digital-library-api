@@ -4,6 +4,7 @@ export class UserEntity {
     public firstName: string,
     public lastName: string | null,
     public email: string,
+    public avatarUrl: string,
     public password: string,
     public role: 'user'|'admin',
     public createdAt: Date,
@@ -20,6 +21,7 @@ export class UserEntity {
       data.email,
       data.password,
       data.role,
+      data.avatarUrl,
       new Date(data.createdAt),
       new Date(data.updatedAt)
     );

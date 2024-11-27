@@ -1,4 +1,5 @@
 import compression from "compression";
+import cookieParser from "cookie-parser";
 import cors, { CorsOptions } from "cors";
 import express, {
   Application,
@@ -9,7 +10,6 @@ import express, {
 } from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
-import cookieParser from "cookie-parser";
 import { StatusCodes } from "http-status-codes";
 import { ONE_HUNDRED, ONE_THOUSAND, SIXTY } from "./core/constants/constants";
 import { AppError } from "./core/errors/custom-error";
@@ -17,8 +17,6 @@ import { ErrorMiddleware } from "./features/shared/application/middlewares/error
 
 // import "./features/shared/infrastructure/utils/logger/global-logger";
 import "reflect-metadata";
-import logger from "./features/shared/infrastructure/utils/logger/logger";
-import { config } from "./core/config/config";
 
 interface ServerOptions {
   port: number;
@@ -38,14 +36,13 @@ export class Server {
     this.routes = routes;
     this.apiPrefix = apiPrefix;
 
-    // this.initializeInfrastucture();
     this.initializeMiddlewares();
     this.initializeRoutes();
     this.initializeErrorHandling();
   }
 
   private initializeMiddlewares(): void {
-    var whitelist = ["http://localhost:3000", "http://localhost:8080"];
+    var whitelist = ["http://localhost:3000", "http://localhost:8080","https://chyra.vercel.app/"];
     var corsOptions: CorsOptions = {
       origin: function (origin, callback) {
         if (!origin || whitelist.indexOf(origin) !== -1) {
@@ -98,6 +95,5 @@ export class Server {
     this.app.listen(this.port, () => {
       console.info(`Server running on port ${this.port}`);
     });
-    logger.info(`App configs: ${JSON.stringify(config)}`);
   }
 }

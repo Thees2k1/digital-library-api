@@ -1,14 +1,14 @@
-import { PrismaClient, User } from "@prisma/client";
-import { UserEntity } from "../../domain/entities/user";
-import { UserRepository } from "../../domain/repository/user-repository";
-import { inject, injectable } from "inversify";
+import { PrismaClient } from "@prisma/client";
 import { INTERFACE_TYPE } from "@src/core/constants/constants";
+import { AppError } from "@src/core/errors/custom-error";
 import {
   binaryToUuid,
   uuidToBinary,
 } from "@src/features/shared/infrastructure/utils/utils";
-import { CreateUserDto, UpdateUserDto } from "../../domain/dtos/user-dto";
-import { AppError } from "@src/core/errors/custom-error";
+import { inject, injectable } from "inversify";
+import { CreateUserDto, UpdateUserDto } from "../../application/dtos/user-dto";
+import { UserEntity } from "../../domain/entities/user";
+import { UserRepository } from "../../domain/repository/user-repository";
 
 @injectable()
 export class PersistenceUserRepository extends UserRepository {
@@ -26,6 +26,7 @@ export class PersistenceUserRepository extends UserRepository {
           id: true, // userId
           firstName: true,
           lastName: true,
+          avatar: true,
           identity: {
             // Join với UserIdentity
             select: {
@@ -59,6 +60,7 @@ export class PersistenceUserRepository extends UserRepository {
         res.firstName,
         res.lastName,
         res.identity.email,
+        res.avatar ??'' ,
         res.identity.password,
         res.identity.role,
         res.createdAt,
@@ -78,6 +80,7 @@ export class PersistenceUserRepository extends UserRepository {
         id: true,
         firstName: true,
         lastName: true,
+        avatar: true,
         identity: {
           select: {
             email: true,
@@ -102,10 +105,11 @@ export class PersistenceUserRepository extends UserRepository {
     }
 
     const data: UserEntity = new UserEntity(
-      id,
+      binaryToUuid(res.id),
       res.firstName,
       res.lastName,
       res.identity.email,
+      res.avatar ??'' ,
       res.identity.password,
       res.identity.role,
       res.createdAt,
@@ -118,13 +122,13 @@ export class PersistenceUserRepository extends UserRepository {
   async create(data: CreateUserDto): Promise<UserEntity> {
     const newUser = await this.prismaClient.$transaction(async (prisma) => {
       // Create the User first
-      const userInfor = {
+      const userInfo = {
         firstName: data.firstName,
         lastName: data.lastName || "",
         avatar: data.avatar || "",
       };
       const user = await prisma.user.create({
-        data: userInfor,
+        data: userInfo,
       });
 
       // Create the UserIdentity related to the created User
@@ -150,8 +154,9 @@ export class PersistenceUserRepository extends UserRepository {
       newUser.user.firstName,
       newUser.user.lastName,
       newUser.userIdentity.email,
+      newUser.user.avatar ??'' ,
       newUser.userIdentity.password,
-      "user",
+      newUser.userIdentity.role,
       newUser.user.createdAt,
       newUser.user.updatedAt
     );
@@ -172,10 +177,15 @@ export class PersistenceUserRepository extends UserRepository {
               role: true,
             },
           },
+          avatar: true,
           createdAt: true,
           updatedAt: true,
         },
       });
+
+      if (res.length === 0) {
+        return [];
+      }
 
       const users: UserEntity[] = res.map((user) => {
         if (!user.identity) {
@@ -187,6 +197,7 @@ export class PersistenceUserRepository extends UserRepository {
           user.firstName,
           user.lastName,
           user.identity.email,
+          user.avatar ?? "",
           user.identity.password,
           user.identity.role,
           user.createdAt,
@@ -200,7 +211,7 @@ export class PersistenceUserRepository extends UserRepository {
     }
   }
 
-  async update(data: UpdateUserDto): Promise<UserEntity | null> {
+  async update(id:string,data: UpdateUserDto): Promise<UserEntity> {
     try {
       const updatedUser = await this.prismaClient.$transaction(
         async (prisma) => {
@@ -210,7 +221,7 @@ export class PersistenceUserRepository extends UserRepository {
             where: { id: transformedId },
             data: {
               firstName: data.firstName,
-              lastName: data.lastName,
+              lastName: data.lastName??'',
               avatar: data.avatar,
             },
           });
@@ -233,24 +244,24 @@ export class PersistenceUserRepository extends UserRepository {
       );
 
       const res = new UserEntity(
-        data.id,
+        binaryToUuid(updatedUser.user.id),
         updatedUser.user.firstName,
         updatedUser.user.lastName,
         updatedUser.userIdentity.email,
+        updatedUser.user.avatar ??'' ,
         updatedUser.userIdentity.password,
-        "user",
+        updatedUser.userIdentity.role,
         updatedUser.user.createdAt,
         updatedUser.user.updatedAt
       );
 
       return res;
     } catch (error) {
-      console.error("Error updating user:", error);
-      throw AppError.internalServer("Failed to update user");
+      throw error;
     }
   }
 
-  async delete(id: string): Promise<string | null> {
+  async delete(id: string): Promise<string> {
     try {
       const userId = uuidToBinary(id);
       // Wrap deletion in a transaction to ensure both deletions happen atomically
@@ -270,11 +281,9 @@ export class PersistenceUserRepository extends UserRepository {
         }
       );
 
-      console.log("User and associated identity deleted successfully");
       return binaryToUuid(deletedUser.id);
     } catch (e) {
-      console.error("Error updating user:", e);
-      throw AppError.internalServer("Failed to delete user");
+      throw e;
     }
   }
 }

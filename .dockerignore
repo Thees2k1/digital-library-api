@@ -1,10 +1,14 @@
 node_modules
-prisma/migrations
-
+logs
 dist
 Dockerfile
+Dockerfile.local
 docker-compose.yml
 .dockerignore
 *.md
 .git
 .env
+.env.staging
+nodemon.json
+
+

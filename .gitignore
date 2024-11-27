@@ -1,6 +1,6 @@
 node_modules
 logs
-prisma/migrations
+
 # Keep environment variables out of version control
 .env
 
@@ -13,4 +13,5 @@ pnpm-lock.yaml
 docker-compose.yml
 
 dist
-Dockerfile
+
+Dockerfile.local

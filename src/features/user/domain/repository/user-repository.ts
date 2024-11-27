@@ -1,9 +1,9 @@
 import { BaseRepository } from "@src/features/shared/domain/repository/base-repository";
+import { CreateUserDto, UpdateUserDto } from "../../application/dtos/user-dto";
 import { type UserEntity } from "../entities/user";
-import { SessionDTO } from "../../../auth/application/dtos/session-dto";
 
 export abstract class UserRepository
-  implements BaseRepository<UserEntity, string>
+  implements BaseRepository<CreateUserDto,UserEntity, string>
 {
   findById(id: string): Promise<UserEntity | null> {
     throw new Error("Method not implemented.");
@@ -12,15 +12,15 @@ export abstract class UserRepository
     throw new Error("Method not implemented.");
   }
 
-  create(data: any): Promise<UserEntity> {
+  create(data: CreateUserDto): Promise<UserEntity> {
     throw new Error("Method not implemented. Yet");
   }
 
-  update( data: any): Promise<UserEntity | null> {
+  update(id:string, data: UpdateUserDto): Promise<UserEntity> {
     throw new Error("Method not implemented.");
   }
 
-  delete(id: string): Promise<string|null> {
+  delete(id: string): Promise<string> {
     throw new Error("Method not implemented.");
   }
 
