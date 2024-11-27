@@ -13,7 +13,7 @@ export class UserRouter{
         router.get("/user",controller.getUserByEmail.bind(controller));
         router.get(path,authenticate, controller.getAllUsers.bind(controller));
         router.get(`${path}/:id`,controller.getUserById.bind(controller));
-        router.put(`${path}/:id`,validate(UpdateUserSchema), controller.updateUser.bind(controller));
+        router.patch(`${path}/:id`,validate(UpdateUserSchema), controller.updateUser.bind(controller));
         router.delete(`${path}/:id`, controller.deleteUser.bind(controller));
         router.post(`${path}/:id`,validate(CreateUserSchema), controller.createUser.bind(controller));
         return router;

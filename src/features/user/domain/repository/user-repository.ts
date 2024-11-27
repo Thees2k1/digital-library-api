@@ -16,7 +16,7 @@ export abstract class UserRepository
     throw new Error("Method not implemented. Yet");
   }
 
-  update(id:string, data: UpdateUserDto): Promise<UserEntity> {
+  update(id:string, data: UserEntity): Promise<string> {
     throw new Error("Method not implemented.");
   }
 

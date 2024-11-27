@@ -211,18 +211,18 @@ export class PersistenceUserRepository extends UserRepository {
     }
   }
 
-  async update(id:string,data: UpdateUserDto): Promise<UserEntity> {
+  async update(id:string,data: UserEntity): Promise<string> {
     try {
       const updatedUser = await this.prismaClient.$transaction(
         async (prisma) => {
           // Update User table
-          const transformedId = uuidToBinary(data.id);
+          const transformedId = uuidToBinary(id);
           const user = await prisma.user.update({
             where: { id: transformedId },
             data: {
               firstName: data.firstName,
               lastName: data.lastName??'',
-              avatar: data.avatar,
+              avatar: data.avatarUrl??'',
             },
           });
 
@@ -243,19 +243,7 @@ export class PersistenceUserRepository extends UserRepository {
         }
       );
 
-      const res = new UserEntity(
-        binaryToUuid(updatedUser.user.id),
-        updatedUser.user.firstName,
-        updatedUser.user.lastName,
-        updatedUser.userIdentity.email,
-        updatedUser.user.avatar ??'' ,
-        updatedUser.userIdentity.password,
-        updatedUser.userIdentity.role,
-        updatedUser.user.createdAt,
-        updatedUser.user.updatedAt
-      );
-
-      return res;
+      return binaryToUuid(updatedUser.user.id);
     } catch (error) {
       throw error;
     }

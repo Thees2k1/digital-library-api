@@ -8,7 +8,14 @@ export const CreateUserSchema = z.object({
   role: z.string().optional(),
 });
 
-export const UpdateUserSchema = CreateUserSchema.extend({id: z.string()});
+export const UpdateUserSchema = z.object({
+  email: z.string().email().optional(),
+  password: z.string().min(6).optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  avatar: z.string().optional(),
+  role: z.string().optional(),
+});
 
 interface CreateUserDto extends z.infer<typeof CreateUserSchema> {}
 

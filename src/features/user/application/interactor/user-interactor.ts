@@ -1,11 +1,10 @@
 import { INTERFACE_TYPE } from "@src/core/constants/constants";
 import { AppError } from "@src/core/errors/custom-error";
+import logger from "@src/features/shared/infrastructure/utils/logger/logger";
 import { inject, injectable } from "inversify";
 import { UserRepository } from "../../domain/repository/user-repository";
 import { CreateUserDto, UpdateUserDto, User } from "../dtos/user-dto";
 import { UserUseCase } from "../use-cases/user-use-case";
-import logger from "@src/features/shared/infrastructure/utils/logger/logger";
-import { log } from "console";
 
 @injectable()
 export class UserInteractor implements UserUseCase {
@@ -91,7 +90,6 @@ export class UserInteractor implements UserUseCase {
       return user;
     } catch (error) {
       if (error instanceof Error) {
-        logger.error('at getEmail');
         throw AppError.internalServer(error.message);
       }
       throw error;
@@ -102,12 +100,20 @@ export class UserInteractor implements UserUseCase {
     updateData: UpdateUserDto
   ): Promise<string> {
     try {
-      const user = await this.repository.findById(id);
+      let user = await this.repository.findById(id);
       if (!user) {
         throw AppError.badRequest("User not found");
       }
-      const res = await this.repository.update(id, updateData);
-      return res.id;
+
+      user.email = updateData.email || user.email;
+      user.password = updateData.password || user.password;
+      user.firstName = updateData.firstName || user.firstName;
+      user.lastName = updateData.lastName || user.lastName;
+      user.avatarUrl = updateData.avatar || user.avatarUrl;
+      user.role =(updateData.role ==='user' || updateData.role ==='admin') ? updateData.role : user.role;
+
+      const res = await this.repository.update(id, user);
+      return res;
     } catch (error) {
       if (error instanceof Error) {
         logger.error(error.message);
