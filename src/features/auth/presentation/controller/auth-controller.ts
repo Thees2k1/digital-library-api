@@ -1,37 +1,37 @@
 import {
-  INTERFACE_TYPE,
   REFRESH_TOKEN,
   REFRESH_TOKEN_EXPIRES_IN,
-} from "@src/core/constants/constants";
-import { AppError } from "@src/core/errors/custom-error";
-import { NextFunction, Request, Response } from "express";
-import { inject, injectable } from "inversify";
+} from '@src/core/constants/constants';
+import { AppError } from '@src/core/errors/custom-error';
+import { NextFunction, Request, Response } from 'express';
+import { inject, injectable } from 'inversify';
 import {
   LoginBodyDTO,
   LoginResultDTO,
   LoginResultSchema,
-} from "../../application/dtos/login-dto";
-import { RefreshBodyDTO } from "../../application/dtos/refresh-token";
+} from '../../application/dtos/login-dto';
+import { RefreshBodyDTO } from '../../application/dtos/refresh-token';
 import {
   RegisterBodyDTO,
   RegisterResultDTO,
   RegisterResultSchema,
-} from "../../application/dtos/register-dto";
-import { AuthUseCase } from "../../application/use-cases/auth-use-case";
+} from '../../application/dtos/register-dto';
+import { AuthUseCase } from '../../application/use-cases/auth-use-case';
+import { DI_TYPES } from '@src/core/di/types';
 
-const IS_PRODUCTION = process.env.NODE_ENV === "production";
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 @injectable()
 export class AuthController {
   private readonly interactor: AuthUseCase;
-  constructor(@inject(INTERFACE_TYPE.AuthUseCase) interactor: AuthUseCase) {
+  constructor(@inject(DI_TYPES.AuthUseCase) interactor: AuthUseCase) {
     this.interactor = interactor;
   }
 
   async register(
     req: Request<any, RegisterResultDTO, RegisterBodyDTO>,
     res: Response<RegisterResultDTO>,
-    next: NextFunction
+    next: NextFunction,
   ) {
     try {
       const data = req.body;
@@ -50,18 +50,18 @@ export class AuthController {
   async login(
     req: Request<any, any, LoginBodyDTO>,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ) {
     try {
       const credentials = req.body;
-      const ip = (req.headers["x-forwarded-for"] || req.connection.remoteAddress) ; // Get the IP address
-      let ipAddress :string|undefined;
-       if(ip && typeof ip === "string") {
-          ipAddress = ip;
-       }else if(ip && Array.isArray(ip)){
-          ipAddress = ip[0];
-       }
-      const userAgent = req.headers["user-agent"]; // Get the user-agent
+      const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress; // Get the IP address
+      let ipAddress: string | undefined;
+      if (ip && typeof ip === 'string') {
+        ipAddress = ip;
+      } else if (ip && Array.isArray(ip)) {
+        ipAddress = ip[0];
+      }
+      const userAgent = req.headers['user-agent']; // Get the user-agent
       const result = await this.interactor.login({
         ...credentials,
         ipAddress,
@@ -114,7 +114,7 @@ export class AuthController {
   async logout(
     req: Request<any, any, RefreshBodyDTO>,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ) {
     try {
       const refreshToken = req.cookies[REFRESH_TOKEN];

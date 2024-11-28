@@ -10,5 +10,8 @@ docker-compose.yml
 .env
 .env.staging
 nodemon.json
+.eslint.config.mjs
+.prettierrc
+.prettierignore
 
 
