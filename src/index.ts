@@ -1,13 +1,13 @@
 import {Server} from './server';
 import {config} from '@core/config/config';
-import {AppRoutes} from './routes';
 import { initializeInfrastucture } from './core/di/container';
+import { AppRoutes } from './core/router/routes';
 
 (()=>{
-  main();
+  runApp();
 })();
 
-function main(){
+function runApp(){
   initializeInfrastucture();
   const server = new Server({
     port: config.port,

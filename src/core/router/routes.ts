@@ -1,6 +1,7 @@
+import { AuthRouter } from "@src/features/auth/presentation/routes/auth-routes";
+import { UserRouter } from "@src/features/user/presentation/routes/user-routes";
 import { Router } from "express";
-import { UserRouter } from "./features/user/presentation/routes/user-routes";
-import { AuthRouter } from "./features/auth/presentation/routes/auth-routes";
+import 'reflect-metadata';
 
 export class AppRoutes {
   static get routes(): Router {

@@ -35,14 +35,14 @@ export class Server {
     this.port = port;
     this.routes = routes;
     this.apiPrefix = apiPrefix;
-
-    this.initializeMiddlewares();
-    this.initializeRoutes();
-    this.initializeErrorHandling();
   }
 
   private initializeMiddlewares(): void {
-    var whitelist = ["http://localhost:3000", "http://localhost:8080","https://chyra.vercel.app/"];
+    var whitelist = [
+      "http://localhost:3000",
+      "http://localhost:8080",
+      "https://chyra.vercel.app/",
+    ];
     var corsOptions: CorsOptions = {
       origin: function (origin, callback) {
         if (!origin || whitelist.indexOf(origin) !== -1) {
@@ -92,8 +92,20 @@ export class Server {
     this.routes.use(ErrorMiddleware.handleError);
   }
   async start(): Promise<void> {
+    this.init();
     this.app.listen(this.port, () => {
       console.info(`Server running on port ${this.port}`);
     });
+  }
+
+  private init(): void {
+    console.log("Initializing server...");
+    try {
+      this.initializeMiddlewares();
+      this.initializeRoutes();
+      this.initializeErrorHandling();
+    } catch (error) {
+      console.error("Error initializing server", error);
+    }
   }
 }
