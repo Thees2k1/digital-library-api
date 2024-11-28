@@ -38,12 +38,12 @@ export class Server {
   }
 
   private initializeMiddlewares(): void {
-    var whitelist = [
+    const whitelist = [
       'http://localhost:3000',
       'http://localhost:8080',
       'https://chyra.vercel.app/',
     ];
-    var corsOptions: CorsOptions = {
+    const corsOptions: CorsOptions = {
       origin: function (origin, callback) {
         if (!origin || whitelist.indexOf(origin) !== -1) {
           callback(null, true);

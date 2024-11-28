@@ -1,19 +1,12 @@
 import globals from 'globals';
 import pluginJs from '@eslint/js';
 import tseslint from 'typescript-eslint';
-import { eslintPluginPrettierRecommended } from 'eslint-plugin-prettier/recommended';
+import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
   { files: ['**/*.{js,mjs,cjs,ts}'] },
   { languageOptions: { globals: globals.browser } },
-  {
-    rules: {
-      eqeqeq: 'warn',
-      'no-unused-vars': 'error',
-      'prefer-const': ['error', { ignoreReadBeforeAssign: true }],
-    },
-  },
   {
     ignores: [
       '.node_modules/*',
@@ -38,5 +31,12 @@ export default [
 
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
+  {
+    rules: {
+      eqeqeq: 'warn',
+      'no-unused-vars': 'warn',
+      'prefer-const': ['error', { ignoreReadBeforeAssign: true }],
+    },
+  },
   eslintPluginPrettierRecommended,
 ];

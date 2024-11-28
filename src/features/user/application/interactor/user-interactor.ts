@@ -25,6 +25,9 @@ export class UserInteractor implements UserUseCase {
       }));
       return users;
     } catch (error) {
+      if (error instanceof Error) {
+        throw AppError.internalServer(error.message);
+      }
       throw error;
     }
   }
@@ -95,7 +98,7 @@ export class UserInteractor implements UserUseCase {
   }
   async updateUser(id: string, updateData: UpdateUserDto): Promise<string> {
     try {
-      let user = await this.repository.findById(id);
+      const user = await this.repository.findById(id);
       if (!user) {
         throw AppError.badRequest('User not found');
       }
