@@ -1,5 +1,8 @@
 export const DI_TYPES = {
   UserRepository: Symbol.for('UserRepository'),
+  AuthRepository: Symbol.for('AuthRepository'),
+  AuthorRepository: Symbol.for('AuthorRepository'),
+  AuthorOutputPort: Symbol.for('AuthorOutputPort'),
   UserInteractor: Symbol.for('UserInteractor'),
   UserController: Symbol.for('UserController'),
   Mailer: Symbol.for('Mailer'),
@@ -7,6 +10,5 @@ export const DI_TYPES = {
   AuthUseCase: Symbol.for('AuthUseCase'),
   AuthController: Symbol.for('AuthController'),
   PrismaClient: Symbol.for('PrismaClient'),
-  AuthRepository: Symbol.for('AuthRepository'),
   Logger: Symbol.for('Logger'),
 };

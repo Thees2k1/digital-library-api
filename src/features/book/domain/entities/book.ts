@@ -8,7 +8,8 @@ class BookEntity {
     public readonly updatedAt: Date,
     public readonly author: string,
     public readonly categories: CategoryEntity[],
-    public readonly reviews?: ReviewEntity[],
+    public readonly reviews: ReviewEntity[],
+    public readonly digitalItems: BookDigitalItemEntity[],
   ) {}
 
   // `copyWith` method to create a new instance with updated properties
@@ -23,6 +24,25 @@ class BookEntity {
       updates.author ?? this.author,
       updates.categories ?? this.categories,
       updates.reviews ?? this.reviews,
+      updates.digitalItems ?? this.digitalItems,
+    );
+  }
+}
+
+//entity for BookDigitalItem
+class BookDigitalItemEntity {
+  constructor(
+    public readonly id: number,
+    public readonly format: string,
+    public readonly url: string,
+  ) {}
+
+  // `copyWith` method to create a new instance with updated properties
+  copyWith(updates: Partial<BookDigitalItemEntity>): BookDigitalItemEntity {
+    return new BookDigitalItemEntity(
+      updates.id ?? this.id,
+      updates.format ?? this.format,
+      updates.url ?? this.url,
     );
   }
 }
