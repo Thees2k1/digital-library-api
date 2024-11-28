@@ -1,4 +1,4 @@
-import { BaseRepository } from "@src/features/shared/domain/repository/base-repository";
+import { BaseRepository } from "@src/core/interfaces/base-repository";
 import { CreateUserDto, UpdateUserDto } from "../../application/dtos/user-dto";
 import { type UserEntity } from "../entities/user";
 

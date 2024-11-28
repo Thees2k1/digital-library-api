@@ -1,20 +1,20 @@
 import { PrismaClient } from "@prisma/client";
-import { INTERFACE_TYPE } from "@src/core/constants/constants";
 import { AppError } from "@src/core/errors/custom-error";
 import {
   binaryToUuid,
   uuidToBinary,
-} from "@src/features/shared/infrastructure/utils/utils";
+} from "@src/core/utils/utils";
 import { inject, injectable } from "inversify";
 import { CreateUserDto, UpdateUserDto } from "../../application/dtos/user-dto";
 import { UserEntity } from "../../domain/entities/user";
 import { UserRepository } from "../../domain/repository/user-repository";
+import { DI_TYPES } from "@src/core/di/types";
 
 @injectable()
 export class PersistenceUserRepository extends UserRepository {
   private readonly prismaClient: PrismaClient;
 
-  constructor(@inject(INTERFACE_TYPE.PrismaClient) prismaClient: PrismaClient) {
+  constructor(@inject(DI_TYPES.PrismaClient) prismaClient: PrismaClient) {
     super();
     this.prismaClient = prismaClient;
   }

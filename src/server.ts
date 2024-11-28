@@ -13,7 +13,7 @@ import helmet from "helmet";
 import { StatusCodes } from "http-status-codes";
 import { ONE_HUNDRED, ONE_THOUSAND, SIXTY } from "./core/constants/constants";
 import { AppError } from "./core/errors/custom-error";
-import { ErrorMiddleware } from "./features/shared/application/middlewares/error-middleware";
+import { ErrorMiddleware } from "./core/middlewares/error-middleware";
 
 // import "./features/shared/infrastructure/utils/logger/global-logger";
 import "reflect-metadata";

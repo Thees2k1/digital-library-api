@@ -1,10 +1,9 @@
 import {
-  INTERFACE_TYPE,
   INVALID_CREDENTIALS,
   REFRESH_TOKEN_EXPIRES_IN,
 } from "@src/core/constants/constants";
 import { AppError } from "@src/core/errors/custom-error";
-import { JwtService } from "@src/features/shared/infrastructure/services/jwt-service";
+import { JwtService } from "@src/core/services/jwt-service";
 import { UserRepository } from "@src/features/user/domain/repository/user-repository";
 import { inject, injectable } from "inversify";
 import { LoginBodyDTO, LoginResultDTO } from "../dtos/login-dto";
@@ -19,6 +18,7 @@ import { AuthUseCase } from "../use-cases/auth-use-case";
 import argon2 from "argon2";
 import { JwtPayload } from "jsonwebtoken";
 import { CreateUserDto } from "@src/features/user/application/dtos/user-dto";
+import { DI_TYPES } from "@src/core/di/types";
 //import { RedisService } from "@src/features/shared/infrastructure/services/redis-service";
 
 @injectable()
@@ -28,8 +28,8 @@ export class AuthInteractor implements AuthUseCase {
   private readonly JwtService : JwtService;
  // private readonly redisService : RedisService;
   constructor(
-    @inject(INTERFACE_TYPE.UserRepository) userRepository: UserRepository,
-    @inject(INTERFACE_TYPE.AuthRepository) authRepository: AuthRepository,
+    @inject(DI_TYPES.UserRepository) userRepository: UserRepository,
+    @inject(DI_TYPES.AuthRepository) authRepository: AuthRepository,
     @inject(JwtService) JwtService: JwtService,
     //@inject(RedisService) redisService,
   ) {

@@ -1,4 +1,4 @@
-import { INTERFACE_TYPE, SUCCESSFUL } from "@src/core/constants/constants";
+import { SUCCESSFUL } from "@src/core/constants/constants";
 import { AppError } from "@src/core/errors/custom-error";
 import { type NextFunction, type Request, type Response } from "express";
 import { inject, injectable } from "inversify";
@@ -9,12 +9,13 @@ import {
   UserResponse,
 } from "../../application/dtos/user-dto";
 import { UserUseCase } from "../../application/use-cases/user-use-case";
-import logger from "@src/features/shared/infrastructure/utils/logger/logger";
+import logger from "@src/core/utils/logger/logger";
+import { DI_TYPES } from "@src/core/di/types";
 
 @injectable()
 export class UserController {
   private readonly interactor: UserUseCase;
-  constructor(@inject(INTERFACE_TYPE.UserInteractor) interactor: UserUseCase) {
+  constructor(@inject(DI_TYPES.UserInteractor) interactor: UserUseCase) {
     this.interactor = interactor;
   }
   async getAllUsers(

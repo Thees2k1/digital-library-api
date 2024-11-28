@@ -2,9 +2,9 @@ import { config } from "@src/core/config/config";
 import { AppError } from "@src/core/errors/custom-error";
 import { type NextFunction, type Request, type Response } from "express";
 import jwt from "jsonwebtoken";
-import logger from "../../infrastructure/utils/logger/logger";
+import logger from "../../../../core/utils/logger/logger";
 
-export const authenticate = async (
+export const authMiddleware = async (
   req: Request,
   res: Response,
   next: NextFunction

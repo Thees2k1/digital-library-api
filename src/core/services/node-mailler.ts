@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-import { IMailer } from "../../domain/service/imailer";
+import { IMailer } from "../interfaces/imailer";
 
 export class NodemailerMailer implements IMailer {
   private transporter;

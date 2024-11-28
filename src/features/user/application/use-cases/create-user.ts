@@ -1,4 +1,4 @@
-import { BaseUseCase } from "@src/features/shared/domain/use-case/base-use-case";
+import { BaseUseCase } from "@src/core/interfaces/base-use-case";
 import { UserRepository } from "../../domain/repository/user-repository";
 import { CreateUserDto } from "../dtos/user-dto";
 import { UserEntity } from "../../domain/entities/user";

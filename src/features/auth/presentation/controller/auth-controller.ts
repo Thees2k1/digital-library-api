@@ -1,5 +1,4 @@
 import {
-  INTERFACE_TYPE,
   REFRESH_TOKEN,
   REFRESH_TOKEN_EXPIRES_IN,
 } from "@src/core/constants/constants";
@@ -18,13 +17,14 @@ import {
   RegisterResultSchema,
 } from "../../application/dtos/register-dto";
 import { AuthUseCase } from "../../application/use-cases/auth-use-case";
+import { DI_TYPES } from "@src/core/di/types";
 
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
 @injectable()
 export class AuthController {
   private readonly interactor: AuthUseCase;
-  constructor(@inject(INTERFACE_TYPE.AuthUseCase) interactor: AuthUseCase) {
+  constructor(@inject(DI_TYPES.AuthUseCase) interactor: AuthUseCase) {
     this.interactor = interactor;
   }
 

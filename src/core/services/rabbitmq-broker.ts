@@ -1,5 +1,5 @@
 // infrastructure/services/RabbitMQBroker.ts
-import { IMessageBroker } from "../../domain/service/imessage-broker";
+import { IMessageBroker } from "../interfaces/imessage-broker";
 import amqp from "amqplib";
 
 export class RabbitMQBroker implements IMessageBroker {

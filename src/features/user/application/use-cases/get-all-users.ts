@@ -1,5 +1,5 @@
 import { UserEntity } from "../../domain/entities/user";
-import { BaseUseCase } from "@src/features/shared/domain/use-case/base-use-case";
+import { BaseUseCase } from "@src/core/interfaces/base-use-case";
 import { UserRepository } from "../../domain/repository/user-repository";
 
 export class GetAllUsers implements BaseUseCase<void, UserEntity[]> {

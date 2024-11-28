@@ -1,17 +1,18 @@
-import { INTERFACE_TYPE } from "@src/core/constants/constants";
+
 import { AppError } from "@src/core/errors/custom-error";
-import logger from "@src/features/shared/infrastructure/utils/logger/logger";
+import logger from "@src/core/utils/logger/logger";
 import { inject, injectable } from "inversify";
 import { UserRepository } from "../../domain/repository/user-repository";
 import { CreateUserDto, UpdateUserDto, User } from "../dtos/user-dto";
 import { UserUseCase } from "../use-cases/user-use-case";
+import { DI_TYPES } from "@src/core/di/types";
 
 @injectable()
 export class UserInteractor implements UserUseCase {
   private repository: UserRepository;
 
   constructor(
-    @inject(INTERFACE_TYPE.UserRepository) userRepository: UserRepository
+    @inject(DI_TYPES.UserRepository) userRepository: UserRepository
   ) {
     this.repository = userRepository;
   }

@@ -1,7 +1,7 @@
 import {Server} from './server';
 import {config} from '@core/config/config';
 import {AppRoutes} from './routes';
-import {initializeInfrastucture } from './features/shared/infrastructure/utils/inversify-config';
+import { initializeInfrastucture } from './core/di/container';
 
 (()=>{
   main();

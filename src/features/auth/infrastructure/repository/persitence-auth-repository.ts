@@ -1,11 +1,11 @@
 import { PrismaClient } from "@prisma/client";
-import { INTERFACE_TYPE } from "@src/core/constants/constants";
 import { AppError } from "@src/core/errors/custom-error";
 import { SessionDTO } from "@src/features/auth/application/dtos/session-dto";
-import { calculateExpiryDate } from "@src/features/shared/infrastructure/utils/calculate-expiry-date";
-import { uuidToBinary } from "@src/features/shared/infrastructure/utils/utils";
+import { calculateExpiryDate } from "@src/core/utils/calculate-expiry-date";
+import { uuidToBinary } from "@src/core/utils/utils";
 import { inject, injectable } from "inversify";
 import { AuthRepository } from "../../domain/repository/auth-repository";
+import { DI_TYPES } from "@src/core/di/types";
 
 // import { RedisService } from "@src/features/shared/infrastructure/services/redis-service";
 
@@ -15,7 +15,7 @@ export class PersistenceAuthRepository extends AuthRepository {
   private readonly prismaClient: PrismaClient;
   // private readonly redisService: RedisService;
   constructor(
-    @inject(INTERFACE_TYPE.PrismaClient) prismaClient: PrismaClient,
+    @inject(DI_TYPES.PrismaClient) prismaClient: PrismaClient,
    // @inject(RedisService) redisService: RedisService
   ) {
     super();
