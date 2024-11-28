@@ -6,14 +6,14 @@ export class UserEntity {
     public email: string,
     public avatarUrl: string,
     public password: string,
-    public role: 'user'|'admin',
+    public role: 'user' | 'admin',
     public createdAt: Date,
-    public updatedAt: Date
+    public updatedAt: Date,
   ) {}
 
   public static fromJson(data: any): UserEntity {
     //TODO: Add validation
-    
+
     return new UserEntity(
       data.id,
       data.firstName,
@@ -23,10 +23,7 @@ export class UserEntity {
       data.role,
       data.avatarUrl,
       new Date(data.createdAt),
-      new Date(data.updatedAt)
+      new Date(data.updatedAt),
     );
   }
 }
-
-
-

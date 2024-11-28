@@ -1,4 +1,4 @@
-import { parse, stringify } from "uuid";
+import { parse, stringify } from 'uuid';
 
 export function uuidToBinary(uuid: string): Buffer {
   return Buffer.from(parse(uuid));

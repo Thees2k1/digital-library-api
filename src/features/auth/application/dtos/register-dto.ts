@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 export const RegisterBodySchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
@@ -15,5 +15,6 @@ export const RegisterResultSchema = z.object({
   createdAt: z.date(),
 });
 
-export interface RegisterBodyDTO extends z.infer<typeof RegisterBodySchema>{};
-export interface RegisterResultDTO extends z.infer<typeof RegisterResultSchema>{};
+export interface RegisterBodyDTO extends z.infer<typeof RegisterBodySchema> {}
+export interface RegisterResultDTO
+  extends z.infer<typeof RegisterResultSchema> {}

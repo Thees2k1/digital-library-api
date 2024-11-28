@@ -1,4 +1,4 @@
-import { StatusCodes } from "http-status-codes";
+import { StatusCodes } from 'http-status-codes';
 
 interface AppErrorArgs {
   name?: string;
@@ -12,7 +12,7 @@ export class AppError extends Error {
   public readonly statusCode: StatusCodes;
   public readonly isOperational: boolean = true;
   constructor(args: AppErrorArgs) {
-    const { name = "Error", statusCode, message, isOperational } = args;
+    const { name = 'Error', statusCode, message, isOperational } = args;
     super(message);
     Object.setPrototypeOf(this, new.target.prototype);
     this.name = name;

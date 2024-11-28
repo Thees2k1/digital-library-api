@@ -1,6 +1,6 @@
-import { ValidationError } from "@src/core/errors/validation-error";
-import { type NextFunction, type Request, type Response } from "express";
-import { ZodError, ZodSchema } from "zod";
+import { ValidationError } from '@src/core/errors/validation-error';
+import { type NextFunction, type Request, type Response } from 'express';
+import { ZodError, ZodSchema } from 'zod';
 
 export const validationMiddleware = (schema: ZodSchema<any>) => {
   return (req: Request, res: Response, next: NextFunction) => {

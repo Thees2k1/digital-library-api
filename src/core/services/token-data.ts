@@ -1,6 +1,5 @@
 // import { JwtPayload } from 'jsonwebtoken';
 
-
 // interface TokenData extends JwtPayload {
 //     id: string;
 //     email: string;

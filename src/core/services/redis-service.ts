@@ -20,7 +20,7 @@
 //   }
 
 //   async set({key,value,timeType,time}:RedisArguments) {
-   
+
 //     await this.client.connect();
 //     await this.client.set(key,value,{EX:time});
 //     await this.client.disconnect();

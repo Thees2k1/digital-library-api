@@ -1,32 +1,32 @@
 import {
   INVALID_CREDENTIALS,
   REFRESH_TOKEN_EXPIRES_IN,
-} from "@src/core/constants/constants";
-import { AppError } from "@src/core/errors/custom-error";
-import { JwtService } from "@src/core/services/jwt-service";
-import { UserRepository } from "@src/features/user/domain/repository/user-repository";
-import { inject, injectable } from "inversify";
-import { LoginBodyDTO, LoginResultDTO } from "../dtos/login-dto";
-import { RefreshResultDTO } from "../dtos/refresh-token";
+} from '@src/core/constants/constants';
+import { AppError } from '@src/core/errors/custom-error';
+import { JwtService } from '@src/core/services/jwt-service';
+import { UserRepository } from '@src/features/user/domain/repository/user-repository';
+import { inject, injectable } from 'inversify';
+import { LoginBodyDTO, LoginResultDTO } from '../dtos/login-dto';
+import { RefreshResultDTO } from '../dtos/refresh-token';
 import {
   RegisterBodyDTO,
   RegisterResultDTO,
   RegisterResultSchema,
-} from "../dtos/register-dto";
-import { AuthRepository } from "../../domain/repository/auth-repository";
-import { AuthUseCase } from "../use-cases/auth-use-case";
-import argon2 from "argon2";
-import { JwtPayload } from "jsonwebtoken";
-import { CreateUserDto } from "@src/features/user/application/dtos/user-dto";
-import { DI_TYPES } from "@src/core/di/types";
+} from '../dtos/register-dto';
+import { AuthRepository } from '../../domain/repository/auth-repository';
+import { AuthUseCase } from '../use-cases/auth-use-case';
+import argon2 from 'argon2';
+import { JwtPayload } from 'jsonwebtoken';
+import { CreateUserDto } from '@src/features/user/application/dtos/user-dto';
+import { DI_TYPES } from '@src/core/di/types';
 //import { RedisService } from "@src/features/shared/infrastructure/services/redis-service";
 
 @injectable()
 export class AuthInteractor implements AuthUseCase {
   private readonly userRepository: UserRepository;
   private readonly authRepository: AuthRepository;
-  private readonly JwtService : JwtService;
- // private readonly redisService : RedisService;
+  private readonly JwtService: JwtService;
+  // private readonly redisService : RedisService;
   constructor(
     @inject(DI_TYPES.UserRepository) userRepository: UserRepository,
     @inject(DI_TYPES.AuthRepository) authRepository: AuthRepository,
@@ -56,14 +56,14 @@ export class AuthInteractor implements AuthUseCase {
       };
       const accessToken = await this.JwtService.generate(payload, {
         audience: data.userAgent,
-        expiresIn: "15m",
+        expiresIn: '15m',
       });
       const refreshToken = await this.JwtService.generate(payload, {
         audience: data.userAgent,
-        expiresIn: "7d",
+        expiresIn: '7d',
       });
 
-      const sessionIdentity = refreshToken.split(".")[2];
+      const sessionIdentity = refreshToken.split('.')[2];
 
       await this.authRepository.saveSession({
         userId: user.id,
@@ -74,7 +74,7 @@ export class AuthInteractor implements AuthUseCase {
       });
 
       return { accessToken, refreshToken };
-    } catch (error) {;
+    } catch (error) {
       throw error;
     }
   }
@@ -83,18 +83,18 @@ export class AuthInteractor implements AuthUseCase {
     try {
       const existedUser = await this.userRepository.findByEmail(data.email);
       if (existedUser) {
-        throw AppError.unauthorized("Email already exists");
+        throw AppError.unauthorized('Email already exists');
       }
       const hashedPassword = await argon2.hash(data.password);
 
-      const input : CreateUserDto = {
+      const input: CreateUserDto = {
         email: data.email,
         password: hashedPassword,
         firstName: data.firstName,
         lastName: data.lastName,
         avatar: '',
         role: data.role,
-      }
+      };
 
       const user = await this.userRepository.create(input);
 
@@ -110,9 +110,9 @@ export class AuthInteractor implements AuthUseCase {
       if (!res.success) {
         throw AppError.forbidden(res.error);
       }
-      const sessionIdentity = refreshToken.split(".")[2];
+      const sessionIdentity = refreshToken.split('.')[2];
       await this.authRepository.deleteSession(sessionIdentity);
-      return "Logout success";
+      return 'Logout success';
     } catch (error) {
       throw error;
     }
@@ -125,33 +125,33 @@ export class AuthInteractor implements AuthUseCase {
     }
 
     const session = await this.authRepository.verifySession(
-      refreshToken.split(".")[2]
+      refreshToken.split('.')[2],
     );
-    const isSessionInvalid = session === "invalid";
+    const isSessionInvalid = session === 'invalid';
     if (isSessionInvalid) {
-      throw AppError.unauthorized("Invalid session");
+      throw AppError.unauthorized('Invalid session');
     }
 
-    const payload = res.data as JwtPayload |undefined;
+    const payload = res.data as JwtPayload | undefined;
 
     if (!payload) {
-      throw AppError.internalServer("Payload is null");
+      throw AppError.internalServer('Payload is null');
     }
 
     const newPayload: JwtPayload = {
       userId: payload.userId,
-    }
+    };
 
     const newAccessToken = this.JwtService.generate(newPayload, {
-      expiresIn: "15m",
+      expiresIn: '15m',
       audience: payload.aud,
     });
     const newRefreshToken = this.JwtService.generate(newPayload, {
-      expiresIn: "7d",
+      expiresIn: '7d',
       audience: payload.aud,
     });
 
-    const sessionIdentity = newRefreshToken.split(".")[2];
+    const sessionIdentity = newRefreshToken.split('.')[2];
 
     await this.authRepository.saveSession({
       userId: payload.userId,

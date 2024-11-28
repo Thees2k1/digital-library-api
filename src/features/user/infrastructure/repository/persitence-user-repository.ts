@@ -1,14 +1,11 @@
-import { PrismaClient } from "@prisma/client";
-import { AppError } from "@src/core/errors/custom-error";
-import {
-  binaryToUuid,
-  uuidToBinary,
-} from "@src/core/utils/utils";
-import { inject, injectable } from "inversify";
-import { CreateUserDto, UpdateUserDto } from "../../application/dtos/user-dto";
-import { UserEntity } from "../../domain/entities/user";
-import { UserRepository } from "../../domain/repository/user-repository";
-import { DI_TYPES } from "@src/core/di/types";
+import { PrismaClient } from '@prisma/client';
+import { AppError } from '@src/core/errors/custom-error';
+import { binaryToUuid, uuidToBinary } from '@src/core/utils/utils';
+import { inject, injectable } from 'inversify';
+import { CreateUserDto, UpdateUserDto } from '../../application/dtos/user-dto';
+import { UserEntity } from '../../domain/entities/user';
+import { UserRepository } from '../../domain/repository/user-repository';
+import { DI_TYPES } from '@src/core/di/types';
 
 @injectable()
 export class PersistenceUserRepository extends UserRepository {
@@ -50,7 +47,7 @@ export class PersistenceUserRepository extends UserRepository {
       }
 
       if (!res.identity) {
-        throw AppError.internalServer("User identity not found");
+        throw AppError.internalServer('User identity not found');
       }
 
       const transformedId = binaryToUuid(res.id);
@@ -60,11 +57,11 @@ export class PersistenceUserRepository extends UserRepository {
         res.firstName,
         res.lastName,
         res.identity.email,
-        res.avatar ??'' ,
+        res.avatar ?? '',
         res.identity.password,
         res.identity.role,
         res.createdAt,
-        res.updatedAt
+        res.updatedAt,
       );
 
       return data;
@@ -101,7 +98,7 @@ export class PersistenceUserRepository extends UserRepository {
     }
 
     if (!res.identity) {
-      throw AppError.internalServer("User identity not found");
+      throw AppError.internalServer('User identity not found');
     }
 
     const data: UserEntity = new UserEntity(
@@ -109,11 +106,11 @@ export class PersistenceUserRepository extends UserRepository {
       res.firstName,
       res.lastName,
       res.identity.email,
-      res.avatar ??'' ,
+      res.avatar ?? '',
       res.identity.password,
       res.identity.role,
       res.createdAt,
-      res.updatedAt
+      res.updatedAt,
     );
 
     return data;
@@ -124,8 +121,8 @@ export class PersistenceUserRepository extends UserRepository {
       // Create the User first
       const userInfo = {
         firstName: data.firstName,
-        lastName: data.lastName || "",
-        avatar: data.avatar || "",
+        lastName: data.lastName || '',
+        avatar: data.avatar || '',
       };
       const user = await prisma.user.create({
         data: userInfo,
@@ -154,11 +151,11 @@ export class PersistenceUserRepository extends UserRepository {
       newUser.user.firstName,
       newUser.user.lastName,
       newUser.userIdentity.email,
-      newUser.user.avatar ??'' ,
+      newUser.user.avatar ?? '',
       newUser.userIdentity.password,
       newUser.userIdentity.role,
       newUser.user.createdAt,
-      newUser.user.updatedAt
+      newUser.user.updatedAt,
     );
     return res;
   }
@@ -189,7 +186,7 @@ export class PersistenceUserRepository extends UserRepository {
 
       const users: UserEntity[] = res.map((user) => {
         if (!user.identity) {
-          throw AppError.internalServer("User identity not found");
+          throw AppError.internalServer('User identity not found');
         }
 
         return new UserEntity(
@@ -197,11 +194,11 @@ export class PersistenceUserRepository extends UserRepository {
           user.firstName,
           user.lastName,
           user.identity.email,
-          user.avatar ?? "",
+          user.avatar ?? '',
           user.identity.password,
           user.identity.role,
           user.createdAt,
-          user.updatedAt
+          user.updatedAt,
         );
       });
 
@@ -211,7 +208,7 @@ export class PersistenceUserRepository extends UserRepository {
     }
   }
 
-  async update(id:string,data: UserEntity): Promise<string> {
+  async update(id: string, data: UserEntity): Promise<string> {
     try {
       const updatedUser = await this.prismaClient.$transaction(
         async (prisma) => {
@@ -221,8 +218,8 @@ export class PersistenceUserRepository extends UserRepository {
             where: { id: transformedId },
             data: {
               firstName: data.firstName,
-              lastName: data.lastName??'',
-              avatar: data.avatarUrl??'',
+              lastName: data.lastName ?? '',
+              avatar: data.avatarUrl ?? '',
             },
           });
 
@@ -240,7 +237,7 @@ export class PersistenceUserRepository extends UserRepository {
             user,
             userIdentity,
           };
-        }
+        },
       );
 
       return binaryToUuid(updatedUser.user.id);
@@ -266,7 +263,7 @@ export class PersistenceUserRepository extends UserRepository {
           });
 
           return user; // Return the deleted user information if needed
-        }
+        },
       );
 
       return binaryToUuid(deletedUser.id);

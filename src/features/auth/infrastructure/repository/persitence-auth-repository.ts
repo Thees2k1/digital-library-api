@@ -1,14 +1,13 @@
-import { PrismaClient } from "@prisma/client";
-import { AppError } from "@src/core/errors/custom-error";
-import { SessionDTO } from "@src/features/auth/application/dtos/session-dto";
-import { calculateExpiryDate } from "@src/core/utils/calculate-expiry-date";
-import { uuidToBinary } from "@src/core/utils/utils";
-import { inject, injectable } from "inversify";
-import { AuthRepository } from "../../domain/repository/auth-repository";
-import { DI_TYPES } from "@src/core/di/types";
+import { PrismaClient } from '@prisma/client';
+import { AppError } from '@src/core/errors/custom-error';
+import { SessionDTO } from '@src/features/auth/application/dtos/session-dto';
+import { calculateExpiryDate } from '@src/core/utils/calculate-expiry-date';
+import { uuidToBinary } from '@src/core/utils/utils';
+import { inject, injectable } from 'inversify';
+import { AuthRepository } from '../../domain/repository/auth-repository';
+import { DI_TYPES } from '@src/core/di/types';
 
 // import { RedisService } from "@src/features/shared/infrastructure/services/redis-service";
-
 
 @injectable()
 export class PersistenceAuthRepository extends AuthRepository {
@@ -16,12 +15,11 @@ export class PersistenceAuthRepository extends AuthRepository {
   // private readonly redisService: RedisService;
   constructor(
     @inject(DI_TYPES.PrismaClient) prismaClient: PrismaClient,
-   // @inject(RedisService) redisService: RedisService
+    // @inject(RedisService) redisService: RedisService
   ) {
     super();
     this.prismaClient = prismaClient;
     //this.redisService = redisService;
-
   }
 
   async saveSession(session: SessionDTO): Promise<string> {
@@ -60,7 +58,7 @@ export class PersistenceAuthRepository extends AuthRepository {
       return session.sessionIdentity;
     } catch (e) {
       if (e instanceof Error) {
-        throw AppError.internalServer("Error saving session, err:" + e.message);
+        throw AppError.internalServer('Error saving session, err:' + e.message);
       }
       throw e;
     }
@@ -75,16 +73,16 @@ export class PersistenceAuthRepository extends AuthRepository {
       });
 
       // await this.redisClient!.del(`refreshToken:${sessionIdentity}`);
-      return "delete success";
+      return 'delete success';
     } catch (e) {
       if (e instanceof Error) {
-        throw AppError.internalServer("Error delete session, err:" + e.message);
+        throw AppError.internalServer('Error delete session, err:' + e.message);
       }
       throw e;
     }
   }
 
-  async verifySession(sessionIdentity: string): Promise<"valid"|"invalid"> {
+  async verifySession(sessionIdentity: string): Promise<'valid' | 'invalid'> {
     try {
       const session = await this.prismaClient.userSession.findUnique({
         where: {
@@ -93,7 +91,7 @@ export class PersistenceAuthRepository extends AuthRepository {
       });
 
       if (!session) {
-        return "invalid";
+        return 'invalid';
       }
 
       if (new Date() > session.expiresAt) {
@@ -102,22 +100,22 @@ export class PersistenceAuthRepository extends AuthRepository {
             signature: sessionIdentity,
           },
         });
-        return "invalid";
+        return 'invalid';
       }
 
-      return "valid";
+      return 'valid';
     } catch (e) {
       if (e instanceof Error) {
-        throw AppError.internalServer("Error verify session, err:" + e.message);
+        throw AppError.internalServer('Error verify session, err:' + e.message);
       }
       throw e;
     }
   }
 
   findSessionByIdentity(sessionIdentity: string): Promise<string> {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
   findSessionByUserId(userId: string): Promise<string> {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
 }

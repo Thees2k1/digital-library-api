@@ -1,6 +1,6 @@
 // infrastructure/services/RabbitMQBroker.ts
-import { IMessageBroker } from "../interfaces/imessage-broker";
-import amqp from "amqplib";
+import { IMessageBroker } from '../interfaces/imessage-broker';
+import amqp from 'amqplib';
 
 export class RabbitMQBroker implements IMessageBroker {
   private connection!: amqp.Connection;
@@ -22,7 +22,7 @@ export class RabbitMQBroker implements IMessageBroker {
 
   subscribe(topic: string, callback: (message: any) => void): void {
     this.channel.assertQueue(topic).then(() => {
-      this.channel.consume(topic, (msg:any) => {
+      this.channel.consume(topic, (msg: any) => {
         if (msg) {
           const content = JSON.parse(msg.content.toString());
           callback(content);

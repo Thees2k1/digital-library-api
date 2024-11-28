@@ -1,21 +1,21 @@
 {
   "compilerOptions": {
-    "target": "es2016",  // specify the ECMAScript target version
-    "module": "CommonJS",  // use ES module syntax
-    "moduleResolution": "node",  // resolve modules like Node.js does
-    "esModuleInterop": true,  // allow default imports from non-ES modules
-    "skipLibCheck": true,  // skip type checking of declaration files
-    "strict": true,  // enable all strict type-checking options
-    "baseUrl": ".",  // set base directory for relative paths
+    "target": "es2016", // specify the ECMAScript target version
+    "module": "CommonJS", // use ES module syntax
+    "moduleResolution": "node", // resolve modules like Node.js does
+    "esModuleInterop": true, // allow default imports from non-ES modules
+    "skipLibCheck": true, // skip type checking of declaration files
+    "strict": true, // enable all strict type-checking options
+    "baseUrl": ".", // set base directory for relative paths
     "paths": {
-      "@src/*": ["src/*"] , // set up path aliases (example for @src)
+      "@src/*": ["src/*"], // set up path aliases (example for @src)
       "@core/*": ["src/core/*"]
     },
-    "experimentalDecorators": true,  // enable experimental support for ES decorators
-    "declaration": true,  // generate .d.ts files
-    "outDir": "./dist",  // specify the output directory for compiled files
-    "sourceMap": true  // generate source maps
+    "experimentalDecorators": true, // enable experimental support for ES decorators
+    "declaration": true, // generate .d.ts files
+    "outDir": "./dist", // specify the output directory for compiled files
+    "sourceMap": true // generate source maps
   },
-  "include": ["src/**/*"],  // include all files under src/
-  "exclude": ["node_modules", "dist"]  // exclude node_modules and dist folder from compilation
+  "include": ["src/**/*"], // include all files under src/
+  "exclude": ["node_modules", "dist"] // exclude node_modules and dist folder from compilation
 }
