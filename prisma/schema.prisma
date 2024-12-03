@@ -11,9 +11,14 @@ datasource db {
 model Author {
   id    Bytes   @id @default(dbgenerated("(UUID_TO_BIN(UUID()))")) @db.Binary(16)
   name  String  @db.VarChar(100)
+  avatar String? @db.VarChar(255)
   bio   String? @db.Text
+  birthDate DateTime @map("birth_date") @db.Date
+  deathDate DateTime? @map("death_date") @db.Date
+  country String? @db.VarChar(100)
   books Book[]
-
+  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime    @default(now()) @map("updated_at") @db.Timestamp(0)
   @@index([name], name: "name")
   @@map("author")
 }
@@ -39,29 +44,79 @@ model Book {
   title        String            @db.VarChar(255)
   authorId     Bytes             @db.Binary(16) @map("author_id")
   author       Author            @relation(fields: [authorId], references: [id])
-  categoryId   Bytes             @db.Binary(16) @map("category_id")
-  category     Category          @relation(fields: [categoryId], references: [id])
   cover        String            @db.VarChar(255)
-  publisher    String?           @db.VarChar(255)
+  publisherId  Bytes?            @db.Binary(16) @map("publisher_id")
+  publisher    Publisher?        @relation(fields: [publisherId], references: [id])
   description  String?           @db.Text
   digitalItems BookDigitalItem[]
   pages        Int
   language     String            @db.VarChar(100)
+  categoryId   Bytes             @db.Binary(16) @map("category_id")
+  category     Category          @relation(fields: [categoryId], references: [id])   
+  genres       BookGenre[]
   createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamp(0)
-  updateAt     DateTime          @default(now()) @map("updated_at") @db.Timestamp(0)
+  updatedAt     DateTime          @default(now()) @map("updated_at") @db.Timestamp(0)
   likes        Like[]
   reviews      Review[]
   readBooks    UserReadBook[]
-
+  serieId      Bytes?            @db.Binary(16) @map("serie_id")
+  serie        Serie?            @relation(fields: [serieId], references: [id])
   @@map("book")
+}
+
+model Publisher {
+  id    Bytes  @id @default(dbgenerated("(UUID_TO_BIN(UUID()))")) @db.Binary(16)
+  name  String @db.VarChar(128)
+  cover String? @db.VarChar(255)
+  contactInfo String? @db.VarChar(255) @map("contact_info")
+  address String? @db.Text
+  books Book[]
+  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt     DateTime          @default(now()) @map("updated_at") @db.Timestamp(0)
+
+  @@map("publisher")
+}
+model Serie {
+  id    Bytes  @id @default(dbgenerated("(UUID_TO_BIN(UUID()))")) @db.Binary(16)
+  name  String @db.VarChar(128)
+  cover String? @db.VarChar(255)
+  description String? @db.Text
+  books Book[]
+  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt     DateTime          @default(now()) @map("updated_at") @db.Timestamp(0)
+
+  @@map("serie")
 }
 
 model Category {
   id    Bytes  @id @default(dbgenerated("(UUID_TO_BIN(UUID()))")) @db.Binary(16)
   name  String @db.VarChar(128)
-  books Book[]
-
+  cover String? @db.VarChar(255)
+  description String? @db.Text
+ books Book[]
+ createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt     DateTime          @default(now()) @map("updated_at") @db.Timestamp(0)
   @@map("category")
+}
+
+model Genre {
+  id    Bytes  @id @default(dbgenerated("(UUID_TO_BIN(UUID()))")) @db.Binary(16)
+  name  String @db.VarChar(128)
+  description String? @db.Text
+  books BookGenre[]
+  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt     DateTime          @default(now()) @map("updated_at") @db.Timestamp(0)
+  @@map("genre")
+}
+
+model BookGenre {
+  bookId     Bytes    @db.Binary(16) @map("book_id")
+  book       Book     @relation(fields: [bookId], references: [id])
+  genreId Bytes    @db.Binary(16) @map("genre_id")
+  genre   Genre @relation(fields: [genreId], references: [id])
+
+  @@id([bookId, genreId])
+  @@map("book_genre")
 }
 
 model User {
@@ -130,7 +185,7 @@ model Like {
   userId    Bytes    @db.Binary(16) @map("user_id")
   bookId    Bytes    @db.Binary(16) @map("book_id")
 
-  @@unique([userId, bookId]) // Đảm bảo mỗi người dùng chỉ có thể thích một cuốn sách một lần
+  @@unique([userId, bookId]) 
   @@map("likes")
 }
 

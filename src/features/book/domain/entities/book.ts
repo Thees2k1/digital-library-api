@@ -1,4 +1,4 @@
-class BookEntity {
+export class BookEntity {
   constructor(
     public readonly id: number,
     public readonly title: string,
@@ -7,12 +7,11 @@ class BookEntity {
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
     public readonly author: string,
-    public readonly categories: CategoryEntity[],
+    public readonly categories: Array<Category>,
     public readonly reviews: ReviewEntity[],
     public readonly digitalItems: BookDigitalItemEntity[],
   ) {}
 
-  // `copyWith` method to create a new instance with updated properties
   copyWith(updates: Partial<BookEntity>): BookEntity {
     return new BookEntity(
       updates.id ?? this.id,
@@ -45,4 +44,10 @@ class BookDigitalItemEntity {
       updates.url ?? this.url,
     );
   }
+}
+
+interface Category {
+  id: string;
+  name: string;
+  cover: string;
 }

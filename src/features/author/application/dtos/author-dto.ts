@@ -2,8 +2,21 @@ import { z } from 'zod';
 
 export const AuthorCreateSchema = z.object({
   name: z.string().min(1).max(255),
-  birthdate: z.date(),
-  bio: z.string().min(1).max(255),
+  avatar: z.string().optional(),
+  birthDate: z.preprocess((arg) => {
+    if (typeof arg === 'string' || arg instanceof Date) {
+      return new Date(arg);
+    }
+    return arg;
+  }, z.date()),
+  deathDate: z.preprocess((arg) => {
+    if (typeof arg === 'string' || arg instanceof Date) {
+      return arg ? new Date(arg) : null;
+    }
+    return arg;
+  }, z.date().nullable().optional()),
+  country: z.string().min(1).max(255).optional(),
+  bio: z.string().optional(),
 });
 
 export const AuthorCreateResultSchema = AuthorCreateSchema.extend({
@@ -31,10 +44,13 @@ export type AuthorDeleteResultDto = AuthorIdResultDto;
 export interface AuthorDetailDto {
   id: string;
   name: string;
-  birthdate: Date;
+  avatar: string | null;
+  country: string;
+  birthDate: Date;
+  deathDate: Date | null;
   age: number;
   bio: string;
   bookCount: number;
 }
 
-export type AuthorList = AuthorDetailDto[];
+export type AuthorList = Array<AuthorDetailDto>;

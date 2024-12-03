@@ -112,6 +112,7 @@ export class UserInteractor implements UserUseCase {
         updateData.role === 'user' || updateData.role === 'admin'
           ? updateData.role
           : user.role;
+      user.updatedAt = new Date();
 
       const res = await this.repository.update(id, user);
       return res;

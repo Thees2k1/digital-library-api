@@ -1,32 +1,32 @@
 import { DI_TYPES } from '@src/core/di/types';
 import { inject, injectable } from 'inversify';
-import { ICategoryService } from '../../application/use-cases/interfaces/category-service-interface';
 import { Request, Response, NextFunction } from 'express';
-import {
-  CategoryCreateDto,
-  CategoryUpdateDto,
-  idSchema,
-} from '../../application/dto/category-dtos';
 import { AppError } from '@src/core/errors/custom-error';
 import { ZodError } from 'zod';
 import { ValidationError } from '@src/core/errors/validation-error';
+import { IPublisherService } from '../../application/use-cases/interfaces/publisher-service-interface';
+import {
+  PublisherCreateDto,
+  PublisherUpdateDto,
+} from '../../application/dto/publisher-dtos';
+import { idSchema } from '@src/core/types';
 
 @injectable()
-export class CategoryController {
-  private readonly service: ICategoryService;
-  constructor(@inject(DI_TYPES.CategoryService) service: ICategoryService) {
+export class PublisherController {
+  private readonly service: IPublisherService;
+  constructor(@inject(DI_TYPES.PublisherService) service: IPublisherService) {
     this.service = service;
   }
 
-  async createCategory(
-    req: Request<any, any, CategoryCreateDto>,
+  async createPublisher(
+    req: Request<any, any, PublisherCreateDto>,
     res: Response,
     next: NextFunction,
   ) {
     try {
       const data = req.body;
       const result = await this.service.create(data);
-      res.json({ message: 'Category created successfully', data: result });
+      res.json({ message: 'Publisher created successfully', data: result });
     } catch (error) {
       next(error);
     }
@@ -35,20 +35,20 @@ export class CategoryController {
   async getCategories(req: Request, res: Response, next: NextFunction) {
     try {
       const result = await this.service.getList();
-      res.json({ data: result, message: 'Categories fetched successfully' });
+      res.json({ data: result, message: 'Publishers fetched successfully' });
     } catch (error) {
       next(error);
     }
   }
 
-  async getCategory(req: Request, res: Response, next: NextFunction) {
+  async getPublisher(req: Request, res: Response, next: NextFunction) {
     try {
       const id = idSchema.parse(req.params.id);
       const result = await this.service.getById(id);
       if (!result) {
-        throw AppError.notFound('Category not found');
+        throw AppError.notFound('Publisher not found');
       }
-      res.json({ data: result, message: 'Category fetched successfully' });
+      res.json({ data: result, message: 'Publisher fetched successfully' });
     } catch (error) {
       if (error instanceof ZodError) {
         const validationErrors = error.issues.map((issue) => {
@@ -64,8 +64,8 @@ export class CategoryController {
     }
   }
 
-  async updateCategory(
-    req: Request<any, any, CategoryUpdateDto>,
+  async updatePublisher(
+    req: Request<any, any, PublisherUpdateDto>,
     res: Response,
     next: NextFunction,
   ) {
@@ -73,7 +73,7 @@ export class CategoryController {
       const id = idSchema.parse(req.params.id);
       const data = req.body;
       await this.service.update(id, data);
-      res.json({ message: 'Category updated successfully' });
+      res.json({ message: 'Publisher updated successfully' });
     } catch (error) {
       if (error instanceof ZodError) {
         const validationErrors = error.issues.map((issue) => {
@@ -89,11 +89,11 @@ export class CategoryController {
     }
   }
 
-  async deleteCategory(req: Request, res: Response, next: NextFunction) {
+  async deletePublisher(req: Request, res: Response, next: NextFunction) {
     try {
       const id = idSchema.parse(req.params.id);
       await this.service.delete(id);
-      res.json({ message: 'Category deleted successfully' });
+      res.json({ message: 'Publisher deleted successfully' });
     } catch (error) {
       if (error instanceof ZodError) {
         const validationErrors = error.issues.map((issue) => {
