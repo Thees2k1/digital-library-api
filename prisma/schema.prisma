@@ -47,6 +47,7 @@ model Book {
   cover        String            @db.VarChar(255)
   publisherId  Bytes?            @db.Binary(16) @map("publisher_id")
   publisher    Publisher?        @relation(fields: [publisherId], references: [id])
+  releaseDate  DateTime          @map("release_date") @db.Date
   description  String?           @db.Text
   digitalItems BookDigitalItem[]
   pages        Int
@@ -54,6 +55,7 @@ model Book {
   categoryId   Bytes             @db.Binary(16) @map("category_id")
   category     Category          @relation(fields: [categoryId], references: [id])   
   genres       BookGenre[]
+  status       BookStatus        @default(draft)
   createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt     DateTime          @default(now()) @map("updated_at") @db.Timestamp(0)
   likes        Like[]
@@ -82,6 +84,8 @@ model Serie {
   cover String? @db.VarChar(255)
   description String? @db.Text
   books Book[]
+  status SerieStatus @default(planned)
+  releaseDate DateTime @map("release_date") @db.Date
   createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt     DateTime          @default(now()) @map("updated_at") @db.Timestamp(0)
 
@@ -217,4 +221,19 @@ enum user_role {
 enum LikeStatus {
   liked
   unlike
+}
+
+enum BookStatus {
+  published
+  draft
+  archived
+  deleted
+}
+
+enum SerieStatus {
+  planned
+  ongoing
+  completed
+  archived
+  deleted
 }

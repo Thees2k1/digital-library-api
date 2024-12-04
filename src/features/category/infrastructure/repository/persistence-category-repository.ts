@@ -1,10 +1,9 @@
-import { inject, injectable } from 'inversify';
-import { CategoryRepository } from '../../domain/repository/category-repository';
-import { DI_TYPES } from '@src/core/di/types';
 import { Category, PrismaClient } from '@prisma/client';
-import { CategoryEntity } from '../../domain/entities/category';
+import { DI_TYPES } from '@src/core/di/types';
 import { binaryToUuid, uuidToBinary } from '@src/core/utils/utils';
-import logger from '@src/core/utils/logger/logger';
+import { inject, injectable } from 'inversify';
+import { CategoryEntity } from '../../domain/entities/category';
+import { CategoryRepository } from '../../domain/repository/category-repository';
 
 @injectable()
 export class PersistenceCategoryRepository extends CategoryRepository {
@@ -64,15 +63,17 @@ export class PersistenceCategoryRepository extends CategoryRepository {
       data.name,
       data.cover ?? '',
       data.description ?? '',
-      undefined,
-      undefined,
+      data.createdAt,
+      data.updatedAt,
     );
   }
   static convertToDbModel(data: Partial<CategoryEntity>) {
     const required = {
       name: data.name ?? '',
-      cover: data.cover ?? null,
+      cover: data.cover,
       description: data.description ?? null,
+      updatedAt: data.updatedAt,
+      createdAt: data.createdAt,
     };
     if (data.id) {
       return { ...required, id: uuidToBinary(data.id) };

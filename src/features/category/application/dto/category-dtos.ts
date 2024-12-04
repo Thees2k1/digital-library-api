@@ -4,8 +4,8 @@ export const idSchema = z.string().uuid();
 
 export const categoryCreateSchema = z.object({
   name: z.string(),
-  cover: z.string().optional(),
-  description: z.string().optional(),
+  cover: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
 });
 
 export const categoryUpdateSchema = categoryCreateSchema.partial();

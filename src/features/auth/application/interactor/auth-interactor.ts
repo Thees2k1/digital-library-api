@@ -19,6 +19,7 @@ import argon2 from 'argon2';
 import { JwtPayload } from 'jsonwebtoken';
 import { CreateUserDto } from '@src/features/user/application/dtos/user-dto';
 import { DI_TYPES } from '@src/core/di/types';
+import logger from '@src/core/utils/logger/logger';
 //import { RedisService } from "@src/features/shared/infrastructure/services/redis-service";
 
 @injectable()

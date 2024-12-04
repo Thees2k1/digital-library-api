@@ -5,6 +5,7 @@ import { UserRepository } from '../../domain/repository/user-repository';
 import { CreateUserDto, UpdateUserDto, User } from '../dtos/user-dto';
 import { UserUseCase } from '../use-cases/user-use-case';
 import { DI_TYPES } from '@src/core/di/types';
+import argon2 from 'argon2';
 
 @injectable()
 export class UserInteractor implements UserUseCase {
@@ -23,6 +24,7 @@ export class UserInteractor implements UserUseCase {
         lastName: user.lastName || '',
         avatarUrl: user.avatarUrl,
       }));
+
       return users;
     } catch (error) {
       if (error instanceof Error) {
@@ -31,13 +33,23 @@ export class UserInteractor implements UserUseCase {
       throw error;
     }
   }
-  async createUser(user: CreateUserDto): Promise<User | null> {
+  async createUser(data: CreateUserDto): Promise<User | null> {
     try {
-      const userExist = await this.repository.findByEmail(user.email);
+      const userExist = await this.repository.findByEmail(data.email);
       if (userExist) {
         throw AppError.forbidden('User already exist');
       }
-      const userData = await this.repository.create(user);
+      const hashedPassword = await argon2.hash(data.password);
+      const input: CreateUserDto = {
+        email: data.email,
+        password: hashedPassword,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        avatar: data.avatar,
+        role: data.role,
+      };
+
+      const userData = await this.repository.create(input);
       const userCreated: User = {
         id: userData.id,
         email: userData.email,
@@ -47,9 +59,7 @@ export class UserInteractor implements UserUseCase {
       };
       return userCreated;
     } catch (error) {
-      if (error instanceof Error) {
-        throw AppError.internalServer(error.message);
-      }
+      logger.error(`Error: ${error}`);
       throw error;
     }
   }

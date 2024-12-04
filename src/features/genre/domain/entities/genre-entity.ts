@@ -1,7 +1,6 @@
-export class CategoryEntity {
+export class GenreEntity {
   id: string;
   name: string;
-  cover: string;
   description: string;
   createdAt: Date | undefined;
   updatedAt: Date | undefined;
@@ -9,14 +8,12 @@ export class CategoryEntity {
   constructor(
     id: string,
     name: string,
-    cover: string,
     description: string,
     createdAt: Date | undefined,
     updatedAt: Date | undefined,
   ) {
     this.id = id;
     this.name = name;
-    this.cover = cover;
     this.description = description;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
