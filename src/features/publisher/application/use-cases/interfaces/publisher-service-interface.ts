@@ -1,12 +1,13 @@
-import { Interactor } from '@src/core/interfaces/base-interactor';
+import { BaseUseCase } from '@src/core/interfaces/base-use-case';
+import { Id } from '@src/core/types';
 import {
   PublisherCreateDto,
   PublisherDetailDto,
   PublisherUpdateDto,
 } from '../../dto/publisher-dtos';
-import { Id } from '@src/core/types';
 
-export interface IPublisherService extends Interactor<PublisherDetailDto, Id> {
+export interface IPublisherService
+  extends BaseUseCase<any, PublisherDetailDto, Id> {
   create(data: PublisherCreateDto): Promise<PublisherDetailDto>;
   update(id: Id, data: PublisherUpdateDto): Promise<string>;
 }

@@ -81,11 +81,7 @@ export class AuthController {
         access_token: verifiedResult.accessToken,
       });
     } catch (error) {
-      if (error instanceof Error) {
-        next(AppError.badRequest(error.message));
-      } else {
-        next(error);
-      }
+      next(error);
     }
   }
 

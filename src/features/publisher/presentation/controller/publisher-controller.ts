@@ -34,7 +34,8 @@ export class PublisherController {
 
   async getCategories(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await this.service.getList();
+      const query = req.query;
+      const result = await this.service.getList(query);
       res.json({ data: result, message: 'Publishers fetched successfully' });
     } catch (error) {
       next(error);

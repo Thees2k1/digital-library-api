@@ -35,7 +35,8 @@ export class SerieController {
 
   async getSeries(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await this.service.getList();
+      const query = req.query;
+      const result = await this.service.getList(query);
       res.json({ data: result, message: 'Series fetched successfully' });
     } catch (error) {
       next(error);

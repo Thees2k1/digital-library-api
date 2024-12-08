@@ -5,15 +5,20 @@ import { AuthUseCase } from '@src/features/auth/application/use-cases/auth-use-c
 import { AuthRepository } from '@src/features/auth/domain/repository/auth-repository';
 import { PersistenceAuthRepository } from '@src/features/auth/infrastructure/repository/persitence-auth-repository';
 import { AuthController } from '@src/features/auth/presentation/controller/auth-controller';
-import { AuthorInteractor } from '@src/features/author/application/interactor/author-interactor';
-import { IAuthorInteractor } from '@src/features/author/application/interactor/interfaces/interactor';
+import { AuthorService } from '@src/features/author/application/interactor/author-service';
+import { IAuthorService } from '@src/features/author/application/interactor/interfaces/interactor';
 import { AuthorRepository } from '@src/features/author/domain/repository/author-repository';
 import { PersistenceAuthorRepository } from '@src/features/author/infrastructure/repository/persistence-author-repository';
 import { AuthorController } from '@src/features/author/presentation/controller/author-controller';
+import { IBookService } from '@src/features/book/application/use-cases/interfaces/book-service-interface';
+import { BookRepository } from '@src/features/book/domain/repository/book-repository';
+import { PersistenceBookRepository } from '@src/features/book/infrastructure/repository/persitence-book-repository';
+import { BookController } from '@src/features/book/presentation/controller/book-controller';
 import { CategoryService } from '@src/features/category/application/use-cases/category-service';
 import { ICategoryService } from '@src/features/category/application/use-cases/interfaces/category-service-interface';
 import { CategoryRepository } from '@src/features/category/domain/repository/category-repository';
 import { PersistenceCategoryRepository } from '@src/features/category/infrastructure/repository/persistence-category-repository';
+import { CategoryController } from '@src/features/category/presentation/controller/category-controller';
 import { GenreService } from '@src/features/genre/application/use-cases/genre-service';
 import { IGenreService } from '@src/features/genre/application/use-cases/interfaces/genre-service-interface';
 import { GenreRepository } from '@src/features/genre/domain/repository/genre-repository';
@@ -24,6 +29,11 @@ import { PublisherService } from '@src/features/publisher/application/use-cases/
 import { PublisherRepository } from '@src/features/publisher/domain/repository/publisher-repository';
 import { PersistencePublisherRepository } from '@src/features/publisher/infrastructure/repository/persistence-publisher-repository';
 import { PublisherController } from '@src/features/publisher/presentation/controller/publisher-controller';
+import { ISerieService } from '@src/features/serie/application/use-cases/interfaces/serie-service-interface';
+import { SerieService } from '@src/features/serie/application/use-cases/serie-service';
+import { SerieRepository } from '@src/features/serie/domain/repository/serie-repository';
+import { PersistenceSerieRepository } from '@src/features/serie/infrastructure/repository/persistence-serie-repository';
+import { SerieController } from '@src/features/serie/presentation/controller/serie-controller';
 import { UserInteractor } from '@src/features/user/application/interactor/user-interactor';
 import { UserUseCase } from '@src/features/user/application/use-cases/user-use-case';
 import { UserRepository } from '@src/features/user/domain/repository/user-repository';
@@ -31,12 +41,7 @@ import { PersistenceUserRepository } from '@src/features/user/infrastructure/rep
 import { UserController } from '@src/features/user/presentation/controller/user-controller';
 import { Container } from 'inversify';
 import { DI_TYPES } from './types';
-import { CategoryController } from '@src/features/category/presentation/controller/category-controller';
-import { SerieRepository } from '@src/features/serie/domain/repository/serie-repository';
-import { PersistenceSerieRepository } from '@src/features/serie/infrastructure/repository/persistence-serie-repository';
-import { ISerieService } from '@src/features/serie/application/use-cases/interfaces/serie-service-interface';
-import { SerieService } from '@src/features/serie/application/use-cases/serie-service';
-import { SerieController } from '@src/features/serie/presentation/controller/serie-controller';
+import { BookService } from '@src/features/book/application/use-cases/book-service';
 
 // import { RedisService } from "../services/redis-service";
 
@@ -72,13 +77,15 @@ export function initializeInfrastucture() {
   container
     .bind<SerieRepository>(DI_TYPES.SerieRepository)
     .to(PersistenceSerieRepository);
+  container
+    .bind<BookRepository>(DI_TYPES.BookRepository)
+    .to(PersistenceBookRepository);
 
-  //binding use cases
+  //binding services
+  //TODO: modify userr sẻrvice
   container.bind<UserUseCase>(DI_TYPES.UserInteractor).to(UserInteractor);
   container.bind<AuthUseCase>(DI_TYPES.AuthUseCase).to(AuthInteractor);
-  container
-    .bind<IAuthorInteractor>(DI_TYPES.AuthorInteractor)
-    .to(AuthorInteractor);
+  container.bind<IAuthorService>(DI_TYPES.AuthorService).to(AuthorService);
   container
     .bind<ICategoryService>(DI_TYPES.CategoryService)
     .to(CategoryService);
@@ -87,6 +94,7 @@ export function initializeInfrastucture() {
     .to(PublisherService);
   container.bind<IGenreService>(DI_TYPES.GenreService).to(GenreService);
   container.bind<ISerieService>(DI_TYPES.SerieService).to(SerieService);
+  container.bind<IBookService>(DI_TYPES.BookService).to(BookService);
 
   //binding controllers
   container.bind<UserController>(DI_TYPES.UserController).to(UserController);
@@ -102,4 +110,5 @@ export function initializeInfrastucture() {
     .to(PublisherController);
   container.bind<GenreController>(DI_TYPES.GenreController).to(GenreController);
   container.bind<SerieController>(DI_TYPES.SerieController).to(SerieController);
+  container.bind<BookController>(DI_TYPES.BookController).to(BookController);
 }

@@ -1,12 +1,12 @@
-import { Interactor } from '@src/core/interfaces/base-interactor';
+import { BaseUseCase } from '@src/core/interfaces/base-use-case';
+import { Id } from '@src/core/types';
 import {
   GenreCreateDto,
   GenreDetailDto,
   GenreUpdateDto,
 } from '../../dto/genre-dtos';
-import { Id } from '@src/core/types';
 
-export interface IGenreService extends Interactor<GenreDetailDto, Id> {
+export interface IGenreService extends BaseUseCase<any, GenreDetailDto, Id> {
   create(data: GenreCreateDto): Promise<GenreDetailDto>;
   update(id: Id, data: GenreUpdateDto): Promise<string>;
 }

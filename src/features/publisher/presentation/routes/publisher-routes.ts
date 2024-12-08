@@ -16,19 +16,25 @@ export class PublisherRouter {
     const controller = container.get<PublisherController>(
       DI_TYPES.PublisherController,
     );
-    router.get(path, authMiddleware, controller.getCategories.bind(controller));
+    router.get(path, controller.getCategories.bind(controller));
     router.get(`${path}/:id`, controller.getPublisher.bind(controller));
     router.post(
       path,
+      authMiddleware,
       validationMiddleware(publisherCreateSchema),
       controller.createPublisher.bind(controller),
     );
     router.patch(
       `${path}/:id`,
+      authMiddleware,
       validationMiddleware(publisherUpdateSchema),
       controller.updatePublisher.bind(controller),
     );
-    router.delete(`${path}/:id`, controller.deletePublisher.bind(controller));
+    router.delete(
+      `${path}/:id`,
+      authMiddleware,
+      controller.deletePublisher.bind(controller),
+    );
     return router;
   }
 }

@@ -1,5 +1,4 @@
-import { Interactor } from '@src/core/interfaces/base-interactor';
-
+import { BaseUseCase } from '@src/core/interfaces/base-use-case';
 import { Id } from '@src/core/types';
 import {
   SerieCreateDto,
@@ -7,7 +6,7 @@ import {
   SerieUpdateDto,
 } from '../../dto/serie-dtos';
 
-export interface ISerieService extends Interactor<SerieDetailDto, Id> {
+export interface ISerieService extends BaseUseCase<any, SerieDetailDto, Id> {
   create(data: SerieCreateDto): Promise<SerieDetailDto>;
   update(id: Id, data: SerieUpdateDto): Promise<string>;
 }

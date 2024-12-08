@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import { inject, injectable } from 'inversify';
-import { IAuthorInteractor } from '../../application/interactor/interfaces/interactor';
 import { DI_TYPES } from '@src/core/di/types';
 import {
   AuthorCreateDto,
@@ -9,14 +8,13 @@ import {
 } from '../../application/dtos/author-dto';
 import { ZodError } from 'zod';
 import { AppError } from '@src/core/errors/custom-error';
+import { IAuthorService } from '../../application/interactor/interfaces/interactor';
 
 @injectable()
 export class AuthorController {
-  private readonly interactor: IAuthorInteractor;
-  constructor(
-    @inject(DI_TYPES.AuthorInteractor) interactor: IAuthorInteractor,
-  ) {
-    this.interactor = interactor;
+  private readonly service: IAuthorService;
+  constructor(@inject(DI_TYPES.AuthorService) service: IAuthorService) {
+    this.service = service;
   }
 
   async createAuthor(
@@ -26,7 +24,7 @@ export class AuthorController {
   ) {
     try {
       const data = req.body;
-      const result = await this.interactor.create(data);
+      const result = await this.service.create(data);
       res.json({ message: 'Author created successfully', data: result });
     } catch (error) {
       next(error);
@@ -35,7 +33,7 @@ export class AuthorController {
 
   async getAuthors(req: Request, res: Response, next: NextFunction) {
     try {
-      const result = await this.interactor.getList();
+      const result = await this.service.getList();
       res.json({ data: result, message: 'Authors fetched successfully' });
     } catch (error) {
       next(error);
@@ -45,7 +43,7 @@ export class AuthorController {
   async getAuthor(req: Request, res: Response, next: NextFunction) {
     try {
       const id = AuthorIdSchema.parse(req.params.id);
-      const result = await this.interactor.getById(id);
+      const result = await this.service.getById(id);
       if (!result) {
         throw AppError.notFound('Author not found');
       }
@@ -66,7 +64,7 @@ export class AuthorController {
     try {
       const id = AuthorIdSchema.parse(req.params.id);
       const data = req.body;
-      await this.interactor.update(id, data);
+      await this.service.update(id, data);
       res.json({ message: 'Author updated successfully' });
     } catch (error) {
       next(error);
@@ -76,7 +74,7 @@ export class AuthorController {
   async deleteAuthor(req: Request, res: Response, next: NextFunction) {
     try {
       const id = AuthorIdSchema.parse(req.params.id);
-      await this.interactor.delete(id);
+      await this.service.delete(id);
       res.json({ message: 'Author deleted successfully' });
     } catch (error) {
       next(error);

@@ -6,14 +6,16 @@ export const DI_TYPES = {
   PublisherRepository: Symbol.for('PublisherRepository'),
   GenreRepository: Symbol.for('GenreRepository'),
   SerieRepository: Symbol.for('SerieRepository'),
+  BookRepository: Symbol.for('BookRepository'),
 
   UserInteractor: Symbol.for('UserInteractor'),
-  AuthorInteractor: Symbol.for('AuthorInteractor'),
+  AuthorService: Symbol.for('AuthorService'),
   AuthUseCase: Symbol.for('AuthUseCase'),
   CategoryService: Symbol.for('CategoryService'),
   PublisherService: Symbol.for('PublisherService'),
   GenreService: Symbol.for('GenreService'),
   SerieService: Symbol.for('SerieService'),
+  BookService: Symbol.for('BookService'),
 
   UserController: Symbol.for('UserController'),
   AuthController: Symbol.for('AuthController'),
@@ -22,6 +24,7 @@ export const DI_TYPES = {
   PublisherController: Symbol.for('PublisherController'),
   GenreController: Symbol.for('GenreController'),
   SerieController: Symbol.for('SerieController'),
+  BookController: Symbol.for('BookController'),
 
   PrismaClient: Symbol.for('PrismaClient'),
 

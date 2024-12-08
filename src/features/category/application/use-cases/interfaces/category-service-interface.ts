@@ -1,4 +1,4 @@
-import { Interactor } from '@src/core/interfaces/base-interactor';
+import { BaseUseCase } from '@src/core/interfaces/base-use-case';
 import {
   CategoryCreateDto,
   CategoryDetailDto,
@@ -6,7 +6,8 @@ import {
   Id,
 } from '@src/features/category/application/dto/category-dtos';
 
-export interface ICategoryService extends Interactor<CategoryDetailDto, Id> {
+export interface ICategoryService
+  extends BaseUseCase<any, CategoryDetailDto, Id> {
   create(data: CategoryCreateDto): Promise<CategoryDetailDto>;
   update(id: Id, data: CategoryUpdateDto): Promise<string>;
 }

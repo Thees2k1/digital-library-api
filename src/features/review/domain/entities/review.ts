@@ -1,4 +1,4 @@
-class ReviewEntity {
+export class ReviewEntity {
   constructor(
     public readonly id: number,
     public readonly bookId: number,

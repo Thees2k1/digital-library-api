@@ -29,12 +29,13 @@ model BookDigitalItem {
   book      Book        @relation(fields: [bookId], references: [id])
   format    item_format @default(pdf)
   url       String      @db.VarChar(255)
-  size      Int
+  size      Int?         
   md5       String      @db.VarChar(255)
   sha256    String      @db.VarChar(255)
   createdAt DateTime    @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt DateTime    @default(now()) @map("updated_at") @db.Timestamp(0)
 
+  @@unique([bookId, format], name: "bookId_format")
   @@index([bookId], map: "book_id")
   @@map("book_digital_item")
 }

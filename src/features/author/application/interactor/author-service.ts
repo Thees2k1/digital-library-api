@@ -1,4 +1,5 @@
 import { DI_TYPES } from '@src/core/di/types';
+import { AppError } from '@src/core/errors/custom-error';
 import { inject, injectable } from 'inversify';
 import { v7 as uuid } from 'uuid';
 import { AuthorRepository } from '../../domain/repository/author-repository';
@@ -11,11 +12,10 @@ import {
   AuthorUpdateDto,
 } from '../dtos/author-dto';
 import { AuthorMapper } from '../mapper/author-mapper';
-import { IAuthorInteractor } from './interfaces/interactor';
-import { AppError } from '@src/core/errors/custom-error';
+import { IAuthorService } from './interfaces/interactor';
 
 @injectable()
-export class AuthorInteractor implements IAuthorInteractor {
+export class AuthorService implements IAuthorService {
   private readonly repository: AuthorRepository;
   constructor(@inject(DI_TYPES.AuthorRepository) repository: AuthorRepository) {
     this.repository = repository;
