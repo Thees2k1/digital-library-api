@@ -2,10 +2,15 @@ import {
   INVALID_CREDENTIALS,
   REFRESH_TOKEN_EXPIRES_IN,
 } from '@src/core/constants/constants';
+import { DI_TYPES } from '@src/core/di/types';
 import { AppError } from '@src/core/errors/custom-error';
 import { JwtService } from '@src/core/services/jwt-service';
+import { CreateUserDto } from '@src/features/user/application/dtos/user-dto';
 import { UserRepository } from '@src/features/user/domain/repository/user-repository';
+import argon2 from 'argon2';
 import { inject, injectable } from 'inversify';
+import { JwtPayload } from 'jsonwebtoken';
+import { AuthRepository } from '../../domain/repository/auth-repository';
 import { LoginBodyDTO, LoginResultDTO } from '../dtos/login-dto';
 import { RefreshResultDTO } from '../dtos/refresh-token';
 import {
@@ -13,17 +18,11 @@ import {
   RegisterResultDTO,
   RegisterResultSchema,
 } from '../dtos/register-dto';
-import { AuthRepository } from '../../domain/repository/auth-repository';
-import { AuthUseCase } from '../use-cases/auth-use-case';
-import argon2 from 'argon2';
-import { JwtPayload } from 'jsonwebtoken';
-import { CreateUserDto } from '@src/features/user/application/dtos/user-dto';
-import { DI_TYPES } from '@src/core/di/types';
-import logger from '@src/core/utils/logger/logger';
+import { IAuthService } from './interfaces/auth-service-interface';
 //import { RedisService } from "@src/features/shared/infrastructure/services/redis-service";
 
 @injectable()
-export class AuthInteractor implements AuthUseCase {
+export class AuthService implements IAuthService {
   private readonly userRepository: UserRepository;
   private readonly authRepository: AuthRepository;
   private readonly JwtService: JwtService;

@@ -3,12 +3,12 @@ import logger from '@src/core/utils/logger/logger';
 import { inject, injectable } from 'inversify';
 import { UserRepository } from '../../domain/repository/user-repository';
 import { CreateUserDto, UpdateUserDto, User } from '../dtos/user-dto';
-import { UserUseCase } from '../use-cases/user-use-case';
 import { DI_TYPES } from '@src/core/di/types';
 import argon2 from 'argon2';
+import { IUserService } from './interfaces/user-service-interface';
 
 @injectable()
-export class UserInteractor implements UserUseCase {
+export class UserService implements IUserService {
   private repository: UserRepository;
 
   constructor(@inject(DI_TYPES.UserRepository) userRepository: UserRepository) {

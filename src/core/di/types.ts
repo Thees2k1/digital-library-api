@@ -8,9 +8,9 @@ export const DI_TYPES = {
   SerieRepository: Symbol.for('SerieRepository'),
   BookRepository: Symbol.for('BookRepository'),
 
-  UserInteractor: Symbol.for('UserInteractor'),
+  UserService: Symbol.for('UserService'),
   AuthorService: Symbol.for('AuthorService'),
-  AuthUseCase: Symbol.for('AuthUseCase'),
+  AuthService: Symbol.for('AuthService'),
   CategoryService: Symbol.for('CategoryService'),
   PublisherService: Symbol.for('PublisherService'),
   GenreService: Symbol.for('GenreService'),

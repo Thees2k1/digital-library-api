@@ -13,7 +13,11 @@ export class AuthorEntity {
   ) {}
 
   get age(): number {
-    return new Date().getFullYear() - this.birthDate.getFullYear();
+    const currentYear = new Date().getFullYear();
+
+    return this.deathDate
+      ? this.deathDate.getFullYear() - this.birthDate.getFullYear()
+      : currentYear - this.birthDate.getFullYear();
   }
 
   static get fullName(): string {

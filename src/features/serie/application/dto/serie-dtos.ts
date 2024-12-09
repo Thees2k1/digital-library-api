@@ -1,4 +1,4 @@
-import { idSchema } from '@src/core/types';
+import { idSchema, isoDateStringShema } from '@src/core/types';
 import { z } from 'zod';
 
 export const serieStatusSchema = z.enum([
@@ -15,7 +15,7 @@ export const serieCreateSchema = z.object({
   cover: z.string().optional().nullable(),
   books: z.array(idSchema),
   status: serieStatusSchema,
-  releaseDate: z.date().optional().nullable(),
+  releaseDate: isoDateStringShema,
 });
 
 export const serieUpdateSchema = serieCreateSchema.partial();

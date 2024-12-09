@@ -1,6 +1,6 @@
-import { CreateUserDto, UpdateUserDto, User } from '../dtos/user-dto';
+import { CreateUserDto, UpdateUserDto, User } from '../../dtos/user-dto';
 
-export interface UserUseCase {
+export interface IUserService {
   createUser(user: CreateUserDto): Promise<User | null>;
   getUsers(): Promise<User[] | null>;
   getUserById(id: string): Promise<User | null>;

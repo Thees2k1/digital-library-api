@@ -1,17 +1,17 @@
 import { DI_TYPES } from '@src/core/di/types';
 import { AppError } from '@src/core/errors/custom-error';
-import { inject, injectable } from 'inversify';
-import logger from '@src/core/utils/logger/logger';
 import { Id } from '@src/core/types';
-import { ISerieService } from './interfaces/serie-service-interface';
+import logger from '@src/core/utils/logger/logger';
+import { inject, injectable } from 'inversify';
+import { v7 as uuid } from 'uuid';
+import { SerieEntity } from '../../domain/entities/serie-entity';
 import { SerieRepository } from '../../domain/repository/serie-repository';
 import {
   SerieCreateDto,
   SerieDetailDto,
   SerieUpdateDto,
 } from '../dto/serie-dtos';
-import { SerieEntity } from '../../domain/entities/serie-entity';
-import { v7 as uuid } from 'uuid';
+import { ISerieService } from './interfaces/serie-service-interface';
 
 @injectable()
 export class SerieService implements ISerieService {
@@ -32,7 +32,7 @@ export class SerieService implements ISerieService {
         cover: data.cover ?? '',
         status: data.status,
         description: data.description ?? '',
-        releaseDate: data.releaseDate ?? undefined,
+        releaseDate: new Date(data.releaseDate),
         books: data.books,
         updatedAt: new Date(),
         createdAt: new Date(),
@@ -61,7 +61,9 @@ export class SerieService implements ISerieService {
             : (data.description ?? ''),
         cover: data.cover ?? existed.cover,
         status: data.status ?? existed.status,
-        releaseDate: data.releaseDate ?? existed.releaseDate,
+        releaseDate: data.releaseDate
+          ? new Date(data.releaseDate)
+          : existed.releaseDate,
         books: data.books ?? existed.books,
         updatedAt: new Date(),
       };

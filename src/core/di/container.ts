@@ -1,15 +1,16 @@
 import { PrismaClient } from '@prisma/client';
 import { JwtService } from '@src/core/services/jwt-service';
-import { AuthInteractor } from '@src/features/auth/application/interactor/auth-interactor';
-import { AuthUseCase } from '@src/features/auth/application/use-cases/auth-use-case';
+import { AuthService } from '@src/features/auth/application/use-cases/auth-service';
+import { IAuthService } from '@src/features/auth/application/use-cases/interfaces/auth-service-interface';
 import { AuthRepository } from '@src/features/auth/domain/repository/auth-repository';
 import { PersistenceAuthRepository } from '@src/features/auth/infrastructure/repository/persitence-auth-repository';
 import { AuthController } from '@src/features/auth/presentation/controller/auth-controller';
-import { AuthorService } from '@src/features/author/application/interactor/author-service';
-import { IAuthorService } from '@src/features/author/application/interactor/interfaces/interactor';
+import { AuthorService } from '@src/features/author/application/use-cases/author-service';
+import { IAuthorService } from '@src/features/author/application/use-cases/interfaces/author-service-interface';
 import { AuthorRepository } from '@src/features/author/domain/repository/author-repository';
 import { PersistenceAuthorRepository } from '@src/features/author/infrastructure/repository/persistence-author-repository';
 import { AuthorController } from '@src/features/author/presentation/controller/author-controller';
+import { BookService } from '@src/features/book/application/use-cases/book-service';
 import { IBookService } from '@src/features/book/application/use-cases/interfaces/book-service-interface';
 import { BookRepository } from '@src/features/book/domain/repository/book-repository';
 import { PersistenceBookRepository } from '@src/features/book/infrastructure/repository/persitence-book-repository';
@@ -34,14 +35,13 @@ import { SerieService } from '@src/features/serie/application/use-cases/serie-se
 import { SerieRepository } from '@src/features/serie/domain/repository/serie-repository';
 import { PersistenceSerieRepository } from '@src/features/serie/infrastructure/repository/persistence-serie-repository';
 import { SerieController } from '@src/features/serie/presentation/controller/serie-controller';
-import { UserInteractor } from '@src/features/user/application/interactor/user-interactor';
-import { UserUseCase } from '@src/features/user/application/use-cases/user-use-case';
+import { IUserService } from '@src/features/user/application/use-cases/interfaces/user-service-interface';
+import { UserService } from '@src/features/user/application/use-cases/user-service';
 import { UserRepository } from '@src/features/user/domain/repository/user-repository';
 import { PersistenceUserRepository } from '@src/features/user/infrastructure/repository/persitence-user-repository';
 import { UserController } from '@src/features/user/presentation/controller/user-controller';
 import { Container } from 'inversify';
 import { DI_TYPES } from './types';
-import { BookService } from '@src/features/book/application/use-cases/book-service';
 
 // import { RedisService } from "../services/redis-service";
 
@@ -82,9 +82,8 @@ export function initializeInfrastucture() {
     .to(PersistenceBookRepository);
 
   //binding services
-  //TODO: modify userr sẻrvice
-  container.bind<UserUseCase>(DI_TYPES.UserInteractor).to(UserInteractor);
-  container.bind<AuthUseCase>(DI_TYPES.AuthUseCase).to(AuthInteractor);
+  container.bind<IUserService>(DI_TYPES.UserService).to(UserService);
+  container.bind<IAuthService>(DI_TYPES.AuthService).to(AuthService);
   container.bind<IAuthorService>(DI_TYPES.AuthorService).to(AuthorService);
   container
     .bind<ICategoryService>(DI_TYPES.CategoryService)

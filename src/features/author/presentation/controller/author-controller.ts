@@ -1,14 +1,14 @@
-import { Request, Response, NextFunction } from 'express';
-import { inject, injectable } from 'inversify';
 import { DI_TYPES } from '@src/core/di/types';
+import { AppError } from '@src/core/errors/custom-error';
+import { idSchema } from '@src/core/types';
+import { NextFunction, Request, Response } from 'express';
+import { inject, injectable } from 'inversify';
+import { ZodError } from 'zod';
 import {
   AuthorCreateDto,
-  AuthorIdSchema,
   AuthorUpdateDto,
 } from '../../application/dtos/author-dto';
-import { ZodError } from 'zod';
-import { AppError } from '@src/core/errors/custom-error';
-import { IAuthorService } from '../../application/interactor/interfaces/interactor';
+import { IAuthorService } from '../../application/use-cases/interfaces/author-service-interface';
 
 @injectable()
 export class AuthorController {
@@ -42,7 +42,7 @@ export class AuthorController {
 
   async getAuthor(req: Request, res: Response, next: NextFunction) {
     try {
-      const id = AuthorIdSchema.parse(req.params.id);
+      const id = idSchema.parse(req.params.id);
       const result = await this.service.getById(id);
       if (!result) {
         throw AppError.notFound('Author not found');
@@ -51,8 +51,9 @@ export class AuthorController {
     } catch (error) {
       if (error instanceof ZodError) {
         next(AppError.badRequest(error.toString()));
+      } else {
+        next(error);
       }
-      next(error);
     }
   }
 
@@ -62,22 +63,30 @@ export class AuthorController {
     next: NextFunction,
   ) {
     try {
-      const id = AuthorIdSchema.parse(req.params.id);
+      const id = idSchema.parse(req.params.id);
       const data = req.body;
       await this.service.update(id, data);
       res.json({ message: 'Author updated successfully' });
     } catch (error) {
-      next(error);
+      if (error instanceof ZodError) {
+        next(AppError.badRequest(error.message));
+      } else {
+        next(error);
+      }
     }
   }
 
   async deleteAuthor(req: Request, res: Response, next: NextFunction) {
     try {
-      const id = AuthorIdSchema.parse(req.params.id);
+      const id = idSchema.parse(req.params.id);
       await this.service.delete(id);
       res.json({ message: 'Author deleted successfully' });
     } catch (error) {
-      next(error);
+      if (error instanceof ZodError) {
+        next(AppError.badRequest(error.message));
+      } else {
+        next(error);
+      }
     }
   }
 }

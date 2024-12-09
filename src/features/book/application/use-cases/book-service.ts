@@ -14,6 +14,7 @@ import { Author, DigitalItemData, Genre } from '../../domain/interfaces/models';
 import { BookMapper } from '../mapper/book-mapper';
 import { inject, injectable } from 'inversify';
 import { DI_TYPES } from '@src/core/di/types';
+import { config } from '@src/core/config/config';
 
 @injectable()
 export class BookService implements IBookService {
@@ -215,13 +216,22 @@ export class BookService implements IBookService {
       throw error;
     }
   }
+
   async delete(id: string): Promise<string> {
+    const isHardDelete = config.nodeEnv === 'development';
     try {
+      if (isHardDelete) {
+        await this.repository.delete(id, isHardDelete);
+        return id;
+      }
+
       const bookExisted = await this.repository.getById(id);
       if (!bookExisted) {
         throw AppError.notFound('Book not found.');
       }
-      await this.repository.delete(id, true);
+
+      await this.repository.delete(id, isHardDelete);
+
       return id;
     } catch (error) {
       throw error;

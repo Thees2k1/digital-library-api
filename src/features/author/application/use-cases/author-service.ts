@@ -6,13 +6,12 @@ import { AuthorRepository } from '../../domain/repository/author-repository';
 import {
   AuthorCreateDto,
   AuthorDetailDto,
-  AuthorIdDto,
   AuthorIdResultDto,
   AuthorList,
   AuthorUpdateDto,
 } from '../dtos/author-dto';
 import { AuthorMapper } from '../mapper/author-mapper';
-import { IAuthorService } from './interfaces/interactor';
+import { IAuthorService } from './interfaces/author-service-interface';
 
 @injectable()
 export class AuthorService implements IAuthorService {
@@ -31,7 +30,7 @@ export class AuthorService implements IAuthorService {
     return data;
   }
 
-  async getById(id: AuthorIdDto): Promise<AuthorDetailDto | null> {
+  async getById(id: string): Promise<AuthorDetailDto | null> {
     const res = await this.repository.getById(id);
     if (!res) {
       return null;
@@ -55,7 +54,7 @@ export class AuthorService implements IAuthorService {
   }
 
   async update(
-    id: AuthorIdDto,
+    id: string,
     author: AuthorUpdateDto,
   ): Promise<AuthorIdResultDto> {
     const existedAuthor = await this.repository.getById(id);

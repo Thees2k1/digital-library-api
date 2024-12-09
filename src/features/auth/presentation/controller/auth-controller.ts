@@ -2,6 +2,7 @@ import {
   REFRESH_TOKEN,
   REFRESH_TOKEN_EXPIRES_IN,
 } from '@src/core/constants/constants';
+import { DI_TYPES } from '@src/core/di/types';
 import { AppError } from '@src/core/errors/custom-error';
 import { NextFunction, Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
@@ -16,16 +17,15 @@ import {
   RegisterResultDTO,
   RegisterResultSchema,
 } from '../../application/dtos/register-dto';
-import { AuthUseCase } from '../../application/use-cases/auth-use-case';
-import { DI_TYPES } from '@src/core/di/types';
+import { AuthService } from '../../application/use-cases/auth-service';
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 @injectable()
 export class AuthController {
-  private readonly interactor: AuthUseCase;
-  constructor(@inject(DI_TYPES.AuthUseCase) interactor: AuthUseCase) {
-    this.interactor = interactor;
+  private readonly service: AuthService;
+  constructor(@inject(DI_TYPES.AuthService) service: AuthService) {
+    this.service = service;
   }
 
   async register(
@@ -35,7 +35,7 @@ export class AuthController {
   ) {
     try {
       const data = req.body;
-      const result = await this.interactor.register(data);
+      const result = await this.service.register(data);
       const returnData: RegisterResultDTO = RegisterResultSchema.parse(result);
       res.json(returnData);
     } catch (error) {
@@ -62,7 +62,7 @@ export class AuthController {
         ipAddress = ip[0];
       }
       const userAgent = req.headers['user-agent']; // Get the user-agent
-      const result = await this.interactor.login({
+      const result = await this.service.login({
         ...credentials,
         ipAddress,
         userAgent,
@@ -88,7 +88,7 @@ export class AuthController {
   async refreshToken(req: Request, res: Response, next: NextFunction) {
     try {
       const refreshToken = req.cookies[REFRESH_TOKEN];
-      const result = await this.interactor.refreshTokens(refreshToken);
+      const result = await this.service.refreshTokens(refreshToken);
 
       res.cookie(REFRESH_TOKEN, result.refreshToken, {
         httpOnly: true,
@@ -114,7 +114,7 @@ export class AuthController {
   ) {
     try {
       const refreshToken = req.cookies[REFRESH_TOKEN];
-      const result = await this.interactor.logout(refreshToken);
+      const result = await this.service.logout(refreshToken);
       res.clearCookie(REFRESH_TOKEN);
       res.json(result);
     } catch (error) {
