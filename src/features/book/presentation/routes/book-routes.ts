@@ -7,6 +7,7 @@ import { BookController } from '../controller/book-controller';
 import {
   bookCreateDtoSchema,
   bookUpdateDtoSchema,
+  reviewCreateDtoSchema,
 } from '../../application/dtos/book-dto';
 
 export class BookRouter {
@@ -33,6 +34,27 @@ export class BookRouter {
       authMiddleware,
       controller.deleteBook.bind(controller),
     );
+    //reviews
+    router.post(
+      `${path}/:id/reviews`,
+      authMiddleware,
+      validationMiddleware(reviewCreateDtoSchema),
+      controller.addReview.bind(controller),
+    );
+    router.get(`${path}/:id/reviews`, controller.getReviews.bind(controller));
+
+    //likes
+    router.post(
+      `${path}/:id/like`,
+      authMiddleware,
+      controller.toggleLike.bind(controller),
+    );
+
+    router.get(
+      `${path}/:id/like-count`,
+      controller.getLikeCount.bind(controller),
+    );
+
     return router;
   }
 }

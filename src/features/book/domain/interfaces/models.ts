@@ -38,3 +38,8 @@ export enum ItemFormat {
   EPUB = 'epub',
   MP3 = 'mp3',
 }
+
+export enum LikeStatus {
+  LIKED = 'liked',
+  UNLIKED = 'unliked',
+}

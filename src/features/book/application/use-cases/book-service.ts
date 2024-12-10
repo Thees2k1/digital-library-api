@@ -1,4 +1,15 @@
+import { config } from '@src/core/config/config';
+import { DI_TYPES } from '@src/core/di/types';
+import { AppError } from '@src/core/errors/custom-error';
 import { Id } from '@src/core/types';
+import { inject, injectable } from 'inversify';
+import { BookEntity } from '../../domain/entities/book-entity';
+import {
+  Author,
+  DigitalItemData,
+  Genre,
+  LikeStatus,
+} from '../../domain/interfaces/models';
 import { BookRepository } from '../../domain/repository/book-repository';
 import {
   BookCreateDto,
@@ -6,15 +17,11 @@ import {
   BookListQueryDto,
   BookListResultDto,
   BookUpdateDto,
+  ReviewCreateDto,
+  ReviewDetailDto,
 } from '../dtos/book-dto';
-import { IBookService } from './interfaces/book-service-interface';
-import { AppError } from '@src/core/errors/custom-error';
-import { BookEntity } from '../../domain/entities/book-entity';
-import { Author, DigitalItemData, Genre } from '../../domain/interfaces/models';
 import { BookMapper } from '../mapper/book-mapper';
-import { inject, injectable } from 'inversify';
-import { DI_TYPES } from '@src/core/di/types';
-import { config } from '@src/core/config/config';
+import { IBookService } from './interfaces/book-service-interface';
 
 @injectable()
 export class BookService implements IBookService {
@@ -236,5 +243,44 @@ export class BookService implements IBookService {
     } catch (error) {
       throw error;
     }
+  }
+
+  async addReview(review: ReviewCreateDto): Promise<string> {
+    try {
+      await this.repository.addReview(review);
+
+      return 'Review added';
+    } catch (error) {
+      throw error;
+    }
+  }
+  async getReviews(bookId: string): Promise<Array<ReviewDetailDto>> {
+    try {
+      const res = await this.repository.getReviews(bookId);
+      return res.map((review) => {
+        return {
+          id: review.id,
+          bookId: review.bookId,
+          userId: review.userId,
+          username: review.username,
+          rating: review.rating,
+          comment: review.comment,
+          createdAt: review.createdAt,
+        };
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async toggleLike(userId: string, bookId: string): Promise<void> {
+    const currentStatus = await this.repository.getLikeStatus(userId, bookId);
+    const newStatus =
+      currentStatus === 'liked' ? LikeStatus.UNLIKED : LikeStatus.LIKED;
+    await this.repository.setLikeStatus(userId, bookId, newStatus);
+  }
+
+  async getLikeCount(bookId: string): Promise<number> {
+    return await this.repository.getLikeCount(bookId);
   }
 }

@@ -221,7 +221,7 @@ enum user_role {
 
 enum LikeStatus {
   liked
-  unlike
+  unliked
 }
 
 enum BookStatus {

@@ -1,4 +1,4 @@
-import { Book, item_format, PrismaClient } from '@prisma/client';
+import { Book, item_format, LikeStatus, PrismaClient } from '@prisma/client';
 import { DI_TYPES } from '@src/core/di/types';
 import { binaryToUuid, uuidToBinary } from '@src/core/utils/utils';
 import { inject, injectable } from 'inversify';
@@ -6,6 +6,10 @@ import { BookEntity } from '../../domain/entities/book-entity';
 import { Filter, Paging } from '../../domain/interfaces/common';
 import { DigitalItemData, Genre } from '../../domain/interfaces/models';
 import { BookRepository } from '../../domain/repository/book-repository';
+import {
+  ReviewCreateDto,
+  ReviewDetailDto,
+} from '../../application/dtos/book-dto';
 
 @injectable()
 export class PersistenceBookRepository extends BookRepository {
@@ -510,6 +514,84 @@ export class PersistenceBookRepository extends BookRepository {
   getBookGenres(bookId: string): Promise<object[]> {
     throw new Error('Method not implemented.');
   }
+
+  async addReview(data: ReviewCreateDto): Promise<void> {
+    await this.prisma.review.create({
+      data: {
+        bookId: uuidToBinary(data.bookId),
+        userId: uuidToBinary(data.userId),
+        rating: data.rating,
+        review: data.comment ?? '',
+      },
+    });
+  }
+
+  async getReviews(bookId: string): Promise<ReviewDetailDto[]> {
+    const reviews = await this.prisma.review.findMany({
+      where: { bookId: uuidToBinary(bookId) },
+      include: { user: true },
+    });
+    return reviews.map((review) => ({
+      id: binaryToUuid(review.id),
+      bookId: binaryToUuid(review.bookId),
+      userId: binaryToUuid(review.userId),
+      username: `${review.user.firstName} ${review.user.lastName}`,
+      rating: review.rating,
+      comment: review.review,
+      createdAt: review.createdAt.toISOString(),
+    }));
+  }
+
+  async setLikeStatus(
+    userId: string,
+    bookId: string,
+    status: LikeStatus,
+  ): Promise<void> {
+    await this.prisma.like.upsert({
+      where: {
+        userId_bookId: {
+          userId: uuidToBinary(userId),
+          bookId: uuidToBinary(bookId),
+        },
+      },
+      create: {
+        userId: uuidToBinary(userId),
+        bookId: uuidToBinary(bookId),
+        status,
+      },
+      update: {
+        status,
+      },
+    });
+  }
+
+  async getLikeStatus(
+    userId: string,
+    bookId: string,
+  ): Promise<LikeStatus | null> {
+    const like = await this.prisma.like.findUnique({
+      where: {
+        userId_bookId: {
+          userId: uuidToBinary(userId),
+          bookId: uuidToBinary(bookId),
+        },
+      },
+      select: {
+        status: true,
+      },
+    });
+    return like ? like.status : null;
+  }
+
+  async getLikeCount(bookId: string): Promise<number> {
+    const count = await this.prisma.like.count({
+      where: {
+        bookId: uuidToBinary(bookId),
+        status: 'liked',
+      },
+    });
+    return count;
+  }
   getBookDigitalItems(bookId: string): Promise<object[]> {
     throw new Error('Method not implemented.');
   }
@@ -520,9 +602,6 @@ export class PersistenceBookRepository extends BookRepository {
     throw new Error('Method not implemented.');
   }
   getAverageRating(bookId: string): Promise<number> {
-    throw new Error('Method not implemented.');
-  }
-  getLikeCount(bookId: string): Promise<number> {
     throw new Error('Method not implemented.');
   }
 }

@@ -12,6 +12,7 @@ import {
   BookCreateDto,
   bookListQueryDtoSchema,
   BookUpdateDto,
+  ReviewCreateDto,
 } from '../../application/dtos/book-dto';
 
 @injectable()
@@ -109,6 +110,60 @@ export class BookController {
         next(new ValidationError(validationErrors));
         return;
       }
+      next(error);
+    }
+  }
+
+  async addReview(
+    req: Request<any, any, ReviewCreateDto & { userId: string }>,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const data = req.body;
+      const input: ReviewCreateDto = {
+        ...data,
+        userId: req.body.userId,
+        bookId: req.params.id,
+      };
+      await this.service.addReview(input);
+      res.json({ message: 'Review added successfully' });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getReviews(req: Request, res: Response, next: NextFunction) {
+    try {
+      const bookId = idSchema.parse(req.params.id);
+      const reviews = await this.service.getReviews(bookId);
+      res.json({ data: reviews });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async toggleLike(
+    req: Request<any, any, { userId: string }>,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const bookId = idSchema.parse(req.params.id);
+      const userId = req.body.userId;
+      await this.service.toggleLike(userId, bookId);
+      res.json({ message: 'Like status toggled successfully' });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getLikeCount(req: Request, res: Response, next: NextFunction) {
+    try {
+      const bookId = idSchema.parse(req.params.id);
+      const count = await this.service.getLikeCount(bookId);
+      res.json({ likeCount: count });
+    } catch (error) {
       next(error);
     }
   }

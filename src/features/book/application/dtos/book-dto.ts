@@ -1,4 +1,4 @@
-import { isoDateStringShema } from '@src/core/types';
+import { idSchema, isoDateStringShema } from '@src/core/types';
 import { z } from 'zod';
 import { ItemFormat } from '../../domain/interfaces/models';
 
@@ -98,6 +98,21 @@ export const bookListQueryDtoSchema = z.object({
     .optional(),
 });
 
+export const reviewCreateDtoSchema = z.object({
+  rating: z.number().int().min(1).max(5),
+  comment: z.string().optional(),
+});
+
+export const reviewDetailDtoSchema = z.object({
+  id: z.string().uuid(),
+  bookId: idSchema,
+  userId: idSchema,
+  username: z.string(),
+  rating: z.number().int(),
+  comment: z.string().nullable(),
+  createdAt: isoDateStringShema,
+});
+
 export type BookCreateDto = z.infer<typeof bookCreateDtoSchema>;
 export type BookUpdateDto = z.infer<typeof bookUpdateDtoSchema>;
 export type BookDetailDto = z.infer<typeof bookDetailDtoSchema>;
@@ -112,3 +127,9 @@ export type BookListResultDto = {
     totalPages: number;
   };
 };
+
+export type ReviewCreateDto = z.infer<typeof reviewCreateDtoSchema> & {
+  bookId: string;
+  userId: string;
+};
+export type ReviewDetailDto = z.infer<typeof reviewDetailDtoSchema>;

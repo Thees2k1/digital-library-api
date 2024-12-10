@@ -6,6 +6,8 @@ import {
   BookListQueryDto,
   BookListResultDto,
   BookUpdateDto,
+  ReviewCreateDto,
+  ReviewDetailDto,
 } from '../../dtos/book-dto';
 
 export interface IBookService {
@@ -14,4 +16,8 @@ export interface IBookService {
   update(id: Id, data: BookUpdateDto): Promise<string>;
   getById(id: string): Promise<BookDetailDto | null>;
   delete(id: string): Promise<string>;
+  addReview(review: ReviewCreateDto): Promise<string>;
+  getReviews(bookId: string): Promise<Array<ReviewDetailDto>>;
+  toggleLike(userId: string, bookId: string): Promise<void>;
+  getLikeCount(bookId: string): Promise<number>;
 }
