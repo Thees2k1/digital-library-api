@@ -1,4 +1,7 @@
-import { SUCCESSFUL } from '@src/core/constants/constants';
+import {
+  SOMETHING_WENT_WRONG,
+  SUCCESSFUL,
+} from '@src/core/constants/constants';
 import { DI_TYPES } from '@src/core/di/types';
 import { AppError } from '@src/core/errors/custom-error';
 import logger from '@src/core/utils/logger/logger';
@@ -11,6 +14,8 @@ import {
   UserResponse,
 } from '../../application/dtos/user-dto';
 import { IUserService } from '../../application/use-cases/interfaces/user-service-interface';
+import { idSchema } from '@src/core/types';
+import { ZodError } from 'zod';
 
 @injectable()
 export class UserController {
@@ -78,6 +83,33 @@ export class UserController {
         message: SUCCESSFUL,
       });
     } catch (error) {
+      logger.error(error);
+      next(error);
+    }
+  }
+
+  async getCurrentUser(
+    req: Request<any, any, { userId: string }>,
+    res: Response<UserResponse>,
+    next: NextFunction,
+  ) {
+    try {
+      const id = idSchema.parse(req.body.userId);
+      const user = await this.service.getUserById(id);
+      if (!user) {
+        logger.error('Cannot get current user');
+        next(new Error(SOMETHING_WENT_WRONG));
+        return;
+      }
+      res.status(200).json({
+        data: user,
+        message: SUCCESSFUL,
+      });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        next(AppError.badRequest(error.message));
+        return;
+      }
       logger.error(error);
       next(error);
     }

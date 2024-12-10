@@ -5,6 +5,8 @@ import { CategoryRouter } from '@src/features/category/presentation/routes/categ
 import { GenreRouter } from '@src/features/genre/presentation/routes/genre-routes';
 import { PublisherRouter } from '@src/features/publisher/presentation/routes/publisher-routes';
 import { SerieRouter } from '@src/features/serie/presentation/routes/serie-routes';
+import { uploadRouter } from '@src/features/upload/presentation/controller/uploadthing';
+import { UploadRouter } from '@src/features/upload/presentation/routes/upload-routes';
 import { UserRouter } from '@src/features/user/presentation/routes/user-routes';
 import { Router } from 'express';
 import 'reflect-metadata';
@@ -20,6 +22,7 @@ export class AppRoutes {
     router.use(GenreRouter.routes);
     router.use(SerieRouter.routes);
     router.use(BookRouter.routes);
+    router.use(UploadRouter.routes);
     return router;
   }
 }

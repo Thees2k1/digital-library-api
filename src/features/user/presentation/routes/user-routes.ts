@@ -19,6 +19,11 @@ export class UserRouter {
       controller.getUserByEmail.bind(controller),
     );
     router.get(path, authMiddleware, controller.getAllUsers.bind(controller));
+    router.get(
+      `${path}/me`,
+      authMiddleware,
+      controller.getCurrentUser.bind(controller),
+    );
     router.get(`${path}/:id`, controller.getUserById.bind(controller));
     router.post(
       `${path}`,

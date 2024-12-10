@@ -1,43 +1,23 @@
-// import express, { Request, Response, Router } from "express";
-// class UploadRouter {
-//   public router: Router;
-//   private uploadthing: Uploadthing;
+import { Router } from 'express';
+import { createRouteHandler } from 'uploadthing/express';
+import { uploadRouter } from '../controller/uploadthing';
+import { config } from '@src/core/config/config';
+import { authMiddleware } from '@src/core/middlewares/auth-middleware';
 
-//   constructor() {
-//     this.router = Router();
-//     this.uploadthing = new Uploadthing();
+export class UploadRouter {
+  static get routes(): Router {
+    const path = '/upload';
+    const router = Router();
 
-//     // Initialize routes
-//     this.initRoutes();
-//   }
+    router.use(
+      path,
+      authMiddleware,
+      createRouteHandler({
+        router: uploadRouter,
+        config: { token: config.uploadthingToken },
+      }),
+    );
 
-//   private initRoutes() {
-//     const uploadMiddleware = multer().single("file");
-
-//     this.router.post("/upload", uploadMiddleware, this.handleFileUpload.bind(this));
-//   }
-
-//   private async handleFileUpload(req: Request, res: Response): Promise<void> {
-//     try {
-//       if (!req.file) {
-//         res.status(400).json({ message: "No file uploaded" });
-//         return;
-//       }
-
-//       const uploadResult = await this.uploadthing.upload({
-//         file: req.file.buffer,
-//         filename: req.file.originalname,
-//       });
-
-//       res.status(200).json({
-//         message: "File uploaded successfully",
-//         data: uploadResult,
-//       });
-//     } catch (error) {
-//       console.error(error);
-//       res.status(500).json({ message: "Error uploading file" });
-//     }
-//   }
-// }
-
-// export default new UploadRouter().router;
+    return router;
+  }
+}
