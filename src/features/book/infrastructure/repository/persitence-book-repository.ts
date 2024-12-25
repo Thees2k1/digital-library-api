@@ -4,11 +4,18 @@ import { binaryToUuid, uuidToBinary } from '@src/core/utils/utils';
 import { inject, injectable } from 'inversify';
 import { BookEntity } from '../../domain/entities/book-entity';
 import { Filter, Paging } from '../../domain/interfaces/common';
-import { DigitalItemData, Genre } from '../../domain/interfaces/models';
+import {
+  Author,
+  Category,
+  DigitalItemData,
+  Genre,
+  Review,
+} from '../../domain/interfaces/models';
 import { BookRepository } from '../../domain/repository/book-repository';
 import {
   ReviewCreateDto,
   ReviewDetailDto,
+  ReviewListResultDto,
 } from '../../application/dtos/book-dto';
 
 @injectable()
@@ -36,6 +43,8 @@ export class PersistenceBookRepository extends BookRepository {
           select: {
             id: true,
             name: true,
+            avatar: true,
+            bio: true,
           },
         },
         category: {
@@ -60,6 +69,20 @@ export class PersistenceBookRepository extends BookRepository {
             },
           },
         },
+        reviews: {
+          select: {
+            id: true,
+            rating: true,
+            review: true,
+          },
+        },
+        digitalItems: {
+          select: {
+            format: true,
+            url: true,
+            size: true,
+          },
+        },
       },
     });
 
@@ -67,6 +90,8 @@ export class PersistenceBookRepository extends BookRepository {
     const bookAuthor = {
       id: binaryToUuid(data.author.id),
       name: data.author.name,
+      avatar: data.author.avatar ?? '',
+      bio: data.author.bio ?? '',
     };
     const bookCategory = {
       id: binaryToUuid(data.category.id),
@@ -78,9 +103,25 @@ export class PersistenceBookRepository extends BookRepository {
         name: genre.genre.name,
       } as Genre;
     });
+
+    const bookReviews = data.reviews.map((review) => {
+      return {
+        id: binaryToUuid(review.id),
+        rating: review.rating,
+        comment: review.review ?? '',
+      } as Review;
+    });
     const bookPublisher = data.publisher
       ? { id: binaryToUuid(data.publisher.id), name: data.publisher.name }
       : undefined;
+
+    const digitalItems = data.digitalItems.map((item) => {
+      return {
+        format: item.format,
+        url: item.url,
+        size: item.size,
+      } as DigitalItemData;
+    });
     return new BookEntity(
       binaryToUuid(data.id),
       data.title,
@@ -95,8 +136,8 @@ export class PersistenceBookRepository extends BookRepository {
       bookCategory,
       bookPublisher,
       bookGenres,
-      [],
-      [],
+      bookReviews,
+      digitalItems,
     );
   }
   async getList(
@@ -149,6 +190,7 @@ export class PersistenceBookRepository extends BookRepository {
             id: true,
             name: true,
             avatar: true,
+            bio: true,
           },
         },
         category: {
@@ -186,13 +228,6 @@ export class PersistenceBookRepository extends BookRepository {
             id: true,
             rating: true,
             review: true,
-            user: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-              },
-            },
           },
         },
         likes: {
@@ -219,12 +254,14 @@ export class PersistenceBookRepository extends BookRepository {
         id: binaryToUuid(book.author.id),
         name: book.author.name,
         avatar: book.author.avatar ?? '',
-      };
+        bio: book.author.bio ?? '',
+      } as Author;
       const bookCategory = {
         id: binaryToUuid(book.category.id),
         name: book.category.name,
         cover: book.category.cover ?? '',
-      };
+      } as Category;
+
       const bookPublisher = book.publisher
         ? { id: binaryToUuid(book.publisher.id), name: book.publisher.name }
         : undefined;
@@ -233,6 +270,14 @@ export class PersistenceBookRepository extends BookRepository {
           id: binaryToUuid(genre.genre.id),
           name: genre.genre.name,
         } as Genre;
+      });
+
+      const bookReviews: Array<Review> = book.reviews.map((review) => {
+        return {
+          id: binaryToUuid(review.id),
+          rating: review.rating,
+          comment: review.review ?? '',
+        } as Review;
       });
 
       const digitalItems = book.digitalItems.map((item) => {
@@ -256,7 +301,7 @@ export class PersistenceBookRepository extends BookRepository {
         bookCategory,
         bookPublisher,
         bookGenres,
-        [],
+        bookReviews,
         digitalItems,
       );
     });
@@ -464,7 +509,7 @@ export class PersistenceBookRepository extends BookRepository {
       data.releaseDate,
       data.createdAt,
       data.updatedAt,
-      { id: '', name: '' },
+      { id: '', name: '', avatar: '', bio: '' },
       { id: '', name: '' },
       { id: '', name: '' },
       [],
@@ -526,20 +571,59 @@ export class PersistenceBookRepository extends BookRepository {
     });
   }
 
-  async getReviews(bookId: string): Promise<ReviewDetailDto[]> {
-    const reviews = await this.prisma.review.findMany({
-      where: { bookId: uuidToBinary(bookId) },
-      include: { user: true },
-    });
-    return reviews.map((review) => ({
+  async getReviews(
+    bookId: string,
+    page: number,
+    limit: number,
+  ): Promise<ReviewListResultDto> {
+    const skip = (page - 1) * limit;
+    const [reviews, total] = await Promise.all([
+      this.prisma.review.findMany({
+        where: { bookId: uuidToBinary(bookId) },
+        include: {
+          user: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              avatar: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip,
+        take: limit,
+      }),
+      this.prisma.review.count({
+        where: { bookId: uuidToBinary(bookId) },
+      }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+    const data = reviews.map((review) => ({
       id: binaryToUuid(review.id),
       bookId: binaryToUuid(review.bookId),
-      userId: binaryToUuid(review.userId),
-      username: `${review.user.firstName} ${review.user.lastName}`,
+      reviewer: {
+        id: binaryToUuid(review.user.id),
+        username: `${review.user.firstName} ${review.user.lastName}`,
+        avatar: review.user.avatar ?? '',
+      },
       rating: review.rating,
       comment: review.review,
       createdAt: review.createdAt.toISOString(),
     }));
+
+    return {
+      data,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+    };
   }
 
   async setLikeStatus(

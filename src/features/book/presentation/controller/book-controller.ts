@@ -136,8 +136,10 @@ export class BookController {
   async getReviews(req: Request, res: Response, next: NextFunction) {
     try {
       const bookId = idSchema.parse(req.params.id);
-      const reviews = await this.service.getReviews(bookId);
-      res.json({ data: reviews });
+      const page = parseInt(req.query.page as string, 10) || 1;
+      const limit = parseInt(req.query.limit as string, 10) || 10;
+      const result = await this.service.getReviews(bookId, page, limit);
+      res.json(result);
     } catch (error) {
       next(error);
     }

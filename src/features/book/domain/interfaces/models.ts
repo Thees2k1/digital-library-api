@@ -6,6 +6,8 @@ export interface Category {
 export interface Author {
   id: string;
   name: string;
+  avatar: string;
+  bio: string;
 }
 
 export interface Genre {
@@ -20,10 +22,8 @@ export interface Publisher {
 
 export interface Review {
   id: string;
-  bookId: string;
   rating: number;
   comment: string | undefined;
-  updatedAt: Date;
 }
 
 export interface DigitalItemData {

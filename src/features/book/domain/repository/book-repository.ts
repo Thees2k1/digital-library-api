@@ -1,6 +1,7 @@
 import {
   ReviewCreateDto,
   ReviewDetailDto,
+  ReviewListResultDto,
 } from '../../application/dtos/book-dto';
 import { BookEntity } from '../entities/book-entity';
 import { Filter, Paging } from '../interfaces/common';
@@ -26,7 +27,11 @@ export abstract class BookRepository {
 
   abstract addReview(data: ReviewCreateDto): Promise<void>;
 
-  abstract getReviews(bookId: string): Promise<ReviewDetailDto[]>;
+  abstract getReviews(
+    bookId: string,
+    page: number,
+    limit: number,
+  ): Promise<ReviewListResultDto>;
 
   abstract count(filter: Filter | undefined): Promise<number>;
 

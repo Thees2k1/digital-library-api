@@ -45,4 +45,16 @@ export class BookEntity {
       updates.digitalItems ?? this.digitalItems,
     );
   }
+
+  get averageRating(): number {
+    if (this.reviews.length === 0) {
+      return 0;
+    }
+
+    const totalRating = this.reviews.reduce((acc, review) => {
+      return acc + review.rating;
+    }, 0);
+
+    return totalRating / this.reviews.length;
+  }
 }

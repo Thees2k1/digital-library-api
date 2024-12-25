@@ -78,7 +78,7 @@ export class AuthController {
       });
 
       res.json({
-        access_token: verifiedResult.accessToken,
+        accessToken: verifiedResult.accessToken,
       });
     } catch (error) {
       next(error);
@@ -97,7 +97,7 @@ export class AuthController {
         maxAge: REFRESH_TOKEN_EXPIRES_IN, // 7 ngày cho refresh token
       });
 
-      res.json({ access_token: result.accessToken });
+      res.json({ accessToken: result.accessToken });
     } catch (error) {
       if (error instanceof Error) {
         next(AppError.unauthorized(error.message));

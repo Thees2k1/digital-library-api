@@ -10,13 +10,16 @@ export class BookMapper {
       pages: book.pages,
       language: book.language,
       description: book.description,
+      averageRating: book.averageRating,
       author: {
         id: book.author.id,
+        avatar: book.author.avatar,
         name: book.author.name,
+        bio: book.author.bio,
       },
-      publisher: book.publisher && {
-        id: book.publisher.id,
-        name: book.publisher.name,
+      publisher: {
+        id: book.publisher ? book.publisher.id : null,
+        name: book.publisher ? book.publisher.name : null,
       },
       category: {
         id: book.category.id,

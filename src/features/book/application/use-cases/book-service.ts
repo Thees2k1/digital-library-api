@@ -19,6 +19,7 @@ import {
   BookUpdateDto,
   ReviewCreateDto,
   ReviewDetailDto,
+  ReviewListResultDto,
 } from '../dtos/book-dto';
 import { BookMapper } from '../mapper/book-mapper';
 import { IBookService } from './interfaces/book-service-interface';
@@ -40,6 +41,8 @@ export class BookService implements IBookService {
       const bookAuthor: Author = {
         id: data.authorId,
         name: '',
+        avatar: '',
+        bio: '',
       };
 
       const bookCategory = {
@@ -126,6 +129,8 @@ export class BookService implements IBookService {
         ? {
             id: data.authorId,
             name: '',
+            avatar: '',
+            bio: '',
           }
         : undefined;
 
@@ -254,20 +259,13 @@ export class BookService implements IBookService {
       throw error;
     }
   }
-  async getReviews(bookId: string): Promise<Array<ReviewDetailDto>> {
+  async getReviews(
+    bookId: string,
+    page: number,
+    limit: number,
+  ): Promise<ReviewListResultDto> {
     try {
-      const res = await this.repository.getReviews(bookId);
-      return res.map((review) => {
-        return {
-          id: review.id,
-          bookId: review.bookId,
-          userId: review.userId,
-          username: review.username,
-          rating: review.rating,
-          comment: review.comment,
-          createdAt: review.createdAt,
-        };
-      });
+      return await this.repository.getReviews(bookId, page, limit);
     } catch (error) {
       throw error;
     }

@@ -35,13 +35,13 @@ export const bookDetailDtoSchema = z.object({
   author: z.object({
     id: z.string().uuid(),
     name: z.string().max(255),
+    avatar: z.string(),
+    bio: z.string(),
   }),
-  publisher: z
-    .object({
-      id: z.string().uuid(),
-      name: z.string().max(255),
-    })
-    .nullable(),
+  publisher: z.object({
+    id: z.string().uuid().nullable(),
+    name: z.string().max(255).nullable(),
+  }),
   category: z.object({
     id: z.string().uuid(),
     name: z.string().max(255),
@@ -106,8 +106,11 @@ export const reviewCreateDtoSchema = z.object({
 export const reviewDetailDtoSchema = z.object({
   id: z.string().uuid(),
   bookId: idSchema,
-  userId: idSchema,
-  username: z.string(),
+  reviewer: z.object({
+    id: idSchema,
+    username: z.string(),
+    avatar: z.string(),
+  }),
   rating: z.number().int(),
   comment: z.string().nullable(),
   createdAt: isoDateStringShema,
@@ -133,3 +136,13 @@ export type ReviewCreateDto = z.infer<typeof reviewCreateDtoSchema> & {
   userId: string;
 };
 export type ReviewDetailDto = z.infer<typeof reviewDetailDtoSchema>;
+
+export type ReviewListResultDto = {
+  data: ReviewDetailDto[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+};
