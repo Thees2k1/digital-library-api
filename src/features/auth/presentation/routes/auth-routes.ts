@@ -27,11 +27,11 @@ export class AuthRouter {
       validationMiddleware(LoginBodySchema),
       controller.login.bind(controller),
     );
-    router.get(
+    router.post(
       AuthRoutes.refreshToken,
       controller.refreshToken.bind(controller),
     );
-    router.get(AuthRoutes.logout, controller.logout.bind(controller));
+    router.post(AuthRoutes.logout, controller.logout.bind(controller));
     return router;
   }
 }

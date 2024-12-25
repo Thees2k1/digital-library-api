@@ -1,19 +1,24 @@
-class CategoryEntity {
-  private id: string;
+export class CategoryEntity {
+  id: string;
   name: string;
+  cover: string;
   description: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | undefined;
+  updatedAt: Date | undefined;
 
-  constructor(data: CategoryEntity) {
-    this.id = data.id;
-    this.name = data.name;
-    this.description = data.description;
-    this.createdAt = data.createdAt;
-    this.updatedAt = data.updatedAt;
-  }
-
-  static create(data: CategoryEntity): CategoryEntity {
-    return new CategoryEntity(data);
+  constructor(
+    id: string,
+    name: string,
+    cover: string,
+    description: string,
+    createdAt: Date | undefined,
+    updatedAt: Date | undefined,
+  ) {
+    this.id = id;
+    this.name = name;
+    this.cover = cover;
+    this.description = description;
+    this.createdAt = createdAt;
+    this.updatedAt = updatedAt;
   }
 }

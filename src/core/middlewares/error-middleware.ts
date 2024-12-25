@@ -2,6 +2,7 @@ import { AppError } from '@core/errors/custom-error';
 import { ValidationError } from '@core/errors/validation-error';
 import { type Response, type NextFunction, type Request } from 'express';
 import { StatusCodes } from 'http-status-codes';
+import logger from '../utils/logger/logger';
 
 export class ErrorMiddleware {
   public static handleError = (
@@ -21,6 +22,7 @@ export class ErrorMiddleware {
       res.statusCode = statusCode;
       res.json({ name, message });
     } else {
+      logger.error(error);
       const name = 'InternalServerError';
       const message = 'An internal server error occurred';
       const statusCode = StatusCodes.INTERNAL_SERVER_ERROR;

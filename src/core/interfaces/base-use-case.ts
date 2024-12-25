@@ -1,3 +1,7 @@
-export interface BaseUseCase<X, T> {
-  execute(param: X): Promise<T>;
+export interface BaseUseCase<Q, T, X> {
+  getList(query: Q): Promise<Array<T>>;
+  getById(id: X): Promise<T | null>;
+  create(data: object): Promise<T>;
+  update(id: X, data: object): Promise<X>;
+  delete(id: X): Promise<X>;
 }

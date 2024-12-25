@@ -1,5 +1,10 @@
-import { SUCCESSFUL } from '@src/core/constants/constants';
+import {
+  SOMETHING_WENT_WRONG,
+  SUCCESSFUL,
+} from '@src/core/constants/constants';
+import { DI_TYPES } from '@src/core/di/types';
 import { AppError } from '@src/core/errors/custom-error';
+import logger from '@src/core/utils/logger/logger';
 import { type NextFunction, type Request, type Response } from 'express';
 import { inject, injectable } from 'inversify';
 import {
@@ -8,15 +13,15 @@ import {
   UpdateUserResponse,
   UserResponse,
 } from '../../application/dtos/user-dto';
-import { UserUseCase } from '../../application/use-cases/user-use-case';
-import logger from '@src/core/utils/logger/logger';
-import { DI_TYPES } from '@src/core/di/types';
+import { IUserService } from '../../application/use-cases/interfaces/user-service-interface';
+import { idSchema } from '@src/core/types';
+import { ZodError } from 'zod';
 
 @injectable()
 export class UserController {
-  private readonly interactor: UserUseCase;
-  constructor(@inject(DI_TYPES.UserInteractor) interactor: UserUseCase) {
-    this.interactor = interactor;
+  private readonly service: IUserService;
+  constructor(@inject(DI_TYPES.UserService) service: IUserService) {
+    this.service = service;
   }
   async getAllUsers(
     _: Request,
@@ -24,7 +29,7 @@ export class UserController {
     next: NextFunction,
   ) {
     try {
-      const users = await this.interactor.getUsers();
+      const users = await this.service.getUsers();
 
       res.status(200).json({
         data: users ?? [],
@@ -42,7 +47,7 @@ export class UserController {
   ) {
     try {
       const userId = req.params.id;
-      const user = await this.interactor.getUserById(userId);
+      const user = await this.service.getUserById(userId);
       if (!user) {
         next(AppError.notFound('User not found.'));
         return;
@@ -68,7 +73,7 @@ export class UserController {
         next(AppError.badRequest('Email is required.'));
         return;
       }
-      const user = await this.interactor.getUserByEmail(email);
+      const user = await this.service.getUserByEmail(email);
       if (!user) {
         next(AppError.notFound('User not found.'));
         return;
@@ -83,13 +88,40 @@ export class UserController {
     }
   }
 
+  async getCurrentUser(
+    req: Request<any, any, { userId: string }>,
+    res: Response<UserResponse>,
+    next: NextFunction,
+  ) {
+    try {
+      const id = idSchema.parse(req.body.userId);
+      const user = await this.service.getUserById(id);
+      if (!user) {
+        logger.error('Cannot get current user');
+        next(new Error(SOMETHING_WENT_WRONG));
+        return;
+      }
+      res.status(200).json({
+        data: user,
+        message: SUCCESSFUL,
+      });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        next(AppError.badRequest(error.message));
+        return;
+      }
+      logger.error(error);
+      next(error);
+    }
+  }
+
   async createUser(
     req: Request,
     res: Response<UserResponse>,
     next: NextFunction,
   ) {
     try {
-      const user = await this.interactor.createUser(req.body);
+      const user = await this.service.createUser(req.body);
       if (!user) {
         next(AppError.internalServer('User not created.'));
         return;
@@ -111,7 +143,7 @@ export class UserController {
   ) {
     try {
       const userId = req.params.id;
-      const user = await this.interactor.updateUser(userId, req.body);
+      const user = await this.service.updateUser(userId, req.body);
       res.status(200).json({
         data: user,
         message: SUCCESSFUL,
@@ -129,7 +161,7 @@ export class UserController {
   ) {
     try {
       const userId = req.params.id;
-      const user = await this.interactor.deleteUser(userId);
+      const user = await this.service.deleteUser(userId);
       res.status(200).json({
         data: user,
         message: SUCCESSFUL,

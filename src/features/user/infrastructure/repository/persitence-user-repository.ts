@@ -210,6 +210,7 @@ export class PersistenceUserRepository extends UserRepository {
           firstName: data.firstName,
           lastName: data.lastName ?? '',
           avatar: data.avatarUrl ?? '',
+          updatedAt: data.updatedAt,
         },
       });
 
