@@ -22,6 +22,14 @@ RUN pnpm run build
 # Stage 2: Production Stage
 FROM node:20-alpine AS production
 
+RUN apk add --no-cache \
+    openssl \
+    bash \
+    libc6-compat \
+    libstdc++ \
+    libgcc \
+    && npm install -g npm@latest
+
 # Install pnpm globally
 RUN npm install -g pnpm
 
