@@ -52,6 +52,7 @@ export class Server {
           callback(new Error('Not allowed by CORS'));
         }
       },
+      credentials: true,
     };
 
     this.app.use(helmet());
