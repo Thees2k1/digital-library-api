@@ -42,7 +42,7 @@ export class Server {
       'http://localhost:3000',
       'http://localhost:5173',
       'http://localhost:8080',
-      'https://chyra.vercel.app/',
+      'https://chyra.vercel.app',
     ];
     const corsOptions: CorsOptions = {
       origin: function (origin, callback) {
