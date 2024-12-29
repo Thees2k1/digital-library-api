@@ -56,12 +56,7 @@ export class Server {
     };
 
     this.app.use(helmet());
-    this.app.use(
-      cors({
-        origin: 'http://localhost:5173', // Domain frontend
-        credentials: true, // Cho phép gửi cookie
-      }),
-    );
+    this.app.use(cors(corsOptions));
     this.app.use(
       rateLimit({
         max: ONE_HUNDRED,
