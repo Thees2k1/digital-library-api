@@ -412,11 +412,23 @@ export class PersistenceBookRepository extends BookRepository {
   async update(id: string, data: Partial<BookEntity>): Promise<void> {
     await this.prisma.$transaction(async (prisma) => {
       const bookIdBin = uuidToBinary(id);
+      const authorIdBin = data.author
+        ? uuidToBinary(data.author.id)
+        : undefined;
+      const categoryIdBin = data.category
+        ? uuidToBinary(data.category.id)
+        : undefined;
+      const publisherIdBin = data.publisher
+        ? uuidToBinary(data.publisher.id)
+        : undefined;
       const mappedData = {
         title: data.title,
         cover: data.cover,
         description: data.description,
         releaseDate: data.releaseDate,
+        publisherId: publisherIdBin,
+        categoryId: categoryIdBin,
+        authorId: authorIdBin,
         pages: data.pages,
         updatedAt: data.updatedAt ?? new Date(),
       };

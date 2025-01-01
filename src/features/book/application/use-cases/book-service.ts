@@ -70,10 +70,18 @@ export class BookService implements IBookService {
         ? new Date(data.releaseDate)
         : undefined;
 
+      const publisher = data.publisherId
+        ? {
+            id: data.publisherId,
+            name: '',
+          }
+        : undefined;
+
       const bookData: Partial<BookEntity> = {
         title: data.title,
         cover: data.cover,
         description: data.description,
+        publisher: publisher,
         author: bookAuthor,
         category: bookCategory,
         genres: bookGenres,
@@ -134,6 +142,13 @@ export class BookService implements IBookService {
           }
         : undefined;
 
+      const bookPublisher = data.publisherId
+        ? {
+            id: data.publisherId,
+            name: '',
+          }
+        : undefined;
+
       const bookCategory = data.categoryId
         ? {
             id: data.categoryId,
@@ -169,6 +184,7 @@ export class BookService implements IBookService {
         description: data.description,
         author: bookAuthor,
         category: bookCategory,
+        publisher: bookPublisher,
         genres: bookGenres,
         releaseDate: releaseDate,
         digitalItems: digitalItems,
