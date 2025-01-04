@@ -2,7 +2,6 @@ import { PrismaClient } from '@prisma/client';
 import { AppError } from '@src/core/errors/custom-error';
 import { SessionDTO } from '@src/features/auth/application/dtos/session-dto';
 import { calculateExpiryDate } from '@src/core/utils/calculate-expiry-date';
-import { uuidToBinary } from '@src/core/utils/utils';
 import { inject, injectable } from 'inversify';
 import { AuthRepository } from '../../domain/repository/auth-repository';
 import { DI_TYPES } from '@src/core/di/types';
@@ -27,14 +26,14 @@ export class PersistenceAuthRepository extends AuthRepository {
     try {
       const existedSession = await this.prismaClient.userSession.findUnique({
         where: {
-          userId: uuidToBinary(session.userId),
+          userId: session.userId,
         },
       });
 
       if (existedSession) {
         await this.prismaClient.userSession.update({
           where: {
-            userId: uuidToBinary(session.userId),
+            userId: session.userId,
           },
           data: {
             signature: session.sessionIdentity,
@@ -46,7 +45,7 @@ export class PersistenceAuthRepository extends AuthRepository {
       } else {
         await this.prismaClient.userSession.create({
           data: {
-            userId: uuidToBinary(session.userId),
+            userId: session.userId,
             signature: session.sessionIdentity,
             ipAddress: session.ipAddress,
             userAgent: session.userAgent,

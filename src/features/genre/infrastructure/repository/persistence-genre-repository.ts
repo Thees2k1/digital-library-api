@@ -1,6 +1,5 @@
 import { Genre, PrismaClient } from '@prisma/client';
 import { DI_TYPES } from '@src/core/di/types';
-import { binaryToUuid, uuidToBinary } from '@src/core/utils/utils';
 import { inject, injectable } from 'inversify';
 import { GenreRepository } from '../../domain/repository/genre-repository';
 import { GenreEntity } from '../../domain/entities/genre-entity';
@@ -22,7 +21,7 @@ export class PersistenceGenreRepository extends GenreRepository {
 
   async getById(id: string): Promise<GenreEntity | null> {
     const data: Genre | null = await this.prisma.genre.findUnique({
-      where: { id: uuidToBinary(id) },
+      where: { id: id },
     });
     if (!data) return null;
     return PersistenceGenreRepository.convertToEntity(data);
@@ -48,18 +47,18 @@ export class PersistenceGenreRepository extends GenreRepository {
   async update(id: string, data: Partial<GenreEntity>): Promise<void> {
     const mappedData = PersistenceGenreRepository.convertToDbModel(data);
     await this.prisma.genre.update({
-      where: { id: uuidToBinary(id) },
+      where: { id: id },
       data: mappedData,
     });
   }
 
   async delete(id: string): Promise<void> {
-    await this.prisma.genre.delete({ where: { id: uuidToBinary(id) } });
+    await this.prisma.genre.delete({ where: { id: id } });
   }
 
   static convertToEntity(data: Genre): GenreEntity {
     return new GenreEntity(
-      binaryToUuid(data.id),
+      data.id,
       data.name,
       data.description ?? '',
       data.createdAt,
@@ -74,7 +73,7 @@ export class PersistenceGenreRepository extends GenreRepository {
       updatedAt: data.updatedAt,
     };
     if (data.id) {
-      return { ...required, id: uuidToBinary(data.id) };
+      return { ...required, id: data.id };
     }
     return required;
   }
