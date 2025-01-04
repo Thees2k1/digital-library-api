@@ -31,6 +31,7 @@
     "http-status-codes": "^2.3.0",
     "inversify": "^6.1.4",
     "jsonwebtoken": "^9.0.2",
+    "meilisearch": "^0.47.0",
     "multer": "1.4.5-lts.1",
     "nodemailer": "^6.9.16",
     "redis": "^4.7.0",

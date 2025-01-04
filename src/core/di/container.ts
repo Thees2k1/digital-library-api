@@ -42,6 +42,8 @@ import { PersistenceUserRepository } from '@src/features/user/infrastructure/rep
 import { UserController } from '@src/features/user/presentation/controller/user-controller';
 import { Container } from 'inversify';
 import { DI_TYPES } from './types';
+import { SearchService } from '../interfaces/search-service';
+import { MeiliSearchService } from '../services/meilisearch-service';
 
 // import { RedisService } from "../services/redis-service";
 
@@ -54,6 +56,7 @@ export function initializeInfrastucture() {
     .toConstantValue(new PrismaClient());
   // container.bind<RedisService>(RedisService).toSelf();
   container.bind<JwtService>(JwtService).toSelf();
+  container.bind<SearchService>(DI_TYPES.SearchService).to(MeiliSearchService);
 
   //binding repositories
   container

@@ -16,6 +16,7 @@ export class BookRouter {
     const router = Router();
     const controller = container.get<BookController>(DI_TYPES.BookController);
     router.get(path, controller.getBooks.bind(controller));
+    router.get(`${path}/search`, controller.searchBooks.bind(controller));
     router.get(`${path}/:id`, controller.getBook.bind(controller));
     router.post(
       path,

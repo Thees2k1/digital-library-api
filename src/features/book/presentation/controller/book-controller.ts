@@ -169,4 +169,16 @@ export class BookController {
       next(error);
     }
   }
+
+  async searchBooks(req: Request, res: Response, next: NextFunction) {
+    try {
+      const query = req.query.q as string;
+      const page = parseInt(req.query.page as string, 10) || 1;
+      const limit = parseInt(req.query.limit as string, 10) || 10;
+      const result = await this.service.search(query, page, limit);
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
 }

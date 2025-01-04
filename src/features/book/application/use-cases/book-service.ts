@@ -14,6 +14,7 @@ import { BookRepository } from '../../domain/repository/book-repository';
 import {
   BookCreateDto,
   BookDetailDto,
+  BookIndexRecord,
   BookListQueryDto,
   BookListResultDto,
   BookUpdateDto,
@@ -23,13 +24,20 @@ import {
 } from '../dtos/book-dto';
 import { BookMapper } from '../mapper/book-mapper';
 import { IBookService } from './interfaces/book-service-interface';
+import { SearchService } from '@src/core/interfaces/search-service';
+import { SearchParams } from 'meilisearch';
 
 @injectable()
 export class BookService implements IBookService {
   private readonly repository: BookRepository;
+  private readonly searchService: SearchService;
 
-  constructor(@inject(DI_TYPES.BookRepository) repository: BookRepository) {
+  constructor(
+    @inject(DI_TYPES.BookRepository) repository: BookRepository,
+    @inject(DI_TYPES.SearchService) searchService: SearchService,
+  ) {
     this.repository = repository;
+    this.searchService = searchService;
   }
   async create(data: BookCreateDto): Promise<BookDetailDto> {
     try {
@@ -121,6 +129,22 @@ export class BookService implements IBookService {
         updateAt: book.updatedAt.toISOString(),
       } as BookDetailDto;
 
+      const searchData: BookIndexRecord = {
+        id: book.id,
+        title: book.title,
+        cover: book.cover,
+        description: book.description,
+        authorName: book.author.name,
+        categoryName: book.category.name,
+        rating: book.averageRating,
+        genres: book.genres.map((genre) => genre.name),
+        releaseDate: book.releaseDate?.toISOString() || '',
+      };
+      await this.searchService.index({
+        indexName: 'books',
+        documents: [searchData],
+      });
+
       return returnData;
     } catch (error) {
       throw error;
@@ -192,6 +216,27 @@ export class BookService implements IBookService {
       };
 
       await this.repository.update(id, bookData);
+
+      const updated = await this.getById(id);
+
+      if (updated) {
+        const searchData: BookIndexRecord = {
+          id: updated.id,
+          title: updated.title,
+          cover: updated.cover,
+          description: updated.description,
+          authorName: updated.author.name,
+          categoryName: updated.category.name,
+          rating: updated.averageRating || 0,
+          genres: updated.genres.map((genre) => genre.name),
+          releaseDate: updated.releaseDate,
+        };
+
+        await this.searchService.index({
+          indexName: 'books',
+          documents: [searchData],
+        });
+      }
       return id;
     } catch (error) {
       throw error;
@@ -221,6 +266,8 @@ export class BookService implements IBookService {
 
       const data = books.map((book) => BookMapper.toBookDetailDto(book));
 
+      await this.indexAllBooks(data);
+
       return {
         data,
         pagination: {
@@ -233,6 +280,32 @@ export class BookService implements IBookService {
       throw error;
     }
   }
+
+  async search(query: string, page: number, limit: number): Promise<any> {
+    try {
+      const result = await this.searchService.search<BookIndexRecord>(query, {
+        indexName: 'books',
+        params: {
+          page,
+          limit,
+        },
+      });
+
+      // const data = result.hits.map((item: any) => {
+      //   return {
+      //     id: item.id,
+      //     title: item.title,
+      //     cover: item.cover,
+      //     description: item.description,
+      //   };
+      // });
+
+      return result;
+    } catch (error: any) {
+      throw error;
+    }
+  }
+
   async getById(id: string): Promise<BookDetailDto | null> {
     try {
       const res = await this.repository.getById(id);
@@ -259,6 +332,11 @@ export class BookService implements IBookService {
       }
 
       await this.repository.delete(id, isHardDelete);
+
+      await this.searchService.delete({
+        indexName: 'books',
+        id: id,
+      });
 
       return id;
     } catch (error) {
@@ -296,5 +374,28 @@ export class BookService implements IBookService {
 
   async getLikeCount(bookId: string): Promise<number> {
     return await this.repository.getLikeCount(bookId);
+  }
+
+  async indexAllBooks(documents: BookDetailDto[]): Promise<void> {
+    const indexDatas: Array<BookIndexRecord> = documents.map((item) => {
+      return {
+        id: item.id,
+        title: item.title,
+        cover: item.cover,
+        description: item.description,
+        authorName: item.author.name,
+        categoryName: item.category.name,
+        rating: item.averageRating || 0,
+        genres: item.genres.map((genre) => genre.name),
+        releaseDate: item.releaseDate,
+      } satisfies BookIndexRecord;
+    });
+
+    await this.searchService.index({
+      indexName: 'books',
+      documents: indexDatas,
+    });
+
+    console.log('updated all books');
   }
 }

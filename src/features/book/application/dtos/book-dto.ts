@@ -131,6 +131,18 @@ export type BookListResultDto = {
   };
 };
 
+export type BookIndexRecord = {
+  id: string;
+  title: string;
+  description: string;
+  cover: string;
+  releaseDate: string;
+  rating: number;
+  authorName: string;
+  categoryName: string;
+  genres: string[];
+};
+
 export type ReviewCreateDto = z.infer<typeof reviewCreateDtoSchema> & {
   bookId: string;
   userId: string;

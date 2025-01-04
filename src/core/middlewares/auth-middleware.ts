@@ -29,7 +29,6 @@ export const authMiddleware = async (
     }
     const payload = decoded as { userId: string };
     const newBody = { ...req.body, userId: payload.userId };
-    console.log('newBody', newBody);
     req.body = newBody;
   });
 

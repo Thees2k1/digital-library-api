@@ -23,4 +23,5 @@ export interface IBookService {
   ): Promise<ReviewListResultDto>;
   toggleLike(userId: string, bookId: string): Promise<void>;
   getLikeCount(bookId: string): Promise<number>;
+  search(query: string, page: number, limit: number): Promise<any>;
 }
