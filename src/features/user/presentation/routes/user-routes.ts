@@ -42,6 +42,18 @@ export class UserRouter {
       authMiddleware,
       controller.deleteUser.bind(controller),
     );
+
+    router.get(
+      `${path}/:id/liked-books`,
+      authMiddleware,
+      controller.getBookLikes.bind(controller),
+    );
+
+    // router.get(
+    //   `${path}/:id/favorites`,
+    //   authMiddleware,
+    //   controller.toggleLike.bind(controller),
+    // )
     return router;
   }
 }

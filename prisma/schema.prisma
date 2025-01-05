@@ -200,10 +200,13 @@ model UserReadBook {
   book      Book     @relation(fields: [bookId], references: [id])
   userId    String    @db.Uuid @map("user_id")
   user      User     @relation(fields: [userId], references: [id])
-  readAt    DateTime @default(now()) @map("read_at") @db.Timestamp(0)
+  
+  isFavorite Boolean  @default(false) @map("is_favorite")
+  latestProcess    Int? @default(0) @map("latest_process") @db.SmallInt
+  currentPage      Int? @default(0) @map("current_page") @db.Integer
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamp(0)
-
   
   @@map("user_read_book")
 }

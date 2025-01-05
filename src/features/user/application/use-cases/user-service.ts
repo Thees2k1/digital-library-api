@@ -2,7 +2,12 @@ import { AppError } from '@src/core/errors/custom-error';
 import logger from '@src/core/utils/logger/logger';
 import { inject, injectable } from 'inversify';
 import { UserRepository } from '../../domain/repository/user-repository';
-import { CreateUserDto, UpdateUserDto, User } from '../dtos/user-dto';
+import {
+  BookLikesResult,
+  CreateUserDto,
+  UpdateUserDto,
+  User,
+} from '../dtos/user-dto';
 import { DI_TYPES } from '@src/core/di/types';
 import argon2 from 'argon2';
 import { IUserService } from './interfaces/user-service-interface';
@@ -148,5 +153,14 @@ export class UserService implements IUserService {
       logger.error(error);
       throw error;
     }
+  }
+
+  async getBookLikes(userId: string): Promise<BookLikesResult> {
+    const dataReturn: any = await this.repository.getBookLikes(userId);
+
+    return {
+      bookIds: dataReturn.bookIds ?? [],
+      count: dataReturn.count ?? 0,
+    };
   }
 }

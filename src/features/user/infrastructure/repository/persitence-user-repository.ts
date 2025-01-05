@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { Like, LikeStatus, PrismaClient } from '@prisma/client';
 import { DI_TYPES } from '@src/core/di/types';
 import { AppError } from '@src/core/errors/custom-error';
 import { inject, injectable } from 'inversify';
@@ -250,5 +250,26 @@ export class PersistenceUserRepository extends UserRepository {
     });
 
     return deletedUser.id;
+  }
+
+  async getBookLikes(
+    id: string,
+  ): Promise<{ bookIds: Array<string>; count: number }> {
+    const userLikedBooks = await this.prismaClient.like.findMany({
+      select: {
+        bookId: true,
+      },
+      where: {
+        userId: id,
+        status: LikeStatus.liked,
+      },
+    });
+
+    const bookIds = userLikedBooks.map((like) => like.bookId);
+
+    return {
+      bookIds: bookIds,
+      count: bookIds.length,
+    };
   }
 }

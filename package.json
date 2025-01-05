@@ -17,7 +17,6 @@
   "description": "",
   "dependencies": {
     "@prisma/client": "^5.22.0",
-    "@uploadthing/shared": "^7.1.2",
     "argon2": "^0.41.1",
     "compression": "^1.7.5",
     "cookie-parser": "^1.4.7",

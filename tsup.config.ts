@@ -7,7 +7,7 @@ export default defineConfig({
   dts: true, // generate declaration files
   sourcemap: false, // generate sourcemaps for debugging
   clean: true, // clean the output directory before building
-  external: ['tsconfig-paths', 'express'], // mark tsconfig-paths as external (don't bundle it)
+  external: ['tsconfig-paths', 'express','argon2'], // mark tsconfig-paths as external (don't bundle it)
   minify: true, // enable minification
   treeshake: true, // enable treeshaking
 });
