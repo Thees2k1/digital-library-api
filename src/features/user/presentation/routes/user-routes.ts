@@ -44,7 +44,7 @@ export class UserRouter {
     );
 
     router.get(
-      `${path}/:id/liked-books`,
+      `${path}/me/liked-books`,
       authMiddleware,
       controller.getBookLikes.bind(controller),
     );

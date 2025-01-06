@@ -1,10 +1,11 @@
 import { PrismaClient } from '@prisma/client';
+import { EMPTY_STRING, SUCCESSFUL } from '@src/core/constants/constants';
+import { DI_TYPES } from '@src/core/di/types';
 import { AppError } from '@src/core/errors/custom-error';
-import { SessionDTO } from '@src/features/auth/application/dtos/session-dto';
 import { calculateExpiryDate } from '@src/core/utils/calculate-expiry-date';
+import { SessionDTO } from '@src/features/auth/application/dtos/session-dto';
 import { inject, injectable } from 'inversify';
 import { AuthRepository } from '../../domain/repository/auth-repository';
-import { DI_TYPES } from '@src/core/di/types';
 
 // import { RedisService } from "@src/features/shared/infrastructure/services/redis-service";
 
@@ -65,6 +66,11 @@ export class PersistenceAuthRepository extends AuthRepository {
 
   async deleteSession(sessionIdentity: string): Promise<string> {
     try {
+      const existed = await this.prismaClient.userSession.findUnique({
+        where: { signature: sessionIdentity },
+      });
+      if (!existed) return EMPTY_STRING;
+
       await this.prismaClient.userSession.delete({
         where: {
           signature: sessionIdentity,
@@ -72,7 +78,7 @@ export class PersistenceAuthRepository extends AuthRepository {
       });
 
       // await this.redisClient!.del(`refreshToken:${sessionIdentity}`);
-      return 'delete success';
+      return SUCCESSFUL;
     } catch (e) {
       if (e instanceof Error) {
         throw AppError.internalServer('Error delete session, err:' + e.message);

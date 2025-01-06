@@ -175,13 +175,7 @@ export class UserController {
 
   async getBookLikes(req: Request, res: Response<any>, next: NextFunction) {
     try {
-      let userId: string | undefined;
-
-      if (req.params.id && idSchema.safeParse(req.params.id).success) {
-        userId = req.params.id;
-      } else {
-        userId = req.body.userId;
-      }
+      const userId = req.body.userId;
 
       if (!userId) {
         next(AppError.badRequest('User id is required.'));
