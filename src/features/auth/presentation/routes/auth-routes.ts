@@ -11,6 +11,7 @@ class AuthRoutes {
   static register = '/register';
   static refreshToken = '/refresh-token';
   static logout = '/logout';
+  static checkSession = '/check-session';
 }
 
 export class AuthRouter {
@@ -32,6 +33,10 @@ export class AuthRouter {
       controller.refreshToken.bind(controller),
     );
     router.post(AuthRoutes.logout, controller.logout.bind(controller));
+    router.get(
+      AuthRoutes.checkSession,
+      controller.checkSession.bind(controller),
+    );
     return router;
   }
 }

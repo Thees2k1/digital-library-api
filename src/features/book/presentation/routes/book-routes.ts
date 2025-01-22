@@ -46,7 +46,7 @@ export class BookRouter {
 
     //likes
     router.post(
-      `${path}/:id/like`,
+      `${path}/:id/likes`,
       authMiddleware,
       controller.toggleLike.bind(controller),
     );

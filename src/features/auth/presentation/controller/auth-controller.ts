@@ -17,14 +17,14 @@ import {
   RegisterResultDTO,
   RegisterResultSchema,
 } from '../../application/dtos/register-dto';
-import { AuthService } from '../../application/use-cases/auth-service';
+import { IAuthService } from '../../application/use-cases/interfaces/auth-service-interface';
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 @injectable()
 export class AuthController {
-  private readonly service: AuthService;
-  constructor(@inject(DI_TYPES.AuthService) service: AuthService) {
+  private readonly service: IAuthService;
+  constructor(@inject(DI_TYPES.AuthService) service: IAuthService) {
     this.service = service;
   }
 
@@ -107,6 +107,30 @@ export class AuthController {
     }
   }
 
+  async checkSession(req: Request, res: Response, next: NextFunction) {
+    const { refreshToken } = req.cookies;
+
+    if (!refreshToken) {
+      next(AppError.notFound('Session not found'));
+      return;
+    }
+
+    console.log('refreshToken', refreshToken);
+    try {
+      // Verify refresh token
+      const verified = this.service.verifySession(refreshToken);
+      if (!verified) {
+        next(AppError.badRequest('Invalid session'));
+        return;
+      }
+
+      res.status(200).json({ session: true });
+      return;
+    } catch (error) {
+      next(AppError.badRequest('Invalid session'));
+    }
+  }
+
   async logout(
     req: Request<any, any, RefreshBodyDTO>,
     res: Response,
@@ -114,8 +138,8 @@ export class AuthController {
   ) {
     try {
       const refreshToken = req.cookies[REFRESH_TOKEN];
-      const result = await this.service.logout(refreshToken);
       res.clearCookie(REFRESH_TOKEN);
+      const result = await this.service.logout(refreshToken);
       res.json(result);
     } catch (error) {
       if (error instanceof Error) {

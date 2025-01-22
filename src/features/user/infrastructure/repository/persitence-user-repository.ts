@@ -1,7 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import { Like, LikeStatus, PrismaClient } from '@prisma/client';
 import { DI_TYPES } from '@src/core/di/types';
 import { AppError } from '@src/core/errors/custom-error';
-import { binaryToUuid, uuidToBinary } from '@src/core/utils/utils';
 import { inject, injectable } from 'inversify';
 import { CreateUserDto } from '../../application/dtos/user-dto';
 import { UserEntity } from '../../domain/entities/user';
@@ -49,7 +48,7 @@ export class PersistenceUserRepository extends UserRepository {
       throw AppError.internalServer('User identity not found');
     }
 
-    const transformedId = binaryToUuid(res.id);
+    const transformedId = res.id;
 
     const data = new UserEntity(
       transformedId,
@@ -67,7 +66,7 @@ export class PersistenceUserRepository extends UserRepository {
   }
 
   async findById(id: string): Promise<UserEntity | null> {
-    const transformedId = uuidToBinary(id);
+    const transformedId = id;
     const res = await this.prismaClient.user.findFirst({
       select: {
         id: true,
@@ -98,7 +97,7 @@ export class PersistenceUserRepository extends UserRepository {
     }
 
     const data: UserEntity = new UserEntity(
-      binaryToUuid(res.id),
+      res.id,
       res.firstName,
       res.lastName,
       res.identity.email,
@@ -143,7 +142,7 @@ export class PersistenceUserRepository extends UserRepository {
     });
 
     const res = new UserEntity(
-      binaryToUuid(newUser.user.id),
+      newUser.user.id,
       newUser.user.firstName,
       newUser.user.lastName,
       newUser.userIdentity.email,
@@ -185,7 +184,7 @@ export class PersistenceUserRepository extends UserRepository {
       }
 
       return new UserEntity(
-        binaryToUuid(user.id),
+        user.id,
         user.firstName,
         user.lastName,
         user.identity.email,
@@ -203,7 +202,7 @@ export class PersistenceUserRepository extends UserRepository {
   async update(id: string, data: UserEntity): Promise<string> {
     const updatedUser = await this.prismaClient.$transaction(async (prisma) => {
       // Update User table
-      const transformedId = uuidToBinary(id);
+      const transformedId = id;
       const user = await prisma.user.update({
         where: { id: transformedId },
         data: {
@@ -230,11 +229,11 @@ export class PersistenceUserRepository extends UserRepository {
       };
     });
 
-    return binaryToUuid(updatedUser.user.id);
+    return updatedUser.user.id;
   }
 
   async delete(id: string): Promise<string> {
-    const userId = uuidToBinary(id);
+    const userId = id;
     // Wrap deletion in a transaction to ensure both deletions happen atomically
     const deletedUser = await this.prismaClient.$transaction(async (prisma) => {
       // First, delete the associated UserIdentity
@@ -250,6 +249,27 @@ export class PersistenceUserRepository extends UserRepository {
       return user; // Return the deleted user information if needed
     });
 
-    return binaryToUuid(deletedUser.id);
+    return deletedUser.id;
+  }
+
+  async getBookLikes(
+    id: string,
+  ): Promise<{ bookIds: Array<string>; count: number }> {
+    const userLikedBooks = await this.prismaClient.like.findMany({
+      select: {
+        bookId: true,
+      },
+      where: {
+        userId: id,
+        status: LikeStatus.liked,
+      },
+    });
+
+    const bookIds = userLikedBooks.map((like) => like.bookId);
+
+    return {
+      bookIds: bookIds,
+      count: bookIds.length,
+    };
   }
 }

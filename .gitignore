@@ -13,3 +13,4 @@ docker-compose.yml
 dist
 
 Dockerfile.local
+.env.local

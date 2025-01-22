@@ -283,6 +283,10 @@ export class BookService implements IBookService {
 
   async search(query: string, page: number, limit: number): Promise<any> {
     try {
+      if (query === '') {
+        console.log('empty query');
+        return { hits: [], total: 0, offset: 0, limit: 0, query: '' };
+      }
       const result = await this.searchService.search<BookIndexRecord>(query, {
         indexName: 'books',
         params: {

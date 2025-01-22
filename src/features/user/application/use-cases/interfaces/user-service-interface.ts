@@ -1,4 +1,9 @@
-import { CreateUserDto, UpdateUserDto, User } from '../../dtos/user-dto';
+import {
+  BookLikesResult,
+  CreateUserDto,
+  UpdateUserDto,
+  User,
+} from '../../dtos/user-dto';
 
 export interface IUserService {
   createUser(user: CreateUserDto): Promise<User | null>;
@@ -7,4 +12,5 @@ export interface IUserService {
   getUserByEmail(email: string): Promise<User | null>;
   updateUser(id: string, updateData: UpdateUserDto): Promise<string>;
   deleteUser(id: string): Promise<string>;
+  getBookLikes(id: string): Promise<BookLikesResult>;
 }

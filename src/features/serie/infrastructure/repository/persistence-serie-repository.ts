@@ -1,6 +1,5 @@
 import { Serie, PrismaClient } from '@prisma/client';
 import { DI_TYPES } from '@src/core/di/types';
-import { binaryToUuid, uuidToBinary } from '@src/core/utils/utils';
 import { inject, injectable } from 'inversify';
 import { SerieRepository } from '../../domain/repository/serie-repository';
 import { SerieEntity } from '../../domain/entities/serie-entity';
@@ -22,7 +21,7 @@ export class PersistenceSerieRepository extends SerieRepository {
 
   async getById(id: string): Promise<SerieEntity | null> {
     const data: Serie | null = await this.prisma.serie.findUnique({
-      where: { id: uuidToBinary(id) },
+      where: { id: id },
     });
     if (!data) return null;
     return PersistenceSerieRepository.convertToEntity(data);
@@ -38,7 +37,7 @@ export class PersistenceSerieRepository extends SerieRepository {
 
   async create(data: Partial<SerieEntity>): Promise<SerieEntity> {
     const mappedData = {
-      id: uuidToBinary(data.id!),
+      id: data.id!,
       name: data.name!,
       cover: data.cover,
       releaseDate: data.releaseDate || '',
@@ -66,26 +65,26 @@ export class PersistenceSerieRepository extends SerieRepository {
       updatedAt: data.updatedAt,
     };
     await this.prisma.serie.update({
-      where: { id: uuidToBinary(id) },
+      where: { id: id },
       data: mappedData,
     });
   }
 
   async delete(id: string): Promise<void> {
-    await this.prisma.serie.delete({ where: { id: uuidToBinary(id) } });
+    await this.prisma.serie.delete({ where: { id: id } });
   }
 
   async getBooksBySerieId(id: string): Promise<Array<String>> {
     const data = await this.prisma.book.findMany({
-      where: { serieId: uuidToBinary(id) },
+      where: { serieId: id },
       select: { id: true },
     });
-    return data.map((book) => binaryToUuid(book.id));
+    return data.map((book) => book.id);
   }
 
   static convertToEntity(data: Serie): SerieEntity {
     return new SerieEntity(
-      binaryToUuid(data.id),
+      data.id,
       data.name,
       data.cover ?? '',
       data.description ?? '',

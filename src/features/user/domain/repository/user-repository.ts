@@ -27,4 +27,8 @@ export abstract class UserRepository
   findByEmail(email: string): Promise<UserEntity | null> {
     throw new Error('Method not implemented. yet');
   }
+
+  getBookLikes(id: string): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
 }
