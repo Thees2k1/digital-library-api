@@ -121,6 +121,7 @@ export class AuthController {
       const verified = this.service.verifySession(refreshToken);
       if (!verified) {
         next(AppError.badRequest('Invalid session'));
+        return;
       }
 
       res.status(200).json({ session: true });
