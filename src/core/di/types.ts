@@ -28,6 +28,7 @@ export const DI_TYPES = {
 
   PrismaClient: Symbol.for('PrismaClient'),
 
+  SearchService: Symbol.for('SearchService'),
   Logger: Symbol.for('Logger'),
   Mailer: Symbol.for('Mailer'),
   MessageBroker: Symbol.for('MessageBroker'),

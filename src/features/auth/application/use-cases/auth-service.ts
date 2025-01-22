@@ -1,5 +1,7 @@
 import {
+  EMPTY_STRING,
   INVALID_CREDENTIALS,
+  LOGOUT_SUCCESS,
   REFRESH_TOKEN_EXPIRES_IN,
 } from '@src/core/constants/constants';
 import { DI_TYPES } from '@src/core/di/types';
@@ -25,17 +27,22 @@ import { IAuthService } from './interfaces/auth-service-interface';
 export class AuthService implements IAuthService {
   private readonly userRepository: UserRepository;
   private readonly authRepository: AuthRepository;
-  private readonly JwtService: JwtService;
+  private readonly jwtService: JwtService;
   // private readonly redisService : RedisService;
   constructor(
     @inject(DI_TYPES.UserRepository) userRepository: UserRepository,
     @inject(DI_TYPES.AuthRepository) authRepository: AuthRepository,
-    @inject(JwtService) JwtService: JwtService,
+    @inject(JwtService) jwtService: JwtService,
     //@inject(RedisService) redisService,
   ) {
     this.userRepository = userRepository;
     this.authRepository = authRepository;
-    this.JwtService = JwtService;
+    this.jwtService = jwtService;
+  }
+
+  verifySession(refreshToken: string): Promise<boolean> {
+    const res = this.jwtService.verify(refreshToken);
+    return Promise.resolve(res.success);
   }
 
   async login(data: LoginBodyDTO): Promise<LoginResultDTO> {
@@ -43,22 +50,22 @@ export class AuthService implements IAuthService {
     try {
       const user = await this.userRepository.findByEmail(email);
       if (!user) {
-        throw AppError.unauthorized(INVALID_CREDENTIALS);
+        throw AppError.badRequest(INVALID_CREDENTIALS);
       }
       const isPasswordValid = await argon2.verify(user.password, password);
 
       if (!isPasswordValid) {
-        throw AppError.unauthorized(INVALID_CREDENTIALS);
+        throw AppError.badRequest(INVALID_CREDENTIALS);
       }
 
       const payload: JwtPayload = {
         userId: user.id,
       };
-      const accessToken = await this.JwtService.generate(payload, {
+      const accessToken = await this.jwtService.generate(payload, {
         audience: data.userAgent,
         expiresIn: '15m',
       });
-      const refreshToken = await this.JwtService.generate(payload, {
+      const refreshToken = await this.jwtService.generate(payload, {
         audience: data.userAgent,
         expiresIn: '7d',
       });
@@ -106,20 +113,20 @@ export class AuthService implements IAuthService {
 
   async logout(refreshToken: string): Promise<string> {
     try {
-      const res = this.JwtService.verify(refreshToken);
+      const res = this.jwtService.verify(refreshToken);
       if (!res.success) {
-        throw AppError.forbidden(res.error);
+        return EMPTY_STRING;
       }
       const sessionIdentity = refreshToken.split('.')[2];
       await this.authRepository.deleteSession(sessionIdentity);
-      return 'Logout success';
+      return LOGOUT_SUCCESS;
     } catch (error) {
       throw error;
     }
   }
 
   async refreshTokens(refreshToken: string): Promise<RefreshResultDTO> {
-    const res = this.JwtService.verify(refreshToken);
+    const res = this.jwtService.verify(refreshToken);
     if (!res.success) {
       throw AppError.unauthorized(res.error);
     }
@@ -142,11 +149,11 @@ export class AuthService implements IAuthService {
       userId: payload.userId,
     };
 
-    const newAccessToken = this.JwtService.generate(newPayload, {
+    const newAccessToken = this.jwtService.generate(newPayload, {
       expiresIn: '15m',
       audience: payload.aud,
     });
-    const newRefreshToken = this.JwtService.generate(newPayload, {
+    const newRefreshToken = this.jwtService.generate(newPayload, {
       expiresIn: '7d',
       audience: payload.aud,
     });

@@ -3,7 +3,6 @@ import { PublisherRepository } from '../../domain/repository/publisher-repositor
 import { PrismaClient, Publisher } from '@prisma/client';
 import { DI_TYPES } from '@src/core/di/types';
 import { PublisherEntity } from '../../domain/entities/publisher-entity';
-import { binaryToUuid, uuidToBinary } from '@src/core/utils/utils';
 
 @injectable()
 export class PersistencePublisherRepository extends PublisherRepository {
@@ -22,7 +21,7 @@ export class PersistencePublisherRepository extends PublisherRepository {
 
   async getById(id: string): Promise<PublisherEntity | null> {
     const data: Publisher | null = await this.prisma.publisher.findUnique({
-      where: { id: uuidToBinary(id) },
+      where: { id: id },
     });
     if (!data) return null;
     return PersistencePublisherRepository.convertToEntity(data);
@@ -48,18 +47,18 @@ export class PersistencePublisherRepository extends PublisherRepository {
   async update(id: string, data: Partial<PublisherEntity>): Promise<void> {
     const mappedData = PersistencePublisherRepository.convertToDbModel(data);
     await this.prisma.publisher.update({
-      where: { id: uuidToBinary(id) },
+      where: { id: id },
       data: mappedData,
     });
   }
 
   async delete(id: string): Promise<void> {
-    await this.prisma.publisher.delete({ where: { id: uuidToBinary(id) } });
+    await this.prisma.publisher.delete({ where: { id: id } });
   }
 
   static convertToEntity(data: Publisher): PublisherEntity {
     return new PublisherEntity(
-      binaryToUuid(data.id),
+      data.id,
       data.name,
       data.cover,
       data.contactInfo,
@@ -78,7 +77,7 @@ export class PersistencePublisherRepository extends PublisherRepository {
       updatedAt: data.updatedAt ?? undefined,
     };
     if (data.id) {
-      return { ...required, id: uuidToBinary(data.id) };
+      return { ...required, id: data.id };
     }
     return required;
   }

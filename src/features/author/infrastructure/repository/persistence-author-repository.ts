@@ -1,6 +1,5 @@
 import { Author, PrismaClient } from '@prisma/client';
 import { DI_TYPES } from '@src/core/di/types';
-import { binaryToUuid, uuidToBinary } from '@src/core/utils/utils';
 import { inject, injectable } from 'inversify';
 import { AuthorEntity } from '../../domain/entities/author-entity';
 import { AuthorRepository } from '../../domain/repository/author-repository';
@@ -18,7 +17,7 @@ export class PersistenceAuthorRepository implements AuthorRepository {
   }
   async getById(id: string): Promise<AuthorEntity | null> {
     const data: Author | null = await this.prisma.author.findUnique({
-      where: { id: uuidToBinary(id) },
+      where: { id: id },
     });
     if (!data) return null;
     return PersistenceAuthorRepository.convertToAuthorEntity(data);
@@ -44,17 +43,17 @@ export class PersistenceAuthorRepository implements AuthorRepository {
   async update(id: string, data: Partial<AuthorEntity>): Promise<void> {
     const mappedData = PersistenceAuthorRepository.convertToDbModel(data);
     await this.prisma.author.update({
-      where: { id: uuidToBinary(id) },
+      where: { id: id },
       data: mappedData,
     });
   }
   async delete(id: string): Promise<void> {
-    await this.prisma.author.delete({ where: { id: uuidToBinary(id) } });
+    await this.prisma.author.delete({ where: { id: id } });
   }
 
   static convertToAuthorEntity(data: Author): AuthorEntity {
     return new AuthorEntity(
-      binaryToUuid(data.id),
+      data.id,
       data.name,
       data.avatar,
       data.birthDate,
@@ -76,6 +75,6 @@ export class PersistenceAuthorRepository implements AuthorRepository {
       bio: data.bio ?? null,
     };
     if (!data.id) return required;
-    return { ...required, id: uuidToBinary(data.id) };
+    return { ...required, id: data.id };
   }
 }

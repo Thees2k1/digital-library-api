@@ -8,6 +8,7 @@ import logger from '@src/core/utils/logger/logger';
 import { type NextFunction, type Request, type Response } from 'express';
 import { inject, injectable } from 'inversify';
 import {
+  BookLikesResult,
   DeleteUserResponse,
   ListUserResponse,
   UpdateUserResponse,
@@ -164,6 +165,26 @@ export class UserController {
       const user = await this.service.deleteUser(userId);
       res.status(200).json({
         data: user,
+        message: SUCCESSFUL,
+      });
+    } catch (error) {
+      logger.error(error);
+      next(error);
+    }
+  }
+
+  async getBookLikes(req: Request, res: Response<any>, next: NextFunction) {
+    try {
+      const userId = req.body.userId;
+
+      if (!userId) {
+        next(AppError.badRequest('User id is required.'));
+        return;
+      }
+
+      const data: BookLikesResult = await this.service.getBookLikes(userId);
+      res.status(200).json({
+        data: data,
         message: SUCCESSFUL,
       });
     } catch (error) {

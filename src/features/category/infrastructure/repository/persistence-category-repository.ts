@@ -1,6 +1,5 @@
 import { Category, PrismaClient } from '@prisma/client';
 import { DI_TYPES } from '@src/core/di/types';
-import { binaryToUuid, uuidToBinary } from '@src/core/utils/utils';
 import { inject, injectable } from 'inversify';
 import { CategoryEntity } from '../../domain/entities/category';
 import { CategoryRepository } from '../../domain/repository/category-repository';
@@ -22,7 +21,7 @@ export class PersistenceCategoryRepository extends CategoryRepository {
 
   async getById(id: string): Promise<CategoryEntity | null> {
     const data: Category | null = await this.prisma.category.findUnique({
-      where: { id: uuidToBinary(id) },
+      where: { id: id },
     });
     if (!data) return null;
     return PersistenceCategoryRepository.convertToEntity(data);
@@ -48,18 +47,18 @@ export class PersistenceCategoryRepository extends CategoryRepository {
   async update(id: string, data: Partial<CategoryEntity>): Promise<void> {
     const mappedData = PersistenceCategoryRepository.convertToDbModel(data);
     await this.prisma.category.update({
-      where: { id: uuidToBinary(id) },
+      where: { id: id },
       data: mappedData,
     });
   }
 
   async delete(id: string): Promise<void> {
-    await this.prisma.category.delete({ where: { id: uuidToBinary(id) } });
+    await this.prisma.category.delete({ where: { id: id } });
   }
 
   static convertToEntity(data: Category): CategoryEntity {
     return new CategoryEntity(
-      binaryToUuid(data.id),
+      data.id,
       data.name,
       data.cover ?? '',
       data.description ?? '',
@@ -76,7 +75,7 @@ export class PersistenceCategoryRepository extends CategoryRepository {
       createdAt: data.createdAt,
     };
     if (data.id) {
-      return { ...required, id: uuidToBinary(data.id) };
+      return { ...required, id: data.id };
     }
     return required;
   }

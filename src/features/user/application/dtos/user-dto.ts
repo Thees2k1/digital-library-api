@@ -51,3 +51,8 @@ export {
   UpdateUserResponse,
   DeleteUserResponse,
 };
+
+export interface BookLikesResult {
+  bookIds: Array<string>;
+  count: number;
+}

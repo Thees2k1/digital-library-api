@@ -7,4 +7,5 @@ export interface IAuthService {
   register(data: RegisterBodyDTO): Promise<RegisterResultDTO>;
   logout(refreshToken: string): Promise<string>;
   refreshTokens(refreshToken: string): Promise<RefreshResultDTO>;
+  verifySession(refreshToken: string): Promise<boolean>;
 }

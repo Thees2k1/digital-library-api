@@ -21,3 +21,4 @@ export const SOMETHING_WENT_WRONG = 'Something went wrong.';
 
 export const SUCCESSFUL = 'Successful';
 export const FAILED = 'Failed';
+export const EMPTY_STRING = '';

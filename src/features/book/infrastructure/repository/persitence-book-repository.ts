@@ -1,6 +1,5 @@
 import { Book, item_format, LikeStatus, PrismaClient } from '@prisma/client';
 import { DI_TYPES } from '@src/core/di/types';
-import { binaryToUuid, uuidToBinary } from '@src/core/utils/utils';
 import { inject, injectable } from 'inversify';
 import { BookEntity } from '../../domain/entities/book-entity';
 import { Filter, Paging } from '../../domain/interfaces/common';
@@ -28,7 +27,7 @@ export class PersistenceBookRepository extends BookRepository {
 
   async getById(id: string): Promise<BookEntity | null> {
     const data = await this.prisma.book.findUnique({
-      where: { id: uuidToBinary(id), status: { not: 'deleted' } },
+      where: { id: id, status: { not: 'deleted' } },
       select: {
         id: true,
         title: true,
@@ -88,31 +87,31 @@ export class PersistenceBookRepository extends BookRepository {
 
     if (!data) return null;
     const bookAuthor = {
-      id: binaryToUuid(data.author.id),
+      id: data.author.id,
       name: data.author.name,
       avatar: data.author.avatar ?? '',
       bio: data.author.bio ?? '',
     };
     const bookCategory = {
-      id: binaryToUuid(data.category.id),
+      id: data.category.id,
       name: data.category.name,
     };
     const bookGenres: Array<Genre> = data.genres.map((genre) => {
       return {
-        id: binaryToUuid(genre.genre.id),
+        id: genre.genre.id,
         name: genre.genre.name,
       } as Genre;
     });
 
     const bookReviews = data.reviews.map((review) => {
       return {
-        id: binaryToUuid(review.id),
+        id: review.id,
         rating: review.rating,
         comment: review.review ?? '',
       } as Review;
     });
     const bookPublisher = data.publisher
-      ? { id: binaryToUuid(data.publisher.id), name: data.publisher.name }
+      ? { id: data.publisher.id, name: data.publisher.name }
       : undefined;
 
     const digitalItems = data.digitalItems.map((item) => {
@@ -123,7 +122,7 @@ export class PersistenceBookRepository extends BookRepository {
       } as DigitalItemData;
     });
     return new BookEntity(
-      binaryToUuid(data.id),
+      data.id,
       data.title,
       data.cover,
       data.description ?? '',
@@ -156,19 +155,19 @@ export class PersistenceBookRepository extends BookRepository {
 
     if (filter) {
       if (filter.authorId) {
-        query.authorId = uuidToBinary(filter.authorId);
+        query.authorId = filter.authorId;
       }
       if (filter.categoryId) {
-        query.categoryId = uuidToBinary(filter.categoryId);
+        query.categoryId = filter.categoryId;
       }
       if (filter.publisherId) {
-        query.publisherId = uuidToBinary(filter.publisherId);
+        query.publisherId = filter.publisherId;
       }
       if (filter.genres) {
         query.genres = {
           some: {
             genreId: {
-              in: filter.genres.map((genre) => uuidToBinary(genre)),
+              in: filter.genres.map((id) => id),
             },
           },
         };
@@ -251,30 +250,30 @@ export class PersistenceBookRepository extends BookRepository {
 
     return bookData.map((book) => {
       const bookAuthor = {
-        id: binaryToUuid(book.author.id),
+        id: book.author.id,
         name: book.author.name,
         avatar: book.author.avatar ?? '',
         bio: book.author.bio ?? '',
       } as Author;
       const bookCategory = {
-        id: binaryToUuid(book.category.id),
+        id: book.category.id,
         name: book.category.name,
         cover: book.category.cover ?? '',
       } as Category;
 
       const bookPublisher = book.publisher
-        ? { id: binaryToUuid(book.publisher.id), name: book.publisher.name }
+        ? { id: book.publisher.id, name: book.publisher.name }
         : undefined;
       const bookGenres: Array<Genre> = book.genres.map((genre) => {
         return {
-          id: binaryToUuid(genre.genre.id),
+          id: genre.genre.id,
           name: genre.genre.name,
         } as Genre;
       });
 
       const bookReviews: Array<Review> = book.reviews.map((review) => {
         return {
-          id: binaryToUuid(review.id),
+          id: review.id,
           rating: review.rating,
           comment: review.review ?? '',
         } as Review;
@@ -288,7 +287,7 @@ export class PersistenceBookRepository extends BookRepository {
         } as DigitalItemData;
       });
       return new BookEntity(
-        binaryToUuid(book.id),
+        book.id,
         book.title,
         book.cover,
         book.description ?? '',
@@ -314,19 +313,19 @@ export class PersistenceBookRepository extends BookRepository {
     };
     if (filter) {
       if (filter.authorId) {
-        query.authorId = uuidToBinary(filter.authorId);
+        query.authorId = filter.authorId;
       }
       if (filter.categoryId) {
-        query.categoryId = uuidToBinary(filter.categoryId);
+        query.categoryId = filter.categoryId;
       }
       if (filter.publisherId) {
-        query.publisherId = uuidToBinary(filter.publisherId);
+        query.publisherId = filter.publisherId;
       }
       if (filter.genres) {
         query.genres = {
           some: {
             genreId: {
-              in: filter.genres.map((genre) => uuidToBinary(genre)),
+              in: filter.genres.map((id) => id),
             },
           },
         };
@@ -346,15 +345,13 @@ export class PersistenceBookRepository extends BookRepository {
       const mappedBookData = {
         title: data.title!,
         cover: data.cover!,
-        authorId: uuidToBinary(data.author!.id),
-        categoryId: uuidToBinary(data.category!.id),
+        authorId: data.author!.id,
+        categoryId: data.category!.id,
         language: '',
         description: data.description,
         releaseDate: data.releaseDate ?? new Date(),
         pages: data.pages ?? 0,
-        publisherId: data.publisher?.id
-          ? uuidToBinary(data.publisher.id)
-          : undefined,
+        publisherId: data.publisher?.id ? data.publisher.id : undefined,
       };
 
       const book = await prisma.book.create({
@@ -366,7 +363,7 @@ export class PersistenceBookRepository extends BookRepository {
           data: data.genres.map((genre) => {
             return {
               bookId: book.id,
-              genreId: uuidToBinary(genre.id),
+              genreId: genre.id,
             };
           }),
         });
@@ -388,7 +385,7 @@ export class PersistenceBookRepository extends BookRepository {
       }
 
       return new BookEntity(
-        binaryToUuid(book.id),
+        book.id,
         book.title,
         book.cover,
         book.description ?? '',
@@ -411,12 +408,18 @@ export class PersistenceBookRepository extends BookRepository {
 
   async update(id: string, data: Partial<BookEntity>): Promise<void> {
     await this.prisma.$transaction(async (prisma) => {
-      const bookIdBin = uuidToBinary(id);
+      const bookIdBin = id;
+      const authorIdBin = data.author ? data.author.id : undefined;
+      const categoryIdBin = data.category ? data.category.id : undefined;
+      const publisherIdBin = data.publisher ? data.publisher.id : undefined;
       const mappedData = {
         title: data.title,
         cover: data.cover,
         description: data.description,
         releaseDate: data.releaseDate,
+        publisherId: publisherIdBin,
+        categoryId: categoryIdBin,
+        authorId: authorIdBin,
         pages: data.pages,
         updatedAt: data.updatedAt ?? new Date(),
       };
@@ -434,7 +437,7 @@ export class PersistenceBookRepository extends BookRepository {
           data: data.genres.map((genre) => {
             return {
               bookId: bookIdBin,
-              genreId: uuidToBinary(genre.id),
+              genreId: genre.id,
             };
           }),
         });
@@ -471,22 +474,22 @@ export class PersistenceBookRepository extends BookRepository {
   async delete(id: string, performHardDelete: boolean = false): Promise<void> {
     if (performHardDelete) {
       await this.prisma.bookGenre.deleteMany({
-        where: { bookId: uuidToBinary(id) },
+        where: { bookId: id },
       });
 
       await this.prisma.bookDigitalItem.deleteMany({
-        where: { bookId: uuidToBinary(id) },
+        where: { bookId: id },
       });
 
       await this.prisma.book.delete({
-        where: { id: uuidToBinary(id) },
+        where: { id: id },
       });
 
       return;
     }
 
     await this.prisma.book.update({
-      where: { id: uuidToBinary(id) },
+      where: { id: id },
       data: {
         status: 'deleted',
       },
@@ -500,7 +503,7 @@ export class PersistenceBookRepository extends BookRepository {
     if (!data) return null;
 
     return new BookEntity(
-      binaryToUuid(data.id),
+      data.id,
       data.title,
       data.cover,
       data.description ?? '',
@@ -519,15 +522,14 @@ export class PersistenceBookRepository extends BookRepository {
   }
 
   async updateBookGenres(genres: string[], bookId: string): Promise<void> {
-    const bookIdBin = uuidToBinary(bookId);
     await this.prisma.bookGenre.deleteMany({
-      where: { bookId: bookIdBin },
+      where: { bookId: bookId },
     });
     await this.prisma.bookGenre.createMany({
       data: genres.map((genre) => {
         return {
-          bookId: bookIdBin,
-          genreId: uuidToBinary(genre),
+          bookId: bookId,
+          genreId: genre,
         };
       }),
     });
@@ -537,7 +539,7 @@ export class PersistenceBookRepository extends BookRepository {
     bookId: string,
   ): Promise<{ id: string }> {
     const inputDataMapped = {
-      bookId: uuidToBinary(bookId),
+      bookId: bookId,
       format: itemData.format as item_format,
       url: itemData.url,
       size: itemData.size,
@@ -548,23 +550,14 @@ export class PersistenceBookRepository extends BookRepository {
       data: inputDataMapped,
     });
 
-    return { id: binaryToUuid(res.id) };
-  }
-  getBookAuthor(bookId: string): Promise<object> {
-    throw new Error('Method not implemented.');
-  }
-  getBookCategory(bookId: string): Promise<object> {
-    throw new Error('Method not implemented.');
-  }
-  getBookGenres(bookId: string): Promise<object[]> {
-    throw new Error('Method not implemented.');
+    return { id: res.id };
   }
 
   async addReview(data: ReviewCreateDto): Promise<void> {
     await this.prisma.review.create({
       data: {
-        bookId: uuidToBinary(data.bookId),
-        userId: uuidToBinary(data.userId),
+        bookId: data.bookId,
+        userId: data.userId,
         rating: data.rating,
         review: data.comment ?? '',
       },
@@ -579,7 +572,7 @@ export class PersistenceBookRepository extends BookRepository {
     const skip = (page - 1) * limit;
     const [reviews, total] = await Promise.all([
       this.prisma.review.findMany({
-        where: { bookId: uuidToBinary(bookId) },
+        where: { bookId: bookId },
         include: {
           user: {
             select: {
@@ -597,16 +590,16 @@ export class PersistenceBookRepository extends BookRepository {
         take: limit,
       }),
       this.prisma.review.count({
-        where: { bookId: uuidToBinary(bookId) },
+        where: { bookId: bookId },
       }),
     ]);
 
     const totalPages = Math.ceil(total / limit);
     const data = reviews.map((review) => ({
-      id: binaryToUuid(review.id),
-      bookId: binaryToUuid(review.bookId),
+      id: review.id,
+      bookId: review.bookId,
       reviewer: {
-        id: binaryToUuid(review.user.id),
+        id: review.user.id,
         username: `${review.user.firstName} ${review.user.lastName}`,
         avatar: review.user.avatar ?? '',
       },
@@ -634,13 +627,13 @@ export class PersistenceBookRepository extends BookRepository {
     await this.prisma.like.upsert({
       where: {
         userId_bookId: {
-          userId: uuidToBinary(userId),
-          bookId: uuidToBinary(bookId),
+          userId: userId,
+          bookId: bookId,
         },
       },
       create: {
-        userId: uuidToBinary(userId),
-        bookId: uuidToBinary(bookId),
+        userId: userId,
+        bookId: bookId,
         status,
       },
       update: {
@@ -656,8 +649,8 @@ export class PersistenceBookRepository extends BookRepository {
     const like = await this.prisma.like.findUnique({
       where: {
         userId_bookId: {
-          userId: uuidToBinary(userId),
-          bookId: uuidToBinary(bookId),
+          userId: userId,
+          bookId: bookId,
         },
       },
       select: {
@@ -670,7 +663,7 @@ export class PersistenceBookRepository extends BookRepository {
   async getLikeCount(bookId: string): Promise<number> {
     const count = await this.prisma.like.count({
       where: {
-        bookId: uuidToBinary(bookId),
+        bookId: bookId,
         status: 'liked',
       },
     });
@@ -686,6 +679,16 @@ export class PersistenceBookRepository extends BookRepository {
     throw new Error('Method not implemented.');
   }
   getAverageRating(bookId: string): Promise<number> {
+    throw new Error('Method not implemented.');
+  }
+
+  getBookAuthor(bookId: string): Promise<object> {
+    throw new Error('Method not implemented.');
+  }
+  getBookCategory(bookId: string): Promise<object> {
+    throw new Error('Method not implemented.');
+  }
+  getBookGenres(bookId: string): Promise<object[]> {
     throw new Error('Method not implemented.');
   }
 }
