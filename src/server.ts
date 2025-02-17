@@ -68,6 +68,7 @@ export class Server {
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(cookieParser());
     this.app.use(compression());
+    this.app.set('trust proxy', 1);
   }
 
   private initializeRoutes(): void {
