@@ -56,7 +56,7 @@ ENV DATABASE_URL=${DATABASE_URL}
 
 RUN echo $DATABASE_URL
 
-RUN npx prisma migrate deploy && npx prisma generate
+RUN pnpm dlx prisma generate
 
 RUN apk add --no-cache curl \
     && curl -sfL https://gobinaries.com/tj/node-prune | sh \
