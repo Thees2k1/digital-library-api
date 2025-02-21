@@ -103,6 +103,7 @@ export class Server {
 
   private init(): void {
     console.log('Initializing server...');
+    console.log('NODE_ENV', process.env.NODE_ENV);
     try {
       this.initializeMiddlewares();
       this.initializeRoutes();
