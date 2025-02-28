@@ -40,16 +40,18 @@ export class Server {
   private initializeMiddlewares(): void {
     const whitelist = [
       'http://localhost:3000',
+      'http://localhost:80',
+      'http://localhost',
       'http://localhost:5173',
-      'http://localhost:8080',
+      'http://localhost:4173',
       'https://chyra.vercel.app',
     ];
-    const corsOptions: CorsOptions = {
+    const corsOptions: cors.CorsOptions = {
       origin: function (origin, callback) {
         if (!origin || whitelist.indexOf(origin) !== -1) {
-          callback(null, true);
+          callback(null, true); // Allow the request
         } else {
-          callback(new Error('Not allowed by CORS'));
+          callback(new Error('Not allowed by CORS')); // Block the request
         }
       },
       credentials: true,
@@ -57,10 +59,11 @@ export class Server {
 
     this.app.use(helmet());
     this.app.use(cors(corsOptions));
+    this.app.options('*', cors(corsOptions));
     this.app.use(
       rateLimit({
-        max: ONE_HUNDRED,
-        windowMs: SIXTY * SIXTY * ONE_THOUSAND,
+        max: 500, // Allow 500 requests
+        windowMs: SIXTY * SIXTY * ONE_THOUSAND, // 1 hour
         message: 'Too many requests from this IP, please try again in one hour',
       }),
     );

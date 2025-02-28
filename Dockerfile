@@ -1,69 +1,40 @@
 # Stage 1: Build Stage
-FROM node:20-alpine AS build
-
-# Install pnpm globally
-RUN npm install -g pnpm
-
-# Set working directory
+FROM node:20-alpine3.18 AS build
 WORKDIR /app
 
-# Copy package.json, pnpm-lock.yaml, and .npmrc if it exists
-COPY package.json pnpm-lock.yaml* .npmrc* ./
+# Copy package.json and pnpm-lock.yaml
+COPY package.json pnpm-lock.yaml* ./
 
 # Install dependencies using pnpm
-RUN pnpm install
+RUN npm install -g pnpm@9.12.2 && pnpm install --frozen-lockfile
 
 # Copy the rest of the project files
 COPY . .
 
-# Build the application
-RUN pnpm run build
+# Build the project
+RUN pnpm dlx prisma generate && pnpm run build
 
 # Stage 2: Production Stage
-FROM node:20-alpine AS production
-
-RUN apk add --no-cache \
-    openssl \
-    bash \
-    libc6-compat \
-    libstdc++ \
-    libgcc \
-    && npm install -g npm@latest
-
-# Install pnpm globally
-RUN npm install -g pnpm
-
-# Set working directory
+FROM node:20-alpine3.18 AS production
 WORKDIR /app
 
-# Copy the package.json, pnpm-lock.yaml, and .npmrc files
-COPY package.json pnpm-lock.yaml* .npmrc* ./
-
-# Install only production dependencies using pnpm
-RUN pnpm install --prod
-
-# Copy build output and other necessary files from build stage
+# Copy only the necessary files from the build stage
 COPY --from=build /app/dist /app/dist
-
-# Copy any Prisma files needed in production (e.g., Prisma client)
-COPY --from=build /app/node_modules/@prisma /app/node_modules/@prisma
+COPY --from=build /app/package.json /app/pnpm-lock.yaml* ./
+COPY --from=build /app/node_modules /app/node_modules
 COPY --from=build /app/prisma /app/prisma
 COPY --from=build /app/tsconfig.json /app/tsconfig.json
 
-# # Ensure the DATABASE_URL environment variable is available during the build
-ARG DATABASE_URL
-ENV DATABASE_URL=${DATABASE_URL}
+# Install only production dependencies
+RUN npm install -g pnpm@9.12.2 && pnpm install --prod --frozen-lockfile
 
-RUN echo $DATABASE_URL
-
-RUN pnpm dlx prisma generate
-
+# Clean up unnecessary files
 RUN apk add --no-cache curl \
     && curl -sfL https://gobinaries.com/tj/node-prune | sh \
     && node-prune \
     && apk del curl
 
-# Expose the application port (change if needed)
+# Expose the application port
 EXPOSE 8080
 
 # Start the application

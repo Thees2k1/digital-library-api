@@ -3,7 +3,6 @@ logs
 dist
 Dockerfile
 Dockerfile.local
-docker-compose.yml
 .dockerignore
 *.md
 .git

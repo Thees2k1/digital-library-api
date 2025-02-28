@@ -73,7 +73,7 @@ export class AuthController {
       res.cookie(REFRESH_TOKEN, verifiedResult.refreshToken, {
         httpOnly: true,
         secure: IS_PRODUCTION, // chỉ sử dụng HTTPS
-        sameSite: 'none', // ngăn chặn CSRF
+        sameSite: IS_PRODUCTION ? 'none' : 'strict', // ngăn chặn CSRF
         maxAge: REFRESH_TOKEN_EXPIRES_IN, // 7 ngày cho refresh token
       });
 
