@@ -17,10 +17,12 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-          cache: 'pnpm'
+          cache: 'pnpm' # Enable pnpm caching
 
-      - name: Install pnpm
-        run: npm install -g pnpm
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8 # Specify the pnpm version you want to use
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
@@ -28,14 +30,14 @@ jobs:
       - name: Build Project
         run: |
           echo "PORT=8080" > .env
-          echo "NODE_ENV=production" > .env
+          echo "NODE_ENV=production" >> .env
           echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
           echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
           echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
           echo "POSTGRES_DB=${{ vars.POSTGRES_DB }}" >> .env
           echo "REDIS_URL=${{ vars.REDIS_URL }}" >> .env
           echo "ACCESS_TOKEN_SECRET=${{ vars.ACCESS_TOKEN_SECRET }}" >> .env
-          echo "VITE_MEILISEARCH_HOST=${{ vars.VITE_MEILISEARCH_HOST }}" > .env
+          echo "VITE_MEILISEARCH_HOST=${{ vars.VITE_MEILISEARCH_HOST }}" >> .env
           echo "VITE_MEILISEARCH_API_KEY=${{ secrets.VITE_MEILISEARCH_API_KEY }}" >> .env
           pnpm build
 
