@@ -42,9 +42,15 @@ export class Server {
       'http://localhost:3000',
       'http://localhost:80',
       'http://localhost',
+      'http://13.212.138.64',
       'http://localhost:5173',
       'http://localhost:4173',
       'https://chyra.vercel.app',
+      'https://chyra.me',
+      'https://lib.chyra.me',
+      'https://admin.chyra.me',
+      'https://www.chyra.me',
+      'https://api.chyra.me',
     ];
     const corsOptions: cors.CorsOptions = {
       origin: function (origin, callback) {
