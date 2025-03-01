@@ -40,4 +40,4 @@ jobs:
 
             # Bring down the existing containers and bring up new ones
             docker compose down
-            docker ncompose up -d
+            docker compose up -d
