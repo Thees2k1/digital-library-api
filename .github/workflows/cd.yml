@@ -25,15 +25,14 @@ jobs:
             cd ~/chyra-library/digital-library-api
             git pull origin main
 
-            # Use environment variables directly in docker-compose
-            export DATABASE_URL=${{ secrets.DATABASE_URL }}
-            export POSTGRES_USER=${{ secrets.POSTGRES_USER }}
-            export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-            export POSTGRES_DB=${{ vars.POSTGRES_DB }}
-            export REDIS_URL=${{ vars.REDIS_URL }}
-            export ACCESS_TOKEN_SECRET=${{ vars.ACCESS_TOKEN_SECRET }}
-            export VITE_MEILISEARCH_HOST=${{ vars.VITE_MEILISEARCH_HOST }}
-            export VITE_MEILISEARCH_API_KEY=${{ secrets.VITE_MEILISEARCH_API_KEY }}
+            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
+            echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
+            echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+            echo "POSTGRES_DB=${{ vars.POSTGRES_DB }}" >> .env
+            echo "REDIS_URL=${{ vars.REDIS_URL }}" >> .env
+            echo "ACCESS_TOKEN_SECRET=${{ vars.ACCESS_TOKEN_SECRET }}" >> .env
+            echo "VITE_MEILISEARCH_HOST=${{ vars.VITE_MEILISEARCH_HOST }}" >> .env
+            echo "VITE_MEILISEARCH_API_KEY=${{ secrets.VITE_MEILISEARCH_API_KEY }}" >> .env
 
             # Pull the latest images
             docker compose pull
