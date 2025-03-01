@@ -1,6 +1,5 @@
 node_modules
 logs
-dist
 Dockerfile
 Dockerfile.local
 .dockerignore
@@ -9,8 +8,9 @@ Dockerfile.local
 .env
 .env.staging
 nodemon.json
-.eslint.config.mjs
+eslint.config.mjs
 .prettierrc
 .prettierignore
+
 
 
