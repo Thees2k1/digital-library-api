@@ -32,7 +32,7 @@ services:
       retries: 3
 
   meilisearch:
-    image: getmeili/meilisearch:latest
+    image: getmeili/meilisearch:v1.12.1
     env_file:
       - .env
     container_name: meilisearch
