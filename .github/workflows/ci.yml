@@ -27,6 +27,8 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
+      - run: pnpm dlx prisma generate
+
       - name: Build Project
         run: |
           echo "PORT=8080" > .env

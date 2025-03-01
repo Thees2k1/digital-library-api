@@ -2,11 +2,9 @@ FROM node:20-alpine3.18
 WORKDIR /app
 
 # Copy only the necessary files from the build stage
-COPY .dist /app/dist
+COPY ./dist /app/dist
 COPY package.json pnpm-lock.yaml* ./
-COPY ./node_modules /app/node_modules
 COPY ./prisma /app/prisma
-COPY tsconfig.json /app/tsconfig.json
 
 # Install only production dependencies
 RUN npm install -g pnpm@9.12.2 && pnpm install --prod --frozen-lockfile
