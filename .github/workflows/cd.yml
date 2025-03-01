@@ -8,31 +8,40 @@
 # jobs:
 #   deploy:
 #     runs-on: ubuntu-latest
+#     timeout-minutes: 30
 
 #     steps:
 #       - name: Checkout Code
 #         uses: actions/checkout@v3
 
 #       - name: Pull Docker Image and Deploy Services
-#         uses: appleboy/ssh-action@v1.2.1
+#         uses: appleboy/ssh-action@master
 #         with:
-#           host: ${{ secrets.EC2_HOST }}
-#           username: ${{ secrets.EC2_USER }}
+#           host: ${{ vars.EC2_HOST }}
+#           username: ${{ vars.EC2_USER }}
 #           key: ${{ secrets.EC2_SSH_KEY }}
 #           script: |
+#             set -e
 #             cd ~/chyra-library/digital-library-api
 #             git pull origin main
-#             echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
-#             echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
-#             echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
-#             echo "POSTGRES_DB=${{ vars.POSTGRES_DB }}" >> .env
-#             echo "REDIS_URL=${{ vars.REDIS_URL }}" >> .env
-#             echo "ACCESS_TOKEN_SECRET=${{ vars.ACCESS_TOKEN_SECRET }}" >> .env
-#             echo "VITE_MEILISEARCH_HOST=${{ vars.VITE_MEILISEARCH_HOST }}" >> .env
-#             echo "VITE_MEILISEARCH_API_KEY=${{ secrets.VITE_MEILISEARCH_API_KEY }}" >> .env
-#             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/chyra-api:latest
+
+#             # Use environment variables directly in docker-compose
+#             export DATABASE_URL=${{ secrets.DATABASE_URL }}
+#             export POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+#             export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+#             export POSTGRES_DB=${{ vars.POSTGRES_DB }}
+#             export REDIS_URL=${{ vars.REDIS_URL }}
+#             export ACCESS_TOKEN_SECRET=${{ vars.ACCESS_TOKEN_SECRET }}
+#             export VITE_MEILISEARCH_HOST=${{ vars.VITE_MEILISEARCH_HOST }}
+#             export VITE_MEILISEARCH_API_KEY=${{ secrets.VITE_MEILISEARCH_API_KEY }}
+
+#             # Pull the latest images
+#             docker-compose pull
+
+#             # Bring down the existing containers and bring up new ones
 #             docker-compose down
 #             docker-compose up -d
+
 name: Backend CD
 
 on:
@@ -49,18 +58,21 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Pull Docker Image and Deploy Services
-        uses: appleboy/ssh-action@master
+      - name: Setup SSH Agent
+        uses: webfactory/ssh-agent@v0.9.0
         with:
-          host: ${{ vars.EC2_HOST }}
-          username: ${{ vars.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+      - name: Deploy to EC2
+        env:
+          HOST: ${{ vars.EC2_HOST }}
+          USER: ${{ vars.EC2_USER }}
+        run: |
+          ssh -o StrictHostKeyChecking=no $USER@$HOST <<EOF
             set -e
             cd ~/chyra-library/digital-library-api
             git pull origin main
 
-            # Use environment variables directly in docker-compose
             export DATABASE_URL=${{ secrets.DATABASE_URL }}
             export POSTGRES_USER=${{ secrets.POSTGRES_USER }}
             export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
@@ -70,9 +82,7 @@ jobs:
             export VITE_MEILISEARCH_HOST=${{ vars.VITE_MEILISEARCH_HOST }}
             export VITE_MEILISEARCH_API_KEY=${{ secrets.VITE_MEILISEARCH_API_KEY }}
 
-            # Pull the latest images
             docker-compose pull
-
-            # Bring down the existing containers and bring up new ones
             docker-compose down
             docker-compose up -d
+          EOF
