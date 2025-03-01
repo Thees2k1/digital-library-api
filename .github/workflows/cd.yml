@@ -36,8 +36,8 @@ jobs:
             export VITE_MEILISEARCH_API_KEY=${{ secrets.VITE_MEILISEARCH_API_KEY }}
 
             # Pull the latest images
-            docker-compose pull
+            docker compose pull
 
             # Bring down the existing containers and bring up new ones
-            docker-compose down
-            docker-compose up -d
+            docker compose down
+            docker ncompose up -d
