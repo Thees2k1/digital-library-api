@@ -69,6 +69,11 @@ services:
         pnpm dlx prisma migrate deploy &&
         pnpm start
       "
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://api:8080/health']
+      interval: 10s
+      timeout: 3s
+      retries: 3
 
   client:
     image: retier/chyra-client:latest
@@ -79,14 +84,19 @@ services:
       - api
     networks:
       - chyra_network
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:4173']
+      interval: 10s
+      timeout: 3s
+      retries: 3
 
   nginx:
     image: nginx:alpine
     container_name: nginx
     restart: always
     depends_on:
-      - client
       - api
+      - client
     ports:
       - '80:80'
     volumes:

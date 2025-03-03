@@ -5,6 +5,7 @@ WORKDIR /app
 COPY ./dist /app/dist
 COPY package.json pnpm-lock.yaml* ./
 COPY ./prisma /app/prisma
+COPY tsconfig.json /app/tsconfig.json
 
 # Install only production dependencies
 RUN npm install -g pnpm@9.12.2 && pnpm install --prod --frozen-lockfile
