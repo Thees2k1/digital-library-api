@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Serie } from '@prisma/client';
 import { JwtService } from '@src/core/services/jwt-service';
 import { AuthService } from '@src/features/auth/application/use-cases/auth-service';
 import { IAuthService } from '@src/features/auth/application/use-cases/interfaces/auth-service-interface';
@@ -46,6 +46,15 @@ import { SearchService } from '../interfaces/search-service';
 import { MeiliSearchService } from '../services/meilisearch-service';
 import { RedisService } from '../services/redis-service';
 import { CacheService } from '../interfaces/cache-service';
+import { UserRouterFactory } from '@src/features/user/presentation/routes/user-routes';
+import { BookRouterFactory } from '@src/features/book/presentation/routes/book-routes';
+import { AuthRouterFactory } from '@src/features/auth/presentation/routes/auth-routes';
+import { AuthorRouterFactory } from '@src/features/author/presentation/routes/author-routes';
+import { CategoryRouterFactory } from '@src/features/category/presentation/routes/category-routes';
+import { GenreRouterFactory } from '@src/features/genre/presentation/routes/genre-routes';
+import { PublisherRouterFactory } from '@src/features/publisher/presentation/routes/publisher-routes';
+import { SerieRouterFactory } from '@src/features/serie/presentation/routes/serie-routes';
+import { IndexingService } from '@src/features/book/infrastructure/index-service';
 
 // import { RedisService } from "../services/redis-service";
 
@@ -65,6 +74,8 @@ export function initializeInfrastucture() {
     .bind<CacheService>(DI_TYPES.CacheService)
     .to(RedisService)
     .inSingletonScope();
+
+  container.bind<IndexingService>(IndexingService).toSelf().inSingletonScope();
 
   //binding repositories
   container
@@ -93,32 +104,105 @@ export function initializeInfrastucture() {
     .to(PersistenceBookRepository);
 
   //binding services
-  container.bind<IUserService>(DI_TYPES.UserService).to(UserService);
-  container.bind<IAuthService>(DI_TYPES.AuthService).to(AuthService);
-  container.bind<IAuthorService>(DI_TYPES.AuthorService).to(AuthorService);
+  container
+    .bind<IUserService>(DI_TYPES.UserService)
+    .to(UserService)
+    .inSingletonScope();
+  container
+    .bind<IAuthService>(DI_TYPES.AuthService)
+    .to(AuthService)
+    .inSingletonScope();
+  container
+    .bind<IAuthorService>(DI_TYPES.AuthorService)
+    .to(AuthorService)
+    .inSingletonScope();
   container
     .bind<ICategoryService>(DI_TYPES.CategoryService)
-    .to(CategoryService);
+    .to(CategoryService)
+    .inSingletonScope();
   container
     .bind<IPublisherService>(DI_TYPES.PublisherService)
-    .to(PublisherService);
-  container.bind<IGenreService>(DI_TYPES.GenreService).to(GenreService);
-  container.bind<ISerieService>(DI_TYPES.SerieService).to(SerieService);
-  container.bind<IBookService>(DI_TYPES.BookService).to(BookService);
+    .to(PublisherService)
+    .inSingletonScope();
+  container
+    .bind<IGenreService>(DI_TYPES.GenreService)
+    .to(GenreService)
+    .inSingletonScope();
+  container
+    .bind<ISerieService>(DI_TYPES.SerieService)
+    .to(SerieService)
+    .inSingletonScope();
+  container
+    .bind<IBookService>(DI_TYPES.BookService)
+    .to(BookService)
+    .inSingletonScope();
 
   //binding controllers
-  container.bind<UserController>(DI_TYPES.UserController).to(UserController);
-  container.bind<AuthController>(DI_TYPES.AuthController).to(AuthController);
+  container
+    .bind<UserController>(DI_TYPES.UserController)
+    .to(UserController)
+    .inSingletonScope();
+  container
+    .bind<AuthController>(DI_TYPES.AuthController)
+    .to(AuthController)
+    .inSingletonScope();
   container
     .bind<AuthorController>(DI_TYPES.AuthorController)
-    .to(AuthorController);
+    .to(AuthorController)
+    .inSingletonScope();
   container
     .bind<CategoryController>(DI_TYPES.CategoryController)
-    .to(CategoryController);
+    .to(CategoryController)
+    .inSingletonScope();
   container
     .bind<PublisherController>(DI_TYPES.PublisherController)
-    .to(PublisherController);
-  container.bind<GenreController>(DI_TYPES.GenreController).to(GenreController);
-  container.bind<SerieController>(DI_TYPES.SerieController).to(SerieController);
-  container.bind<BookController>(DI_TYPES.BookController).to(BookController);
+    .to(PublisherController)
+    .inSingletonScope();
+  container
+    .bind<GenreController>(DI_TYPES.GenreController)
+    .to(GenreController)
+    .inSingletonScope();
+  container
+    .bind<SerieController>(DI_TYPES.SerieController)
+    .to(SerieController)
+    .inSingletonScope();
+  container
+    .bind<BookController>(DI_TYPES.BookController)
+    .to(BookController)
+    .inSingletonScope();
+
+  container
+    .bind<UserRouterFactory>(DI_TYPES.UserRouter)
+    .to(UserRouterFactory)
+    .inSingletonScope();
+
+  container
+    .bind<BookRouterFactory>(DI_TYPES.BookRouter)
+    .to(BookRouterFactory)
+    .inSingletonScope();
+
+  container
+    .bind<AuthRouterFactory>(DI_TYPES.AuthRouter)
+    .to(AuthRouterFactory)
+    .inSingletonScope();
+  container
+    .bind<AuthorRouterFactory>(DI_TYPES.AuthorRouter)
+    .to(AuthorRouterFactory)
+    .inSingletonScope();
+  container
+    .bind<CategoryRouterFactory>(DI_TYPES.CategoryRouter)
+    .to(CategoryRouterFactory)
+    .inSingletonScope();
+  container
+    .bind<GenreRouterFactory>(DI_TYPES.GenreRouter)
+    .to(GenreRouterFactory)
+    .inSingletonScope();
+  container
+    .bind<PublisherRouterFactory>(DI_TYPES.PublisherRouter)
+    .to(PublisherRouterFactory)
+    .inSingletonScope();
+  container
+    .bind<SerieRouterFactory>(DI_TYPES.SerieRouter)
+    .to(SerieRouterFactory)
+    .inSingletonScope();
 }

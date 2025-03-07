@@ -43,4 +43,5 @@ export type ApiResponse<T> = {
   data?: T;
   filters?: Record<string, unknown>;
   pagination?: PagingMetadata;
+  timestamp?: number;
 };

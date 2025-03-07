@@ -78,38 +78,6 @@ export const bookDetailDtoSchema = z.object({
   updateAt: isoDateStringShema,
 });
 
-// export const bookListQueryDtoSchema = z.object({
-//   page: z
-//     .string()
-//     .optional()
-//     .transform((val) => parseInt(val!, 10))
-//     .refine((val) => val > 0, {
-//       message: 'Page must be a positive integer',
-//     })
-//     .default('1'),
-//   limit: z
-//     .string()
-//     .optional()
-//     .transform((val) => parseInt(val!, 10))
-//     .refine((val) => val > 0 && val <= 100, {
-//       message: 'Limit must be a positive integer and no more than 100',
-//     })
-//     .default('10'),
-//   authorId: z.string().uuid().optional(),
-//   categoryId: z.string().uuid().optional(),
-//   publisherId: z.string().uuid().optional(),
-//   genres: z
-//     .preprocess((arg) => {
-//       if (typeof arg === 'string') {
-//         return [arg];
-//       } else if (Array.isArray(arg)) {
-//         return arg;
-//       }
-//       return undefined;
-//     }, z.array(z.string().uuid()))
-//     .optional(),
-// });
-
 export const reviewCreateDtoSchema = z.object({
   rating: z.number().int().min(1).max(5),
   comment: z.string().optional(),
@@ -172,7 +140,6 @@ export type BookIndexRecord = {
   id: string;
   title: string;
   description: string;
-  cover: string;
   releaseDate: string;
   rating: number;
   authorName: string;

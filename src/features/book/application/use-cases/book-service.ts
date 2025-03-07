@@ -26,6 +26,8 @@ import { BookMapper } from '../mapper/book-mapper';
 import { IBookService } from './interfaces/book-service-interface';
 import { GetListOptions } from './interfaces/parameters';
 import { CacheService } from '@src/core/interfaces/cache-service';
+import { generateCacheKey } from '@src/core/utils/generate-cache-key';
+import { eventEmitter, EVENTS } from '@src/core/events';
 
 @injectable()
 export class BookService implements IBookService {
@@ -128,21 +130,7 @@ export class BookService implements IBookService {
         updateAt: book.updatedAt?.toISOString() || '',
       } as BookDetailDto;
 
-      const searchData: BookIndexRecord = {
-        id: book.id,
-        title: book.title,
-        cover: book.cover,
-        description: book.description || '',
-        authorName: book.author.name,
-        categoryName: book.category?.name || '',
-        rating: book.averageRating,
-        genres: book.genres ? book.genres.map((genre) => genre.name) : [],
-        releaseDate: book.releaseDate?.toISOString() || '',
-      };
-      await this.searchService.index({
-        indexName: 'books',
-        documents: [searchData],
-      });
+      eventEmitter.emit(EVENTS.NEED_INDEXING, book);
 
       return returnData;
     } catch (error) {
@@ -216,25 +204,10 @@ export class BookService implements IBookService {
 
       await this.repository.update(id, bookData);
 
-      const updated = await this.getById(id);
+      const updated = await this.repository.getById(id);
 
       if (updated) {
-        const searchData: BookIndexRecord = {
-          id: updated.id,
-          title: updated.title,
-          cover: updated.cover,
-          description: updated.description,
-          authorName: updated.author.name,
-          categoryName: updated.category.name,
-          rating: updated.averageRating || 0,
-          genres: updated.genres.map((genre) => genre.name),
-          releaseDate: updated.releaseDate,
-        };
-
-        await this.searchService.index({
-          indexName: 'books',
-          documents: [searchData],
-        });
+        eventEmitter.emit(EVENTS.NEED_INDEXING, updated);
       }
       return id;
     } catch (error) {
@@ -242,7 +215,7 @@ export class BookService implements IBookService {
     }
   }
   async getList(options: GetListOptions): Promise<GetListResult> {
-    const cacheKey = `books:list:${JSON.stringify(options)}`;
+    const cacheKey = generateCacheKey('books:list', options);
     try {
       const { paging, filter, sort } = options;
 
@@ -348,10 +321,7 @@ export class BookService implements IBookService {
 
       await this.repository.delete(id, isHardDelete);
 
-      await this.searchService.delete({
-        indexName: 'books',
-        id: id,
-      });
+      eventEmitter.emit(EVENTS.NEED_INDEXING, { id, action: 'delete' });
 
       return id;
     } catch (error) {
@@ -389,28 +359,5 @@ export class BookService implements IBookService {
 
   async getLikeCount(bookId: string): Promise<number> {
     return await this.repository.getLikeCount(bookId);
-  }
-
-  async indexAllBooks(documents: BookDetailDto[]): Promise<void> {
-    const indexDatas: Array<BookIndexRecord> = documents.map((item) => {
-      return {
-        id: item.id,
-        title: item.title,
-        cover: item.cover,
-        description: item.description,
-        authorName: item.author.name,
-        categoryName: item.category.name,
-        rating: item.averageRating || 0,
-        genres: item.genres.map((genre) => genre.name),
-        releaseDate: item.releaseDate,
-      } satisfies BookIndexRecord;
-    });
-
-    await this.searchService.index({
-      indexName: 'books',
-      documents: indexDatas,
-    });
-
-    console.log('updated all books');
   }
 }

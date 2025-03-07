@@ -39,20 +39,6 @@ export abstract class BookRepository {
 
   abstract count(filter: BooksFilter | undefined): Promise<number>;
 
-  abstract getBookAuthor(bookId: string): Promise<object>;
-
-  abstract getBookCategory(bookId: string): Promise<object>;
-
-  abstract getBookGenres(bookId: string): Promise<object[]>;
-
-  abstract getBookDigitalItems(bookId: string): Promise<object[]>;
-
-  abstract getBookReviews(bookId: string): Promise<object[]>;
-
-  abstract getReviewsCount(bookId: string): Promise<number>;
-
-  abstract getAverageRating(bookId: string): Promise<number>;
-
   abstract setLikeStatus(
     userId: string,
     bookId: string,
@@ -65,4 +51,6 @@ export abstract class BookRepository {
   ): Promise<'liked' | 'unliked' | null>;
 
   abstract getLikeCount(bookId: string): Promise<number>;
+
+  abstract getAllBooks(): Promise<BookEntity[]>;
 }

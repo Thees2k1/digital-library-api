@@ -1,4 +1,12 @@
 export const DI_TYPES = {
+  PrismaClient: Symbol.for('PrismaClient'),
+  CacheService: Symbol.for('CacheService'),
+
+  SearchService: Symbol.for('SearchService'),
+  Logger: Symbol.for('Logger'),
+  Mailer: Symbol.for('Mailer'),
+  MessageBroker: Symbol.for('MessageBroker'),
+
   UserRepository: Symbol.for('UserRepository'),
   AuthRepository: Symbol.for('AuthRepository'),
   AuthorRepository: Symbol.for('AuthorRepository'),
@@ -26,11 +34,12 @@ export const DI_TYPES = {
   SerieController: Symbol.for('SerieController'),
   BookController: Symbol.for('BookController'),
 
-  PrismaClient: Symbol.for('PrismaClient'),
-  CacheService: Symbol.for('CacheService'),
-
-  SearchService: Symbol.for('SearchService'),
-  Logger: Symbol.for('Logger'),
-  Mailer: Symbol.for('Mailer'),
-  MessageBroker: Symbol.for('MessageBroker'),
+  UserRouter: Symbol.for('UserRouter'),
+  AuthRouter: Symbol.for('AuthRouter'),
+  AuthorRouter: Symbol.for('AuthorRouter'),
+  CategoryRouter: Symbol.for('CategoryRouter'),
+  PublisherRouter: Symbol.for('PublisherRouter'),
+  GenreRouter: Symbol.for('GenreRouter'),
+  SerieRouter: Symbol.for('SerieRouter'),
+  BookRouter: Symbol.for('BookRouter'),
 };

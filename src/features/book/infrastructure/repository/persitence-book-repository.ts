@@ -524,27 +524,125 @@ export class PersistenceBookRepository extends BookRepository {
     });
     return count;
   }
-  getBookDigitalItems(bookId: string): Promise<object[]> {
-    throw new Error('Method not implemented.');
-  }
-  getBookReviews(bookId: string): Promise<object[]> {
-    throw new Error('Method not implemented.');
-  }
-  getReviewsCount(bookId: string): Promise<number> {
-    throw new Error('Method not implemented.');
-  }
-  getAverageRating(bookId: string): Promise<number> {
-    throw new Error('Method not implemented.');
-  }
 
-  getBookAuthor(bookId: string): Promise<object> {
-    throw new Error('Method not implemented.');
-  }
-  getBookCategory(bookId: string): Promise<object> {
-    throw new Error('Method not implemented.');
-  }
-  getBookGenres(bookId: string): Promise<object[]> {
-    throw new Error('Method not implemented.');
+  async getAllBooks(): Promise<BookEntity[]> {
+    const books = await this.prisma.book.findMany({
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        cover: true,
+        releaseDate: true,
+        language: true,
+        pages: true,
+        updatedAt: true,
+        createdAt: true,
+        author: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+            bio: true,
+          },
+        },
+        category: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        publisher: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        genres: {
+          select: {
+            genre: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        reviews: {
+          select: {
+            id: true,
+            rating: true,
+            review: true,
+          },
+        },
+        digitalItems: {
+          select: {
+            format: true,
+            url: true,
+            size: true,
+          },
+        },
+      },
+      where: {
+        status: {
+          not: 'deleted',
+        },
+      },
+    });
+
+    return books.map((book) => {
+      const bookAuthor = {
+        id: book.author.id,
+        name: book.author.name,
+        avatar: book.author.avatar ?? '',
+        bio: book.author.bio ?? '',
+      };
+      const bookCategory = {
+        id: book.category.id,
+        name: book.category.name,
+      };
+      const bookGenres: Array<Genre> = book.genres.map((genre) => {
+        return {
+          id: genre.genre.id,
+          name: genre.genre.name,
+        } as Genre;
+      });
+
+      const bookReviews = book.reviews.map((review) => {
+        return {
+          id: review.id,
+          rating: review.rating,
+          comment: review.review ?? '',
+        } as Review;
+      });
+      const bookPublisher = book.publisher
+        ? { id: book.publisher.id, name: book.publisher.name }
+        : undefined;
+
+      const digitalItems = book.digitalItems.map((item) => {
+        return {
+          format: item.format,
+          url: item.url,
+          size: item.size,
+        } as DigitalItemData;
+      });
+      return new BookEntity(
+        book.id,
+        book.title,
+        book.cover,
+        book.createdAt,
+        bookAuthor,
+        bookReviews,
+        book.description ?? '',
+        book.pages,
+        book.language,
+        book.releaseDate,
+        book.updatedAt,
+        bookCategory,
+        bookPublisher,
+        bookGenres,
+        digitalItems,
+      );
+    });
   }
 
   private _setupQuery(filter: BooksFilter | undefined): any {

@@ -91,6 +91,7 @@ export class BookController {
           hasNextPage: result.hasNextPage,
           nextCursor: result.nextCursor,
         },
+        timestamp: Date.now(),
       };
       res.json(reponseBody);
     } catch (error) {

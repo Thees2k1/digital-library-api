@@ -1,5 +1,5 @@
 import { BookEntity } from '../../domain/entities/book-entity';
-import { BookDetailDto, BookList } from '../dtos/book-dto';
+import { BookDetailDto, BookIndexRecord, BookList } from '../dtos/book-dto';
 
 export class BookMapper {
   static toBookDetailDto(book: BookEntity) {
@@ -53,5 +53,25 @@ export class BookMapper {
         averageRating: book.averageRating,
       };
     });
+  }
+
+  static toBookIndexRecord(book: BookEntity): BookIndexRecord {
+    return {
+      id: book.id,
+      title: book.title,
+      releaseDate: book.releaseDate?.toISOString(),
+      authorName: book.author.name,
+      categoryName: book.category?.name,
+      rating: book.averageRating,
+      genres: book.genres?.map((genre) => genre.name) || [],
+    } as BookIndexRecord;
+  }
+
+  static toBookIndexCollection(books: BookEntity[]) {
+    const booksIndex: BookIndexRecord[] = books.map((book) => {
+      return this.toBookIndexRecord(book);
+    });
+
+    return booksIndex;
   }
 }

@@ -1,40 +1,55 @@
-import { container } from '@src/core/di/container';
 import { DI_TYPES } from '@src/core/di/types';
+import { BaseRouterFactory } from '@src/core/interfaces/base-router-factory';
 import { authMiddleware } from '@src/core/middlewares/auth-middleware';
-import { Router } from 'express';
 import { validationMiddleware } from '@src/core/middlewares/validation-middleware';
-import { PublisherController } from '../controller/publisher-controller';
+import { Router } from 'express';
+import { inject, injectable } from 'inversify';
 import {
   publisherCreateSchema,
   publisherUpdateSchema,
 } from '../../application/dto/publisher-dtos';
+import { PublisherController } from '../controller/publisher-controller';
 
-export class PublisherRouter {
-  static get routes(): Router {
-    const path = '/publishers';
-    const router = Router();
-    const controller = container.get<PublisherController>(
-      DI_TYPES.PublisherController,
+export class PublisherRoutes {
+  static readonly publishers = '/publishers';
+  static readonly publisher = '/publishers/:id';
+}
+@injectable()
+export class PublisherRouterFactory extends BaseRouterFactory<PublisherController> {
+  constructor(
+    @inject(DI_TYPES.PublisherController) controller: PublisherController,
+  ) {
+    super(controller);
+  }
+
+  setupRoutes(): void {
+    this._router.get(
+      PublisherRoutes.publishers,
+      this.controller.getCategories.bind(this.controller),
     );
-    router.get(path, controller.getCategories.bind(controller));
-    router.get(`${path}/:id`, controller.getPublisher.bind(controller));
-    router.post(
-      path,
+    this._router.get(
+      PublisherRoutes.publisher,
+      this.controller.getPublisher.bind(this.controller),
+    );
+    this._router.post(
+      PublisherRoutes.publishers,
       authMiddleware,
       validationMiddleware(publisherCreateSchema),
-      controller.createPublisher.bind(controller),
+      this.controller.createPublisher.bind(this.controller),
     );
-    router.patch(
-      `${path}/:id`,
+    this._router.patch(
+      PublisherRoutes.publisher,
       authMiddleware,
       validationMiddleware(publisherUpdateSchema),
-      controller.updatePublisher.bind(controller),
+      this.controller.updatePublisher.bind(this.controller),
     );
-    router.delete(
-      `${path}/:id`,
+    this._router.delete(
+      PublisherRoutes.publisher,
       authMiddleware,
-      controller.deletePublisher.bind(controller),
+      this.controller.deletePublisher.bind(this.controller),
     );
-    return router;
+  }
+  get routes(): Router {
+    return this._router;
   }
 }

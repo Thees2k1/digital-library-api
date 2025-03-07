@@ -8,33 +8,49 @@ import {
   categoryCreateSchema,
   categoryUpdateSchema,
 } from '../../application/dto/category-dtos';
+import { inject, injectable } from 'inversify';
+import { BaseRouterFactory } from '@src/core/interfaces/base-router-factory';
 
-export class CategoryRouter {
-  static get routes(): Router {
-    const path = '/categories';
-    const router = Router();
-    const controller = container.get<CategoryController>(
-      DI_TYPES.CategoryController,
+export class CategoryRoutes {
+  static readonly categories = '/categories';
+  static readonly category = '/categories/:id';
+}
+@injectable()
+export class CategoryRouterFactory extends BaseRouterFactory<CategoryController> {
+  constructor(
+    @inject(DI_TYPES.CategoryController) controller: CategoryController,
+  ) {
+    super(controller);
+  }
+
+  setupRoutes(): void {
+    this._router.get(
+      CategoryRoutes.categories,
+      this.controller.getCategories.bind(this.controller),
     );
-    router.get(path, controller.getCategories.bind(controller));
-    router.get(`${path}/:id`, controller.getCategory.bind(controller));
-    router.post(
-      path,
+    this._router.get(
+      CategoryRoutes.category,
+      this.controller.getCategory.bind(this.controller),
+    );
+    this._router.post(
+      CategoryRoutes.categories,
       authMiddleware,
       validationMiddleware(categoryCreateSchema),
-      controller.createCategory.bind(controller),
+      this.controller.createCategory.bind(this.controller),
     );
-    router.patch(
-      `${path}/:id`,
+    this._router.patch(
+      CategoryRoutes.category,
       authMiddleware,
       validationMiddleware(categoryUpdateSchema),
-      controller.updateCategory.bind(controller),
+      this.controller.updateCategory.bind(this.controller),
     );
-    router.delete(
-      `${path}/:id`,
+    this._router.delete(
+      CategoryRoutes.category,
       authMiddleware,
-      controller.deleteCategory.bind(controller),
+      this.controller.deleteCategory.bind(this.controller),
     );
-    return router;
+  }
+  get routes(): Router {
+    return this._router;
   }
 }

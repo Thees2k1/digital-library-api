@@ -1,59 +1,73 @@
+import { DI_TYPES } from '@src/core/di/types';
+import { BaseRouterFactory } from '@src/core/interfaces/base-router-factory';
+import { authMiddleware } from '@src/core/middlewares/auth-middleware';
+import { validationMiddleware } from '@src/core/middlewares/validation-middleware';
 import { Router } from 'express';
-import { UserController } from '../controller/user-controller';
+import { inject, injectable } from 'inversify';
 import {
   CreateUserSchema,
   UpdateUserSchema,
 } from '../../application/dtos/user-dto';
-import { container } from '@src/core/di/container';
-import { DI_TYPES } from '@src/core/di/types';
-import { authMiddleware } from '@src/core/middlewares/auth-middleware';
-import { validationMiddleware } from '@src/core/middlewares/validation-middleware';
-export class UserRouter {
-  static get routes(): Router {
-    const path = '/users';
-    const router = Router();
-    const controller = container.get<UserController>(DI_TYPES.UserController);
-    router.get(
-      '/user',
+import { UserController } from '../controller/user-controller';
+
+export class UserRoutes {
+  static readonly userByEmail = '/user';
+  static readonly users = '/users';
+  static readonly user = '/users/:id';
+  static readonly currentUser = '/users/me';
+  static readonly likedBooks = '/users/me/liked-books';
+}
+
+@injectable()
+export class UserRouterFactory extends BaseRouterFactory<UserController> {
+  constructor(@inject(DI_TYPES.UserController) controller: UserController) {
+    super(controller);
+  }
+  setupRoutes(): void {
+    this._router.get(
+      UserRoutes.userByEmail,
       authMiddleware,
-      controller.getUserByEmail.bind(controller),
+      this.controller.getUserByEmail.bind(this.controller),
     );
-    router.get(path, authMiddleware, controller.getAllUsers.bind(controller));
-    router.get(
-      `${path}/me`,
+    this._router.get(
+      UserRoutes.users,
       authMiddleware,
-      controller.getCurrentUser.bind(controller),
+      this.controller.getAllUsers.bind(this.controller),
     );
-    router.get(`${path}/:id`, controller.getUserById.bind(controller));
-    router.post(
-      `${path}`,
+    this._router.get(
+      UserRoutes.currentUser,
+      authMiddleware,
+      this.controller.getCurrentUser.bind(this.controller),
+    );
+    this._router.get(
+      UserRoutes.user,
+      this.controller.getUserById.bind(this.controller),
+    );
+    this._router.post(
+      UserRoutes.users,
       authMiddleware,
       validationMiddleware(CreateUserSchema),
-      controller.createUser.bind(controller),
+      this.controller.createUser.bind(this.controller),
     );
-    router.patch(
-      `${path}/:id`,
+    this._router.patch(
+      UserRoutes.user,
       authMiddleware,
       validationMiddleware(UpdateUserSchema),
-      controller.updateUser.bind(controller),
+      this.controller.updateUser.bind(this.controller),
     );
-    router.delete(
-      `${path}/:id`,
+    this._router.delete(
+      UserRoutes.user,
       authMiddleware,
-      controller.deleteUser.bind(controller),
+      this.controller.deleteUser.bind(this.controller),
     );
 
-    router.get(
-      `${path}/me/liked-books`,
+    this._router.get(
+      UserRoutes.likedBooks,
       authMiddleware,
-      controller.getBookLikes.bind(controller),
+      this.controller.getBookLikes.bind(this.controller),
     );
-
-    // router.get(
-    //   `${path}/:id/favorites`,
-    //   authMiddleware,
-    //   controller.toggleLike.bind(controller),
-    // )
-    return router;
+  }
+  get router(): Router {
+    return this._router;
   }
 }
