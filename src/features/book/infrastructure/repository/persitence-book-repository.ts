@@ -1,21 +1,23 @@
 import { Book, item_format, LikeStatus, PrismaClient } from '@prisma/client';
 import { DI_TYPES } from '@src/core/di/types';
 import { inject, injectable } from 'inversify';
+import {
+  ReviewCreateDto,
+  ReviewListResultDto,
+} from '../../application/dtos/book-dto';
+import {
+  BooksFilter,
+  PagingOptions,
+  SortOptions,
+} from '../../application/use-cases/interfaces/parameters';
 import { BookEntity } from '../../domain/entities/book-entity';
-import { Filter, Paging } from '../../domain/interfaces/common';
 import {
   Author,
-  Category,
   DigitalItemData,
   Genre,
   Review,
 } from '../../domain/interfaces/models';
 import { BookRepository } from '../../domain/repository/book-repository';
-import {
-  ReviewCreateDto,
-  ReviewDetailDto,
-  ReviewListResultDto,
-} from '../../application/dtos/book-dto';
 
 @injectable()
 export class PersistenceBookRepository extends BookRepository {
@@ -125,101 +127,40 @@ export class PersistenceBookRepository extends BookRepository {
       data.id,
       data.title,
       data.cover,
+      data.createdAt,
+      bookAuthor,
+      bookReviews,
       data.description ?? '',
       data.pages,
       data.language,
       data.releaseDate,
-      data.createdAt,
       data.updatedAt,
-      bookAuthor,
       bookCategory,
       bookPublisher,
       bookGenres,
-      bookReviews,
       digitalItems,
     );
   }
   async getList(
-    paging: Paging | undefined,
-    filter: Filter | undefined,
+    paging: PagingOptions | undefined,
+    filter: BooksFilter | undefined,
+    sort: SortOptions | undefined,
   ): Promise<BookEntity[]> {
-    const pagingData = paging ?? { page: 1, limit: 10 };
-    const skip = (pagingData.page - 1) * pagingData.limit;
-    const take = pagingData.limit;
+    // const pagingData = paging ?? { page: 1, limit: 10 };
+    // const skip = (pagingData.page - 1) * pagingData.limit;
+    // const take = pagingData.limit;
 
-    const query: any = {
-      status: {
-        not: 'deleted',
-      },
-    };
-
-    if (filter) {
-      if (filter.authorId) {
-        query.authorId = filter.authorId;
-      }
-      if (filter.categoryId) {
-        query.categoryId = filter.categoryId;
-      }
-      if (filter.publisherId) {
-        query.publisherId = filter.publisherId;
-      }
-      if (filter.genres) {
-        query.genres = {
-          some: {
-            genreId: {
-              in: filter.genres.map((id) => id),
-            },
-          },
-        };
-      }
-    }
+    const query = this._setupQuery(filter);
     const bookData = await this.prisma.book.findMany({
       select: {
         id: true,
         title: true,
-        description: true,
         cover: true,
-        pages: true,
-        language: true,
-        releaseDate: true,
-        updatedAt: true,
         createdAt: true,
         author: {
           select: {
             id: true,
             name: true,
-            avatar: true,
-            bio: true,
-          },
-        },
-        category: {
-          select: {
-            id: true,
-            name: true,
-            cover: true,
-          },
-        },
-        publisher: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        genres: {
-          select: {
-            genre: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-        digitalItems: {
-          select: {
-            format: true,
-            url: true,
-            size: true,
           },
         },
         reviews: {
@@ -229,47 +170,21 @@ export class PersistenceBookRepository extends BookRepository {
             review: true,
           },
         },
-        likes: {
-          select: {
-            id: true,
-            status: true,
-            user: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-              },
-            },
-          },
-        },
       },
-      where: query,
-      skip,
-      take,
+      where: { ...query },
+      take: paging?.limit ?? 20,
+      skip: paging?.cursor ? 1 : 0,
+      ...(paging?.cursor ? { skip: 1, cursor: { id: paging.cursor } } : {}), // Skip the cursor itself
+      orderBy: sort?.field
+        ? [{ [sort?.field]: sort.order }, { id: sort.order }]
+        : [{ id: 'asc' }],
     });
 
     return bookData.map((book) => {
       const bookAuthor = {
         id: book.author.id,
         name: book.author.name,
-        avatar: book.author.avatar ?? '',
-        bio: book.author.bio ?? '',
       } as Author;
-      const bookCategory = {
-        id: book.category.id,
-        name: book.category.name,
-        cover: book.category.cover ?? '',
-      } as Category;
-
-      const bookPublisher = book.publisher
-        ? { id: book.publisher.id, name: book.publisher.name }
-        : undefined;
-      const bookGenres: Array<Genre> = book.genres.map((genre) => {
-        return {
-          id: genre.genre.id,
-          name: genre.genre.name,
-        } as Genre;
-      });
 
       const bookReviews: Array<Review> = book.reviews.map((review) => {
         return {
@@ -279,59 +194,19 @@ export class PersistenceBookRepository extends BookRepository {
         } as Review;
       });
 
-      const digitalItems = book.digitalItems.map((item) => {
-        return {
-          format: item.format,
-          url: item.url,
-          size: item.size,
-        } as DigitalItemData;
-      });
       return new BookEntity(
         book.id,
         book.title,
         book.cover,
-        book.description ?? '',
-        book.pages,
-        book.language,
-        book.releaseDate,
         book.createdAt,
-        book.updatedAt,
         bookAuthor,
-        bookCategory,
-        bookPublisher,
-        bookGenres,
         bookReviews,
-        digitalItems,
       );
     });
   }
-  count(filter: Filter | undefined): Promise<number> {
-    const query: any = {
-      status: {
-        not: 'deleted',
-      },
-    };
-    if (filter) {
-      if (filter.authorId) {
-        query.authorId = filter.authorId;
-      }
-      if (filter.categoryId) {
-        query.categoryId = filter.categoryId;
-      }
-      if (filter.publisherId) {
-        query.publisherId = filter.publisherId;
-      }
-      if (filter.genres) {
-        query.genres = {
-          some: {
-            genreId: {
-              in: filter.genres.map((id) => id),
-            },
-          },
-        };
-      }
-    }
 
+  count(filter: BooksFilter | undefined): Promise<number> {
+    const query: any = this._setupQuery(filter);
     return this.prisma.book.count({
       where: query,
     });
@@ -388,18 +263,8 @@ export class PersistenceBookRepository extends BookRepository {
         book.id,
         book.title,
         book.cover,
-        book.description ?? '',
-        book.pages,
-        book.language,
-        book.releaseDate,
         book.createdAt,
-        book.updatedAt,
         data.author!,
-        data.category!,
-        { id: '', name: '' },
-        [],
-        [],
-        [],
       );
     });
 
@@ -502,23 +367,12 @@ export class PersistenceBookRepository extends BookRepository {
     });
     if (!data) return null;
 
-    return new BookEntity(
-      data.id,
-      data.title,
-      data.cover,
-      data.description ?? '',
-      data.pages,
-      data.language,
-      data.releaseDate,
-      data.createdAt,
-      data.updatedAt,
-      { id: '', name: '', avatar: '', bio: '' },
-      { id: '', name: '' },
-      { id: '', name: '' },
-      [],
-      [],
-      [],
-    );
+    return new BookEntity(data.id, data.title, data.cover, data.createdAt, {
+      id: '',
+      name: '',
+      avatar: '',
+      bio: '',
+    });
   }
 
   async updateBookGenres(genres: string[], bookId: string): Promise<void> {
@@ -534,6 +388,7 @@ export class PersistenceBookRepository extends BookRepository {
       }),
     });
   }
+
   async addBookDigitalItem(
     itemData: DigitalItemData,
     bookId: string,
@@ -690,5 +545,42 @@ export class PersistenceBookRepository extends BookRepository {
   }
   getBookGenres(bookId: string): Promise<object[]> {
     throw new Error('Method not implemented.');
+  }
+
+  private _setupQuery(filter: BooksFilter | undefined): any {
+    const query: any = {
+      status: {
+        not: 'deleted',
+      },
+    };
+
+    if (filter) {
+      if (filter.authorId) {
+        query.authorId = filter.authorId;
+      }
+      if (filter.categoryId) {
+        query.categoryId = filter.categoryId;
+      }
+      if (filter.publisherId) {
+        query.publisherId = filter.publisherId;
+      }
+      if (filter.genres) {
+        query.genres = {
+          some: {
+            genreId: {
+              in: filter.genres.map((id) => id),
+            },
+          },
+        };
+      }
+      if (filter.releaseDateRange) {
+        query.releaseDate = {
+          gte: new Date(filter.releaseDateRange.from ?? 1950, 0, 1),
+          lte: new Date(filter.releaseDateRange.to ?? 2050, 11, 31),
+        };
+      }
+    }
+
+    return query;
   }
 }

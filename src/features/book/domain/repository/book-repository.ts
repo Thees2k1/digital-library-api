@@ -1,15 +1,19 @@
 import {
   ReviewCreateDto,
-  ReviewDetailDto,
   ReviewListResultDto,
 } from '../../application/dtos/book-dto';
+import {
+  BooksFilter,
+  PagingOptions,
+  SortOptions,
+} from '../../application/use-cases/interfaces/parameters';
 import { BookEntity } from '../entities/book-entity';
-import { Filter, Paging } from '../interfaces/common';
 
 export abstract class BookRepository {
   abstract getList(
-    paging: Paging | undefined,
-    filter: Filter | undefined,
+    paging: PagingOptions | undefined,
+    filter: BooksFilter | undefined,
+    sort: SortOptions | undefined,
   ): Promise<BookEntity[]>;
   abstract getById(id: string): Promise<BookEntity | null>;
   abstract create(data: Partial<BookEntity>): Promise<BookEntity>;
@@ -33,7 +37,7 @@ export abstract class BookRepository {
     limit: number,
   ): Promise<ReviewListResultDto>;
 
-  abstract count(filter: Filter | undefined): Promise<number>;
+  abstract count(filter: BooksFilter | undefined): Promise<number>;
 
   abstract getBookAuthor(bookId: string): Promise<object>;
 

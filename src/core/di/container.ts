@@ -44,6 +44,8 @@ import { Container } from 'inversify';
 import { DI_TYPES } from './types';
 import { SearchService } from '../interfaces/search-service';
 import { MeiliSearchService } from '../services/meilisearch-service';
+import { RedisService } from '../services/redis-service';
+import { CacheService } from '../interfaces/cache-service';
 
 // import { RedisService } from "../services/redis-service";
 
@@ -54,9 +56,15 @@ export function initializeInfrastucture() {
   container
     .bind<PrismaClient>(DI_TYPES.PrismaClient)
     .toConstantValue(new PrismaClient());
-  // container.bind<RedisService>(RedisService).toSelf();
-  container.bind<JwtService>(JwtService).toSelf();
-  container.bind<SearchService>(DI_TYPES.SearchService).to(MeiliSearchService);
+  container.bind<JwtService>(JwtService).toSelf().inSingletonScope();
+  container
+    .bind<SearchService>(DI_TYPES.SearchService)
+    .to(MeiliSearchService)
+    .inSingletonScope();
+  container
+    .bind<CacheService>(DI_TYPES.CacheService)
+    .to(RedisService)
+    .inSingletonScope();
 
   //binding repositories
   container

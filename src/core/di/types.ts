@@ -27,6 +27,7 @@ export const DI_TYPES = {
   BookController: Symbol.for('BookController'),
 
   PrismaClient: Symbol.for('PrismaClient'),
+  CacheService: Symbol.for('CacheService'),
 
   SearchService: Symbol.for('SearchService'),
   Logger: Symbol.for('Logger'),
