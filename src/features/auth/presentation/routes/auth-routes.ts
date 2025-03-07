@@ -5,6 +5,8 @@ import { LoginBodySchema } from '../../application/dtos/login-dto';
 import { container } from '@src/core/di/container';
 import { DI_TYPES } from '@src/core/di/types';
 import { validationMiddleware } from '@src/core/middlewares/validation-middleware';
+import { BaseRouterFactory } from '@src/core/interfaces/base-router-factory';
+import { inject, injectable } from 'inversify';
 
 class AuthRoutes {
   static login = '/login';
@@ -14,29 +16,37 @@ class AuthRoutes {
   static checkSession = '/check-session';
 }
 
-export class AuthRouter {
-  static get routes(): Router {
-    const router = Router();
-    const controller = container.get<AuthController>(DI_TYPES.AuthController);
-    router.post(
+@injectable()
+export class AuthRouterFactory extends BaseRouterFactory<AuthController> {
+  constructor(@inject(DI_TYPES.AuthController) controller: AuthController) {
+    super(controller);
+  }
+
+  setupRoutes(): void {
+    this._router.post(
       AuthRoutes.register,
       validationMiddleware(RegisterBodySchema),
-      controller.register.bind(controller),
+      this.controller.register.bind(this.controller),
     );
-    router.post(
+    this._router.post(
       AuthRoutes.login,
       validationMiddleware(LoginBodySchema),
-      controller.login.bind(controller),
+      this.controller.login.bind(this.controller),
     );
-    router.post(
+    this._router.post(
       AuthRoutes.refreshToken,
-      controller.refreshToken.bind(controller),
+      this.controller.refreshToken.bind(this.controller),
     );
-    router.post(AuthRoutes.logout, controller.logout.bind(controller));
-    router.get(
+    this._router.post(
+      AuthRoutes.logout,
+      this.controller.logout.bind(this.controller),
+    );
+    this._router.get(
       AuthRoutes.checkSession,
-      controller.checkSession.bind(controller),
+      this.controller.checkSession.bind(this.controller),
     );
-    return router;
+  }
+  get routes(): Router {
+    return this._router;
   }
 }

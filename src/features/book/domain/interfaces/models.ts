@@ -6,8 +6,8 @@ export interface Category {
 export interface Author {
   id: string;
   name: string;
-  avatar: string;
-  bio: string;
+  avatar?: string;
+  bio?: string;
 }
 
 export interface Genre {

@@ -8,31 +8,47 @@ import {
   genreCreateSchema,
   genreUpdateSchema,
 } from '../../application/dto/genre-dtos';
+import { inject, injectable } from 'inversify';
+import { BaseRouterFactory } from '@src/core/interfaces/base-router-factory';
 
-export class GenreRouter {
-  static get routes(): Router {
-    const path = '/genres';
-    const router = Router();
-    const controller = container.get<GenreController>(DI_TYPES.GenreController);
-    router.get(path, controller.getGenres.bind(controller));
-    router.get(`${path}/:id`, controller.getGenre.bind(controller));
-    router.post(
-      path,
+export class GenreRoutes {
+  static readonly genres = '/genres';
+  static readonly genre = '/genres/:id';
+}
+@injectable()
+export class GenreRouterFactory extends BaseRouterFactory<GenreController> {
+  constructor(@inject(DI_TYPES.GenreController) controller: GenreController) {
+    super(controller);
+  }
+
+  setupRoutes(): void {
+    this._router.get(
+      GenreRoutes.genres,
+      this.controller.getGenres.bind(this.controller),
+    );
+    this._router.get(
+      GenreRoutes.genre,
+      this.controller.getGenre.bind(this.controller),
+    );
+    this._router.post(
+      GenreRoutes.genres,
       authMiddleware,
       validationMiddleware(genreCreateSchema),
-      controller.createGenre.bind(controller),
+      this.controller.createGenre.bind(this.controller),
     );
-    router.patch(
-      `${path}/:id`,
+    this._router.patch(
+      GenreRoutes.genre,
       authMiddleware,
       validationMiddleware(genreUpdateSchema),
-      controller.updateGenre.bind(controller),
+      this.controller.updateGenre.bind(this.controller),
     );
-    router.delete(
-      `${path}/:id`,
+    this._router.delete(
+      GenreRoutes.genre,
       authMiddleware,
-      controller.deleteGenre.bind(controller),
+      this.controller.deleteGenre.bind(this.controller),
     );
-    return router;
+  }
+  get routes(): Router {
+    return this._router;
   }
 }

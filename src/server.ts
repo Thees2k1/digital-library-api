@@ -17,6 +17,8 @@ import { ErrorMiddleware } from './core/middlewares/error-middleware';
 
 // import "./features/shared/infrastructure/utils/logger/global-logger";
 import 'reflect-metadata';
+import { container } from './core/di/container';
+import { IndexingService } from './features/book/infrastructure/index-service';
 
 interface ServerOptions {
   port: number;
@@ -35,37 +37,32 @@ export class Server {
     this.port = port;
     this.routes = routes;
     this.apiPrefix = apiPrefix;
+    this.init();
+  }
+
+  async start(): Promise<void> {
+    this.app.listen(this.port, () => {
+      console.info(`Server running on port ${this.port}`);
+    });
+  }
+
+  private init(): void {
+    console.log('Initializing server...');
+    console.log('NODE_ENV', process.env.NODE_ENV);
+    try {
+      this.initializeServices();
+      this.initializeMiddlewares();
+      this.initializeRoutes();
+      this.initializeErrorHandling();
+    } catch (error) {
+      console.error('Error initializing server', error);
+    }
   }
 
   private initializeMiddlewares(): void {
-    const whitelist = [
-      'http://localhost:3000',
-      'http://localhost:80',
-      'http://localhost',
-      'http://13.212.138.64',
-      'http://localhost:5173',
-      'http://localhost:4173',
-      'https://chyra.vercel.app',
-      'https://chyra.me',
-      'https://lib.chyra.me',
-      'https://admin.chyra.me',
-      'https://www.chyra.me',
-      'https://api.chyra.me',
-    ];
-    const corsOptions: cors.CorsOptions = {
-      origin: function (origin, callback) {
-        if (!origin || whitelist.indexOf(origin) !== -1) {
-          callback(null, true); // Allow the request
-        } else {
-          callback(new Error('Not allowed by CORS')); // Block the request
-        }
-      },
-      credentials: true,
-    };
-
     this.app.use(helmet());
-    this.app.use(cors(corsOptions));
-    this.app.options('*', cors(corsOptions));
+    this.app.use(cors(this.configurateCors()));
+    // this.app.options('*', cors(corsOptions));
     this.app.use(
       rateLimit({
         max: 500, // Allow 500 requests
@@ -103,22 +100,37 @@ export class Server {
   private initializeErrorHandling(): void {
     this.routes.use(ErrorMiddleware.handleError);
   }
-  async start(): Promise<void> {
-    this.init();
-    this.app.listen(this.port, () => {
-      console.info(`Server running on port ${this.port}`);
-    });
+
+  private initializeServices(): void {
+    // Initialize services here
+    const indexingService = container.get<IndexingService>(IndexingService);
+    indexingService.reindexAllBooks();
   }
 
-  private init(): void {
-    console.log('Initializing server...');
-    console.log('NODE_ENV', process.env.NODE_ENV);
-    try {
-      this.initializeMiddlewares();
-      this.initializeRoutes();
-      this.initializeErrorHandling();
-    } catch (error) {
-      console.error('Error initializing server', error);
-    }
+  private configurateCors(): CorsOptions {
+    const whitelist = [
+      'http://localhost:3000',
+      'http://localhost:80',
+      'http://localhost',
+      'http://13.212.138.64',
+      'http://localhost:5173',
+      'http://localhost:4173',
+      'https://chyra.vercel.app',
+      'https://chyra.me',
+      'https://lib.chyra.me',
+      'https://admin.chyra.me',
+      'https://www.chyra.me',
+      'https://api.chyra.me',
+    ];
+    return {
+      origin: function (origin, callback) {
+        if (!origin || whitelist.indexOf(origin) !== -1) {
+          callback(null, true); // Allow the request
+        } else {
+          callback(new Error('Not allowed by CORS')); // Block the request
+        }
+      },
+      credentials: true,
+    } as CorsOptions;
   }
 }

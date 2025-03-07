@@ -25,6 +25,18 @@ export const bookCreateDtoSchema = z.object({
 
 export const bookUpdateDtoSchema = bookCreateDtoSchema.partial();
 
+export const bookListItemSchema = z.object({
+  id: idSchema,
+  title: z.string().min(1).max(255),
+  cover: z.string().min(1).max(255),
+  author: z.object({
+    id: z.string().uuid(),
+    name: z.string().max(255),
+  }),
+  averageRating: z.number().optional(),
+  createdAt: isoDateStringShema,
+});
+
 export const bookDetailDtoSchema = z.object({
   id: z.string().uuid(),
   title: z.string().min(1).max(255),
@@ -66,45 +78,13 @@ export const bookDetailDtoSchema = z.object({
   updateAt: isoDateStringShema,
 });
 
-export const bookListQueryDtoSchema = z.object({
-  page: z
-    .string()
-    .optional()
-    .transform((val) => parseInt(val!, 10))
-    .refine((val) => val > 0, {
-      message: 'Page must be a positive integer',
-    })
-    .default('1'),
-  limit: z
-    .string()
-    .optional()
-    .transform((val) => parseInt(val!, 10))
-    .refine((val) => val > 0 && val <= 100, {
-      message: 'Limit must be a positive integer and no more than 100',
-    })
-    .default('10'),
-  authorId: z.string().uuid().optional(),
-  categoryId: z.string().uuid().optional(),
-  publisherId: z.string().uuid().optional(),
-  genres: z
-    .preprocess((arg) => {
-      if (typeof arg === 'string') {
-        return [arg];
-      } else if (Array.isArray(arg)) {
-        return arg;
-      }
-      return undefined;
-    }, z.array(z.string().uuid()))
-    .optional(),
-});
-
 export const reviewCreateDtoSchema = z.object({
   rating: z.number().int().min(1).max(5),
   comment: z.string().optional(),
 });
 
 export const reviewDetailDtoSchema = z.object({
-  id: z.string().uuid(),
+  id: idSchema,
   bookId: idSchema,
   reviewer: z.object({
     id: idSchema,
@@ -116,26 +96,50 @@ export const reviewDetailDtoSchema = z.object({
   createdAt: isoDateStringShema,
 });
 
+export const bookQuerySchema = z.object({
+  cursor: z.string().optional(),
+  limit: z.coerce.number().int().positive().default(20),
+  q: z.string().optional(),
+  genres: z.string().optional(),
+  author: z.string().uuid().optional(),
+  category: z.string().uuid().optional(),
+  publisher: z.string().uuid().optional(),
+  release_date_gte: z.coerce.number().int().optional(),
+  release_date_lte: z.coerce.number().int().optional(),
+  sort: z
+    .enum([
+      'releaseDate',
+      '-releaseDate',
+      'updatedAt',
+      '-updatedAt',
+      'id',
+      '-id',
+    ])
+    .optional(),
+});
+
+export const bookListSchema = z.array(bookListItemSchema);
+
+export type BookQuery = z.infer<typeof bookQuerySchema>;
+export type BookListItem = z.infer<typeof bookListItemSchema>;
+export type BookList = z.infer<typeof bookListSchema>;
+
+export type GetListResult = {
+  data: BookList;
+  nextCursor: string;
+  total: number;
+  hasNextPage: boolean;
+};
+
 export type BookCreateDto = z.infer<typeof bookCreateDtoSchema>;
 export type BookUpdateDto = z.infer<typeof bookUpdateDtoSchema>;
 export type BookDetailDto = z.infer<typeof bookDetailDtoSchema>;
-export type BookListQueryDto = z.infer<typeof bookListQueryDtoSchema>;
-
-export type BookListResultDto = {
-  data: BookDetailDto[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-};
+// export type BookListQueryDto = z.infer<typeof bookListQueryDtoSchema>;
 
 export type BookIndexRecord = {
   id: string;
   title: string;
   description: string;
-  cover: string;
   releaseDate: string;
   rating: number;
   authorName: string;

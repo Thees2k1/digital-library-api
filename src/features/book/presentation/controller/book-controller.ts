@@ -1,19 +1,26 @@
 import { DI_TYPES } from '@src/core/di/types';
+import { NextFunction, Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
-import { Request, Response, NextFunction } from 'express';
 
 import { AppError } from '@src/core/errors/custom-error';
-import { ZodError } from 'zod';
 import { ValidationError } from '@src/core/errors/validation-error';
+import { ZodError } from 'zod';
 
-import { idSchema } from '@src/core/types';
-import { IBookService } from '../../application/use-cases/interfaces/book-service-interface';
+import { ApiResponse, idSchema } from '@src/core/types';
 import {
   BookCreateDto,
-  bookListQueryDtoSchema,
+  BookList,
+  bookQuerySchema,
   BookUpdateDto,
   ReviewCreateDto,
 } from '../../application/dtos/book-dto';
+import { IBookService } from '../../application/use-cases/interfaces/book-service-interface';
+import {
+  BooksFilter,
+  GetListOptions,
+  PagingOptions,
+  SortOptions,
+} from '../../application/use-cases/interfaces/parameters';
 
 @injectable()
 export class BookController {
@@ -38,9 +45,55 @@ export class BookController {
 
   async getBooks(req: Request, res: Response, next: NextFunction) {
     try {
-      const query = bookListQueryDtoSchema.parse(req.query);
-      const result = await this.service.getList(query);
-      res.json(result);
+      const query = bookQuerySchema.parse(req.query);
+
+      const filters: BooksFilter = {
+        query: query.q,
+        genres: query.genres ? query.genres.split(',') : undefined,
+        authorId: query.author,
+        categoryId: query.category,
+        publisherId: query.publisher,
+        releaseDateRange:
+          query.release_date_gte && query.release_date_lte
+            ? {
+                from: query.release_date_gte,
+                to: query.release_date_lte,
+              }
+            : undefined,
+      };
+
+      const sortOptions: SortOptions | undefined = query.sort && {
+        field: query.sort.includes('-') ? query.sort.slice(1) : query.sort,
+        order: query.sort.includes('-') ? 'desc' : 'asc',
+      };
+
+      const paginOptions: PagingOptions = {
+        cursor: query.cursor,
+        limit: query.limit,
+      };
+
+      const options: GetListOptions = {
+        filter: filters,
+        sort: sortOptions,
+        paging: paginOptions,
+      };
+
+      const result = await this.service.getList(options);
+
+      const reponseBody: ApiResponse<BookList> = {
+        status: 'success',
+        message: 'Books fetched successfully',
+        data: result.data,
+        filters: filters,
+        pagination: {
+          limit: paginOptions.limit,
+          total: result.total,
+          hasNextPage: result.hasNextPage,
+          nextCursor: result.nextCursor,
+        },
+        timestamp: Date.now(),
+      };
+      res.json(reponseBody);
     } catch (error) {
       next(error);
     }

@@ -8,31 +8,46 @@ import {
   serieCreateSchema,
   serieUpdateSchema,
 } from '../../application/dto/serie-dtos';
+import { inject, injectable } from 'inversify';
+import { BaseRouterFactory } from '@src/core/interfaces/base-router-factory';
 
-export class SerieRouter {
-  static get routes(): Router {
-    const path = '/series';
-    const router = Router();
-    const controller = container.get<SerieController>(DI_TYPES.SerieController);
-    router.get(path, controller.getSeries.bind(controller));
-    router.get(`${path}/:id`, controller.getSerie.bind(controller));
-    router.post(
-      path,
+export class SerieRoutes {
+  static readonly series = '/series';
+  static readonly serie = '/series/:id';
+}
+@injectable()
+export class SerieRouterFactory extends BaseRouterFactory<SerieController> {
+  constructor(@inject(DI_TYPES.SerieController) controller: SerieController) {
+    super(controller);
+  }
+  setupRoutes(): void {
+    this._router.get(
+      SerieRoutes.series,
+      this.controller.getSeries.bind(this.controller),
+    );
+    this._router.get(
+      SerieRoutes.serie,
+      this.controller.getSerie.bind(this.controller),
+    );
+    this._router.post(
+      SerieRoutes.series,
       authMiddleware,
       validationMiddleware(serieCreateSchema),
-      controller.createSerie.bind(controller),
+      this.controller.createSerie.bind(this.controller),
     );
-    router.patch(
-      `${path}/:id`,
+    this._router.patch(
+      SerieRoutes.serie,
       authMiddleware,
       validationMiddleware(serieUpdateSchema),
-      controller.updateSerie.bind(controller),
+      this.controller.updateSerie.bind(this.controller),
     );
-    router.delete(
-      `${path}/:id`,
+    this._router.delete(
+      SerieRoutes.serie,
       authMiddleware,
-      controller.deleteSerie.bind(controller),
+      this.controller.deleteSerie.bind(this.controller),
     );
-    return router;
+  }
+  get routes(): Router {
+    return this._router;
   }
 }
