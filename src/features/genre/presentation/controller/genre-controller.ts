@@ -8,9 +8,17 @@ import { ValidationError } from '@src/core/errors/validation-error';
 import { IGenreService } from '../../application/use-cases/interfaces/genre-service-interface';
 import {
   GenreCreateDto,
+  GenreList,
   GenreUpdateDto,
+  GetGenresParams,
 } from '../../application/dto/genre-dtos';
-import { idSchema } from '@src/core/types';
+import {
+  ApiResponse,
+  idSchema,
+  PagingOptions,
+  SortOptions,
+} from '@src/core/types';
+import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
 
 @injectable()
 export class GenreController {
@@ -36,8 +44,35 @@ export class GenreController {
   async getGenres(req: Request, res: Response, next: NextFunction) {
     try {
       const query = req.query;
-      const result = await this.service.getList(query);
-      res.json({ data: result, message: 'Genres fetched successfully' });
+      const filter = {};
+
+      const sortOptions: SortOptions = {
+        field: '',
+        order: 'asc',
+      };
+
+      const paginOptions: PagingOptions = {
+        cursor: query?.cursor as string,
+        limit: query.limit
+          ? parseInt(query.limit as string)
+          : DEFAULT_LIST_LIMIT,
+      };
+      const params: GetGenresParams = {
+        filter,
+        sort: sortOptions,
+        paging: paginOptions,
+      };
+      const result = await this.service.getList(params);
+
+      const resBody = {
+        message: 'Genres fetched successfully',
+        status: 'success',
+        data: result.data,
+        pagination: result.paging,
+        timestamp: Date.now(),
+      } as ApiResponse<GenreList>;
+
+      res.json(resBody);
     } catch (error) {
       next(error);
     }
@@ -50,7 +85,14 @@ export class GenreController {
       if (!result) {
         throw AppError.notFound('Genre not found');
       }
-      res.json({ data: result, message: 'Genre fetched successfully' });
+      const resBody = {
+        status: 'success',
+        message: 'Genre fetched successfully',
+        data: result,
+        timestamp: Date.now(),
+      };
+
+      res.json(resBody);
     } catch (error) {
       if (error instanceof ZodError) {
         const validationErrors = error.issues.map((issue) => {
@@ -75,7 +117,11 @@ export class GenreController {
       const id = idSchema.parse(req.params.id);
       const data = req.body;
       await this.service.update(id, data);
-      res.json({ message: 'Genre updated successfully' });
+      res.json({
+        message: 'Genre updated successfully',
+        status: 'success',
+        timestamp: Date.now(),
+      });
     } catch (error) {
       if (error instanceof ZodError) {
         const validationErrors = error.issues.map((issue) => {
@@ -95,7 +141,11 @@ export class GenreController {
     try {
       const id = idSchema.parse(req.params.id);
       await this.service.delete(id);
-      res.json({ message: 'Genre deleted successfully' });
+      res.json({
+        message: 'Genre deleted successfully',
+        status: 'success',
+        timestamp: Date.now(),
+      });
     } catch (error) {
       if (error instanceof ZodError) {
         const validationErrors = error.issues.map((issue) => {

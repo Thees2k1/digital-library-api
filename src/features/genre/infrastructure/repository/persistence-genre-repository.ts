@@ -3,6 +3,7 @@ import { DI_TYPES } from '@src/core/di/types';
 import { inject, injectable } from 'inversify';
 import { GenreRepository } from '../../domain/repository/genre-repository';
 import { GenreEntity } from '../../domain/entities/genre-entity';
+import { GetGenresParams } from '../../application/dto/genre-dtos';
 
 @injectable()
 export class PersistenceGenreRepository extends GenreRepository {
@@ -12,8 +13,16 @@ export class PersistenceGenreRepository extends GenreRepository {
     this.prisma = prisma;
   }
 
-  async getList(): Promise<GenreEntity[]> {
-    const data: Genre[] = await this.prisma.genre.findMany();
+  count(filter: any): Promise<number> {
+    return this.prisma.genre.count({ where: filter });
+  }
+
+  async getList({ paging }: GetGenresParams): Promise<GenreEntity[]> {
+    const data: Genre[] = await this.prisma.genre.findMany({
+      take: paging?.limit ?? 20,
+      skip: paging?.cursor ? 1 : 0,
+      ...(paging?.cursor ? { skip: 1, cursor: { id: paging.cursor } } : {}),
+    });
     return data.map((Genre) =>
       PersistenceGenreRepository.convertToEntity(Genre),
     );

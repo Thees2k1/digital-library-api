@@ -1,12 +1,9 @@
+import { PagingOptions, SortOptions } from '@src/core/types';
 import {
+  BooksFilter,
   ReviewCreateDto,
   ReviewListResultDto,
 } from '../../application/dtos/book-dto';
-import {
-  BooksFilter,
-  PagingOptions,
-  SortOptions,
-} from '../../application/use-cases/interfaces/parameters';
 import { BookEntity } from '../entities/book-entity';
 
 export abstract class BookRepository {

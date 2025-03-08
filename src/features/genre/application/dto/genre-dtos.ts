@@ -1,4 +1,4 @@
-import { idSchema } from '@src/core/types';
+import { GetListOptions, idSchema, PagingMetadata } from '@src/core/types';
 import { z } from 'zod';
 
 export const genreCreateSchema = z.object({
@@ -20,3 +20,12 @@ export type GenreCreateDto = z.infer<typeof genreCreateSchema>;
 export type GenreUpdateDto = z.infer<typeof genreUpdateSchema>;
 
 export type GenreDetailDto = z.infer<typeof genreDetailSchema>;
+
+export type GenreList = Array<GenreDetailDto>;
+
+export type GetGenresParams = GetListOptions<any>;
+
+export type GetGenresResult = {
+  data: GenreList;
+  paging: PagingMetadata;
+};

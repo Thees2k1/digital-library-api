@@ -3,6 +3,7 @@ import { DI_TYPES } from '@src/core/di/types';
 import { inject, injectable } from 'inversify';
 import { SerieRepository } from '../../domain/repository/serie-repository';
 import { SerieEntity } from '../../domain/entities/serie-entity';
+import { GetSeriesParams } from '../../application/dto/serie-dtos';
 
 @injectable()
 export class PersistenceSerieRepository extends SerieRepository {
@@ -12,8 +13,15 @@ export class PersistenceSerieRepository extends SerieRepository {
     this.prisma = prisma;
   }
 
-  async getList(): Promise<SerieEntity[]> {
-    const data: Serie[] = await this.prisma.serie.findMany();
+  count(filter: any): Promise<number> {
+    return this.prisma.serie.count({ where: filter });
+  }
+  async getList({ paging }: GetSeriesParams): Promise<SerieEntity[]> {
+    const data: Serie[] = await this.prisma.serie.findMany({
+      take: paging?.limit ?? 20,
+      skip: paging?.cursor ? 1 : 0,
+      ...(paging?.cursor ? { skip: 1, cursor: { id: paging.cursor } } : {}),
+    });
     return data.map((Serie) =>
       PersistenceSerieRepository.convertToEntity(Serie),
     );

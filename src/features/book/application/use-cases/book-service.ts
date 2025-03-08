@@ -2,7 +2,7 @@ import { config } from '@src/core/config/config';
 import { DI_TYPES } from '@src/core/di/types';
 import { AppError } from '@src/core/errors/custom-error';
 import { SearchService } from '@src/core/interfaces/search-service';
-import { Id } from '@src/core/types';
+import { GetListOptions, Id } from '@src/core/types';
 import { inject, injectable } from 'inversify';
 import { BookEntity } from '../../domain/entities/book-entity';
 import {
@@ -17,6 +17,7 @@ import {
   BookDetailDto,
   BookIndexRecord,
   bookListSchema,
+  BooksFilter,
   BookUpdateDto,
   GetListResult,
   ReviewCreateDto,
@@ -24,7 +25,6 @@ import {
 } from '../dtos/book-dto';
 import { BookMapper } from '../mapper/book-mapper';
 import { IBookService } from './interfaces/book-service-interface';
-import { GetListOptions } from './interfaces/parameters';
 import { CacheService } from '@src/core/interfaces/cache-service';
 import { generateCacheKey } from '@src/core/utils/generate-cache-key';
 import { eventEmitter, EVENTS } from '@src/core/events';
@@ -214,28 +214,23 @@ export class BookService implements IBookService {
       throw error;
     }
   }
-  async getList(options: GetListOptions): Promise<GetListResult> {
+  async getList(options: GetListOptions<BooksFilter>): Promise<GetListResult> {
     const cacheKey = generateCacheKey('books:list', options);
     try {
       const { paging, filter, sort } = options;
 
-      console.log('cacheKey', cacheKey);
-
       const cachedData = await this.cacheService.get<GetListResult>(cacheKey);
 
       if (cachedData) {
-        console.log('Cache hit');
         return cachedData;
       }
 
-      console.log('Cache miss. Fetching from database...');
       const [books, total] = await Promise.all([
         this.repository.getList(paging, filter, sort),
         this.repository.count(filter),
       ]);
 
       const data = BookMapper.toBooks(books);
-      // await this.indexAllBooks(data);
 
       const hasNextPage = books.length === (paging?.limit ?? 20);
       const nextCursor = hasNextPage ? books[books.length - 1].id : null;

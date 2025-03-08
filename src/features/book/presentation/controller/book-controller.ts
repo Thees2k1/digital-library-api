@@ -6,22 +6,23 @@ import { AppError } from '@src/core/errors/custom-error';
 import { ValidationError } from '@src/core/errors/validation-error';
 import { ZodError } from 'zod';
 
-import { ApiResponse, idSchema } from '@src/core/types';
+import {
+  ApiResponse,
+  idSchema,
+  PagingOptions,
+  SortOptions,
+} from '@src/core/types';
 import {
   BookCreateDto,
   BookDetailDto,
   BookList,
   bookQuerySchema,
+  BooksFilter,
   BookUpdateDto,
+  GetBooksOptions,
   ReviewCreateDto,
 } from '../../application/dtos/book-dto';
 import { IBookService } from '../../application/use-cases/interfaces/book-service-interface';
-import {
-  BooksFilter,
-  GetListOptions,
-  PagingOptions,
-  SortOptions,
-} from '../../application/use-cases/interfaces/parameters';
 
 @injectable()
 export class BookController {
@@ -83,7 +84,7 @@ export class BookController {
         limit: query.limit,
       };
 
-      const options: GetListOptions = {
+      const options: GetBooksOptions = {
         filter: filters,
         sort: sortOptions,
         paging: paginOptions,
@@ -222,13 +223,6 @@ export class BookController {
       const page = parseInt(req.query.page as string, 10) || 1;
       const limit = parseInt(req.query.limit as string, 10) || 10;
       const result = await this.service.getReviews(bookId, page, limit);
-
-      // const responseBody: ApiResponse<any> = {
-      //   status: 'success',
-      //   message: 'Reviews fetched successfully',
-      //   data: result,
-      //   timestamp: Date.now(),
-      // }
       res.json(result);
     } catch (error) {
       next(error);

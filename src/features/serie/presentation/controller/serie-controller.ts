@@ -5,12 +5,20 @@ import { Request, Response, NextFunction } from 'express';
 import { AppError } from '@src/core/errors/custom-error';
 import { ZodError } from 'zod';
 import { ValidationError } from '@src/core/errors/validation-error';
-import { idSchema } from '@src/core/types';
+import {
+  ApiResponse,
+  idSchema,
+  PagingOptions,
+  SortOptions,
+} from '@src/core/types';
 import { ISerieService } from '../../application/use-cases/interfaces/serie-service-interface';
 import {
   SerieCreateDto,
+  SerieList,
   SerieUpdateDto,
 } from '../../application/dto/serie-dtos';
+import { GetGenresParams } from '@src/features/genre/application/dto/genre-dtos';
+import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
 
 @injectable()
 export class SerieController {
@@ -36,8 +44,34 @@ export class SerieController {
   async getSeries(req: Request, res: Response, next: NextFunction) {
     try {
       const query = req.query;
-      const result = await this.service.getList(query);
-      res.json({ data: result, message: 'Series fetched successfully' });
+      const filter = {};
+
+      const sortOptions: SortOptions = {
+        field: '',
+        order: 'asc',
+      };
+
+      const paginOptions: PagingOptions = {
+        cursor: query?.cursor as string,
+        limit: query.limit
+          ? parseInt(query.limit as string)
+          : DEFAULT_LIST_LIMIT,
+      };
+      const params: GetGenresParams = {
+        filter,
+        sort: sortOptions,
+        paging: paginOptions,
+      };
+      const result = await this.service.getList(params);
+
+      const resBody = {
+        message: 'Series fetched successfully',
+        status: 'success',
+        data: result.data,
+        pagination: result.paging,
+        timestamp: Date.now(),
+      } as ApiResponse<SerieList>;
+      res.json(resBody);
     } catch (error) {
       next(error);
     }
@@ -50,7 +84,13 @@ export class SerieController {
       if (!result) {
         throw AppError.notFound('Serie not found');
       }
-      res.json({ data: result, message: 'Serie fetched successfully' });
+      const resBody = {
+        status: 'success',
+        message: 'Serie fetched successfully',
+        data: result,
+        timestamp: Date.now(),
+      } as ApiResponse<any>;
+      res.json(resBody);
     } catch (error) {
       if (error instanceof ZodError) {
         const validationErrors = error.issues.map((issue) => {
@@ -75,7 +115,11 @@ export class SerieController {
       const id = idSchema.parse(req.params.id);
       const data = req.body;
       await this.service.update(id, data);
-      res.json({ message: 'Serie updated successfully' });
+      res.json({
+        message: 'Serie updated successfully',
+        status: 'success',
+        timestamp: Date.now(),
+      });
     } catch (error) {
       if (error instanceof ZodError) {
         const validationErrors = error.issues.map((issue) => {
@@ -95,7 +139,7 @@ export class SerieController {
     try {
       const id = idSchema.parse(req.params.id);
       await this.service.delete(id);
-      res.json({ message: 'Serie deleted successfully' });
+      res.json({ message: 'Serie deleted successfully', status: 'success' });
     } catch (error) {
       if (error instanceof ZodError) {
         const validationErrors = error.issues.map((issue) => {

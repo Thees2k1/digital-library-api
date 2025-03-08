@@ -3,16 +3,14 @@ import {
   BookCreateDto,
   BookDetailDto,
   BookUpdateDto,
+  GetBooksOptions,
   GetListResult,
   ReviewCreateDto,
   ReviewListResultDto,
 } from '../../dtos/book-dto';
-import { GetListOptions } from './parameters';
 
 export interface IBookService {
-  //if the serivce only handle process between the  entity and the controller,
-  // rather limit,offset. how about options search options ., and the data would be
-  getList(options: GetListOptions): Promise<GetListResult>;
+  getList(options: GetBooksOptions): Promise<GetListResult>;
   create(data: BookCreateDto): Promise<BookDetailDto>;
   update(id: Id, data: BookUpdateDto): Promise<string>;
   getById(id: string): Promise<BookDetailDto | null>;

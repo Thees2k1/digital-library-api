@@ -7,17 +7,26 @@ import { v7 as uuid } from 'uuid';
 import { SerieEntity } from '../../domain/entities/serie-entity';
 import { SerieRepository } from '../../domain/repository/serie-repository';
 import {
+  GetSeriesParams,
+  GetSeriesResult,
   SerieCreateDto,
   SerieDetailDto,
   SerieUpdateDto,
 } from '../dto/serie-dtos';
 import { ISerieService } from './interfaces/serie-service-interface';
+import { CacheService } from '@src/core/interfaces/cache-service';
+import { generateCacheKey } from '@src/core/utils/generate-cache-key';
 
 @injectable()
 export class SerieService implements ISerieService {
   private readonly repository: SerieRepository;
-  constructor(@inject(DI_TYPES.SerieRepository) repository: SerieRepository) {
+  private readonly cacheService: CacheService;
+  constructor(
+    @inject(DI_TYPES.SerieRepository) repository: SerieRepository,
+    @inject(DI_TYPES.CacheService) cacheService: CacheService,
+  ) {
     this.repository = repository;
+    this.cacheService = cacheService;
   }
   async create(data: SerieCreateDto): Promise<SerieDetailDto> {
     try {
@@ -75,11 +84,30 @@ export class SerieService implements ISerieService {
       throw error;
     }
   }
-  async getList(): Promise<Array<SerieDetailDto>> {
+  async getList(params: GetSeriesParams): Promise<GetSeriesResult> {
     try {
-      const res = await this.repository.getList();
+      const cacheKey = generateCacheKey('series', params);
+      const cacheData = await this.cacheService.get<GetSeriesResult>(cacheKey);
+      if (cacheData) {
+        return cacheData;
+      }
 
-      return res.map((entity) => this._convertToResultDto(entity));
+      const data = await this.repository.getList(params);
+      const total = await this.repository.count(params);
+
+      const result: GetSeriesResult = {
+        data: data.map((item) => this._convertToResultDto(item)),
+        paging: {
+          total,
+          limit: params.paging.limit,
+          hasNextPage: data.length >= params.paging.limit,
+          nextCursor: data.length > 0 ? data[data.length - 1].id : '',
+        },
+      };
+
+      await this.cacheService.set(cacheKey, result, { EX: 60 });
+
+      return result;
     } catch (error) {
       logger.error(error);
       throw AppError.internalServer('Internal server error.');
@@ -87,13 +115,21 @@ export class SerieService implements ISerieService {
   }
   async getById(id: string): Promise<SerieDetailDto | null> {
     try {
-      const res = await this.repository.getById(id);
+      const cacheKey = generateCacheKey('serie', { id });
 
-      if (!res) {
+      const cacheData = await this.cacheService.get<SerieDetailDto>(cacheKey);
+      if (cacheData) {
+        return cacheData;
+      }
+      const data = await this.repository.getById(id);
+
+      if (!data) {
         return null;
       }
+      const result = this._convertToResultDto(data);
+      await this.cacheService.set(cacheKey, result, { EX: 60 });
 
-      return this._convertToResultDto(res);
+      return result;
     } catch (error) {
       logger.error(error);
       throw AppError.internalServer('Internal server error.');

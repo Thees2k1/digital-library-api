@@ -2,14 +2,10 @@ import { Book, item_format, LikeStatus, PrismaClient } from '@prisma/client';
 import { DI_TYPES } from '@src/core/di/types';
 import { inject, injectable } from 'inversify';
 import {
+  BooksFilter,
   ReviewCreateDto,
   ReviewListResultDto,
 } from '../../application/dtos/book-dto';
-import {
-  BooksFilter,
-  PagingOptions,
-  SortOptions,
-} from '../../application/use-cases/interfaces/parameters';
 import { BookEntity } from '../../domain/entities/book-entity';
 import {
   Author,
@@ -18,6 +14,7 @@ import {
   Review,
 } from '../../domain/interfaces/models';
 import { BookRepository } from '../../domain/repository/book-repository';
+import { PagingOptions, SortOptions } from '@src/core/types';
 
 @injectable()
 export class PersistenceBookRepository extends BookRepository {

@@ -1,11 +1,12 @@
 import { Repository } from '@src/core/interfaces/base-repository';
+import { GetListOptions } from '@src/core/types';
 import { Id } from '../../application/dto/category-dtos';
 import { CategoryEntity } from '../entities/category';
 
 export abstract class CategoryRepository
   implements Repository<Id, CategoryEntity>
 {
-  getList(): Promise<CategoryEntity[]> {
+  getList(options: GetListOptions<CategoryEntity>): Promise<CategoryEntity[]> {
     throw new Error('Method not implemented.');
   }
   getById(id: string): Promise<CategoryEntity | null> {
@@ -24,4 +25,6 @@ export abstract class CategoryRepository
   getByNameAsync(name: string): Promise<null | CategoryEntity> {
     throw new Error('Method not implemented,');
   }
+
+  abstract count(filter: any): Promise<number>;
 }

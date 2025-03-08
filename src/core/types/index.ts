@@ -17,9 +17,26 @@ export type IsoDateString = z.infer<typeof isoDateStringShema>;
 
 export type PagingMetadata = {
   nextCursor?: string;
+  offset?: number;
   limit: number;
   total: number;
   hasNextPage: boolean;
+};
+
+export type SortOptions = {
+  field: string;
+  order: 'asc' | 'desc';
+};
+
+export type PagingOptions = {
+  cursor?: string;
+  limit: number;
+};
+
+export type GetListOptions<T> = {
+  filter: T;
+  sort?: SortOptions;
+  paging: PagingOptions;
 };
 
 export const apiResponseSchema = z.object({

@@ -1,4 +1,9 @@
-import { idSchema, isoDateStringShema } from '@src/core/types';
+import {
+  GetListOptions,
+  idSchema,
+  isoDateStringShema,
+  PagingMetadata,
+} from '@src/core/types';
 import { z } from 'zod';
 
 export const serieStatusSchema = z.enum([
@@ -36,3 +41,12 @@ export type SerieCreateDto = z.infer<typeof serieCreateSchema>;
 export type SerieUpdateDto = z.infer<typeof serieUpdateSchema>;
 
 export type SerieDetailDto = z.infer<typeof serieDetailSchema>;
+
+export type SerieList = Array<SerieDetailDto>;
+
+export type GetSeriesParams = GetListOptions<any>;
+
+export type GetSeriesResult = {
+  data: SerieList;
+  paging: PagingMetadata;
+};

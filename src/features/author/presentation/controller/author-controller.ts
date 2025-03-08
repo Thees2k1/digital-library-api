@@ -1,6 +1,11 @@
 import { DI_TYPES } from '@src/core/di/types';
 import { AppError } from '@src/core/errors/custom-error';
-import { ApiResponse, idSchema } from '@src/core/types';
+import {
+  ApiResponse,
+  idSchema,
+  PagingOptions,
+  SortOptions,
+} from '@src/core/types';
 import { NextFunction, Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
 import { ZodError } from 'zod';
@@ -9,8 +14,10 @@ import {
   AuthorDetailDto,
   AuthorList,
   AuthorUpdateDto,
+  GetAuthorsParams,
 } from '../../application/dtos/author-dto';
 import { IAuthorService } from '../../application/use-cases/interfaces/author-service-interface';
+import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
 
 @injectable()
 export class AuthorController {
@@ -46,18 +53,37 @@ export class AuthorController {
     next: NextFunction,
   ) {
     try {
-      const params = {
-        page: req.query.page ? parseInt(req.query.page as string) : undefined,
-        limit: req.query.limit
-          ? parseInt(req.query.limit as string)
-          : undefined,
+      const query = req.query;
+      const filter = {};
+
+      const sortOptions: SortOptions = {
+        field: '',
+        order: 'asc',
+      };
+
+      const paginOptions: PagingOptions = {
+        cursor: query?.cursor as string,
+        limit: query.limit
+          ? parseInt(query.limit as string)
+          : DEFAULT_LIST_LIMIT,
+      };
+      const params: GetAuthorsParams = {
+        filter,
+        sort: sortOptions,
+        paging: paginOptions,
       };
       const result = await this.service.getList(params);
 
       const resBody = {
         message: 'Authors fetched successfully',
         status: 'success',
-        data: result,
+        data: result.data,
+        pagination: {
+          nextCursor: result.nextCursor,
+          limit: result.limit,
+          total: result.total,
+          hasNextPage: result.hasNextPage,
+        },
         timestamp: Date.now(),
       } as ApiResponse<AuthorList>;
       res.json(resBody);

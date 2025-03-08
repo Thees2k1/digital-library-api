@@ -1,4 +1,4 @@
-import { idSchema, isoDateStringShema } from '@src/core/types';
+import { GetListOptions, idSchema, isoDateStringShema } from '@src/core/types';
 import { z } from 'zod';
 import { ItemFormat } from '../../domain/interfaces/models';
 
@@ -162,3 +162,17 @@ export type ReviewListResultDto = {
     totalPages: number;
   };
 };
+
+export type BooksFilter = {
+  query?: string;
+  genres?: string[];
+  authorId?: string;
+  categoryId?: string;
+  publisherId?: string;
+  releaseDateRange?: {
+    from: number;
+    to: number;
+  };
+};
+
+export type GetBooksOptions = GetListOptions<BooksFilter>;

@@ -5,20 +5,27 @@ import {
   CategoryCreateDto,
   CategoryDetailDto,
   CategoryUpdateDto,
+  GetCategoriesParams,
+  GetCategoriesResult,
   Id,
 } from '../dto/category-dtos';
 import { CategoryEntity } from '../../domain/entities/category';
 import { CategoryRepository } from '../../domain/repository/category-repository';
 import { ICategoryService } from './interfaces/category-service-interface';
 import logger from '@src/core/utils/logger/logger';
+import { CacheService } from '@src/core/interfaces/cache-service';
+import { generateCacheKey } from '@src/core/utils/generate-cache-key';
 
 @injectable()
 export class CategoryService implements ICategoryService {
   private readonly repository: CategoryRepository;
+  private readonly cacheService: CacheService;
   constructor(
     @inject(DI_TYPES.CategoryRepository) repository: CategoryRepository,
+    @inject(DI_TYPES.CacheService) cacheService: CacheService,
   ) {
     this.repository = repository;
+    this.cacheService = cacheService;
   }
   async create(data: CategoryCreateDto): Promise<CategoryDetailDto> {
     try {
@@ -61,11 +68,29 @@ export class CategoryService implements ICategoryService {
       throw error;
     }
   }
-  async getList(): Promise<Array<CategoryDetailDto>> {
+  async getList(params: GetCategoriesParams): Promise<GetCategoriesResult> {
     try {
-      const res = await this.repository.getList();
+      const cacheKey = generateCacheKey('category', params);
+      const cacheData =
+        await this.cacheService.get<GetCategoriesResult>(cacheKey);
 
-      return res.map((entity) => this._convertToResultDto(entity));
+      if (cacheData) {
+        return cacheData;
+      }
+      const res = await this.repository.getList(params);
+      const total = await this.repository.count({});
+
+      const hasNextPage = res.length >= params.paging.limit;
+      const nextCursor = hasNextPage ? res[res.length - 1].id : '';
+
+      const returnData: GetCategoriesResult = {
+        data: res.map((entity) => this._convertToResultDto(entity)),
+        hasNextPage,
+        nextCursor,
+        total,
+      };
+      await this.cacheService.set(cacheKey, returnData, { EX: 60 });
+      return returnData;
     } catch (error) {
       logger.error(error);
       throw AppError.internalServer('Internal server error.');
@@ -73,12 +98,21 @@ export class CategoryService implements ICategoryService {
   }
   async getById(id: string): Promise<CategoryDetailDto | null> {
     try {
+      const cacheKey = generateCacheKey('category', { id });
+      const cacheData =
+        await this.cacheService.get<CategoryDetailDto>(cacheKey);
+      if (cacheData) {
+        return cacheData;
+      }
       const res = await this.repository.getById(id);
 
       if (!res) {
         return null;
       }
 
+      await this.cacheService.set(cacheKey, this._convertToResultDto(res), {
+        EX: 60,
+      });
       return this._convertToResultDto(res);
     } catch (error) {
       logger.error(error);

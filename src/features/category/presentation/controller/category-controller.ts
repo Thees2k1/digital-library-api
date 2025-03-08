@@ -4,12 +4,22 @@ import { ICategoryService } from '../../application/use-cases/interfaces/categor
 import { Request, Response, NextFunction } from 'express';
 import {
   CategoryCreateDto,
+  CategoryDetailDto,
   CategoryUpdateDto,
+  GetCategoriesParams,
   idSchema,
 } from '../../application/dto/category-dtos';
 import { AppError } from '@src/core/errors/custom-error';
 import { ZodError } from 'zod';
 import { ValidationError } from '@src/core/errors/validation-error';
+import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
+import { ApiResponse, PagingOptions, SortOptions } from '@src/core/types';
+
+//handel pagination.
+/*
+ follow only cursor base pagination. lost of coutling total. we may not need total calculation.
+ 
+*/
 
 @injectable()
 export class CategoryController {
@@ -35,8 +45,42 @@ export class CategoryController {
   async getCategories(req: Request, res: Response, next: NextFunction) {
     try {
       const query = req.query;
-      const result = await this.service.getList(query);
-      res.json({ data: result, message: 'Categories fetched successfully' });
+
+      const filters = {};
+
+      const sortOptions: SortOptions = {
+        field: '',
+        order: 'asc',
+      };
+
+      const paginOptions: PagingOptions = {
+        cursor: query?.cursor as string,
+        limit: query.limit
+          ? parseInt(query.limit as string)
+          : DEFAULT_LIST_LIMIT,
+      };
+
+      const params: GetCategoriesParams = {
+        filter: filters,
+        paging: paginOptions,
+        sort: sortOptions,
+      };
+
+      const result = await this.service.getList(params);
+
+      const resBody: ApiResponse<Array<CategoryDetailDto>> = {
+        message: 'Categories fetched successfully',
+        data: result.data,
+        status: 'success',
+        pagination: {
+          limit: params.paging.limit,
+          hasNextPage: result.hasNextPage,
+          nextCursor: result.nextCursor,
+          total: result.total || 0,
+        },
+        timestamp: Date.now(),
+      };
+      res.json(resBody);
     } catch (error) {
       next(error);
     }

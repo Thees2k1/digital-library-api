@@ -1,3 +1,4 @@
+import { GetListOptions } from '@src/core/types';
 import { z } from 'zod';
 
 export const AuthorCreateSchema = z.object({
@@ -52,14 +53,12 @@ export interface AuthorDetailDto {
 
 export interface AuthorList extends Array<AuthorDetailDto> {}
 
-export interface GetAuthorsOption {
-  page?: number;
-  limit?: number;
-}
+export type GetAuthorsParams = GetListOptions<any>;
 
-export interface GetAuthorsResult {
-  authors: AuthorList;
+export type GetAuthorsResult = {
+  data: AuthorList;
   total?: number;
-  page: number;
   limit: number;
-}
+  nextCursor?: string;
+  hasNextPage: boolean;
+};

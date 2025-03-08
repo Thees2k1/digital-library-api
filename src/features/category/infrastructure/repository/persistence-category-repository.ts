@@ -1,6 +1,7 @@
 import { Category, PrismaClient } from '@prisma/client';
 import { DI_TYPES } from '@src/core/di/types';
 import { inject, injectable } from 'inversify';
+import { GetCategoriesParams } from '../../application/dto/category-dtos';
 import { CategoryEntity } from '../../domain/entities/category';
 import { CategoryRepository } from '../../domain/repository/category-repository';
 
@@ -12,8 +13,18 @@ export class PersistenceCategoryRepository extends CategoryRepository {
     this.prisma = prisma;
   }
 
-  async getList(): Promise<CategoryEntity[]> {
-    const data: Category[] = await this.prisma.category.findMany();
+  async count(filter: any): Promise<number> {
+    //NEED TO IMPROVE
+    return await this.prisma.category.count({ where: filter });
+  }
+
+  async getList(options: GetCategoriesParams): Promise<CategoryEntity[]> {
+    const { paging } = options;
+    const data: Category[] = await this.prisma.category.findMany({
+      take: paging?.limit ?? 20,
+      skip: paging?.cursor ? 1 : 0,
+      ...(paging?.cursor ? { skip: 1, cursor: { id: paging.cursor } } : {}),
+    });
     return data.map((category) =>
       PersistenceCategoryRepository.convertToEntity(category),
     );
