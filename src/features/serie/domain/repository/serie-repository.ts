@@ -2,9 +2,7 @@ import { Repository } from '@src/core/interfaces/base-repository';
 import { Id } from '@src/core/types';
 import { SerieEntity } from '../entities/serie-entity';
 
-export abstract class SerieRepository
-  implements Repository<Id, SerieEntity, void>
-{
+export abstract class SerieRepository implements Repository<Id, SerieEntity> {
   getList(): Promise<Array<SerieEntity>> {
     throw new Error('Method not implemented.');
   }

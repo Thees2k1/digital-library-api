@@ -5,10 +5,12 @@ import {
   AuthorDetailDto,
   AuthorList,
   AuthorUpdateDto,
+  GetAuthorsOption,
+  GetAuthorsResult,
 } from '../../dtos/author-dto';
 
 export interface IAuthorService extends BaseUseCase<any, AuthorDetailDto, Id> {
-  getList(): Promise<AuthorList>;
+  getList(params: GetAuthorsOption): Promise<GetAuthorsResult>;
   getById(id: Id): Promise<AuthorDetailDto | null>;
   create(author: AuthorCreateDto): Promise<AuthorDetailDto>;
   update(id: Id, author: AuthorUpdateDto): Promise<string>;

@@ -50,4 +50,16 @@ export interface AuthorDetailDto {
   bookCount: number;
 }
 
-export type AuthorList = Array<AuthorDetailDto>;
+export interface AuthorList extends Array<AuthorDetailDto> {}
+
+export interface GetAuthorsOption {
+  page?: number;
+  limit?: number;
+}
+
+export interface GetAuthorsResult {
+  authors: AuthorList;
+  total?: number;
+  page: number;
+  limit: number;
+}

@@ -9,25 +9,60 @@ import {
   AuthorIdResultDto,
   AuthorList,
   AuthorUpdateDto,
+  GetAuthorsOption,
+  GetAuthorsResult,
 } from '../dtos/author-dto';
 import { AuthorMapper } from '../mapper/author-mapper';
 import { IAuthorService } from './interfaces/author-service-interface';
+import { CacheService } from '@src/core/interfaces/cache-service';
+import { generateCacheKey } from '@src/core/utils/generate-cache-key';
+import {
+  DEFAULT_LIST_LIMIT,
+  DEFAULT_LIST_OFFSET,
+} from '@src/core/constants/constants';
+import { SortOrder } from '@src/core/interfaces/base-repository';
 
 @injectable()
 export class AuthorService implements IAuthorService {
   private readonly repository: AuthorRepository;
-  constructor(@inject(DI_TYPES.AuthorRepository) repository: AuthorRepository) {
+  private readonly cacheService: CacheService;
+  constructor(
+    @inject(DI_TYPES.AuthorRepository) repository: AuthorRepository,
+    @inject(DI_TYPES.CacheService) cacheService: CacheService,
+  ) {
+    this.cacheService = cacheService;
     this.repository = repository;
   }
 
-  async getList(): Promise<AuthorList> {
-    //TODO: Implement pagination
-    //TODO: Implement filtering
-    const res = await this.repository.getList();
+  async getList(params: GetAuthorsOption): Promise<GetAuthorsResult> {
+    const cachekey = generateCacheKey('authors', params);
+
+    const cacheData = await this.cacheService.get<GetAuthorsResult>(cachekey);
+    if (cacheData) {
+      return cacheData;
+    }
+
+    const page = params.page || 1;
+    const limit = params.limit || DEFAULT_LIST_LIMIT;
+    const res = await this.repository.getList({
+      offset: (page - 1) * limit || DEFAULT_LIST_OFFSET,
+      limit: limit || DEFAULT_LIST_LIMIT,
+      sortBy: 'id',
+      orderBy: SortOrder.ASC,
+    });
+
     const data: AuthorList = res.map((author) => {
       return AuthorMapper.toAuthorDetailDto(author);
     });
-    return data;
+
+    const returnData: GetAuthorsResult = {
+      authors: data,
+      limit,
+      page,
+    };
+
+    await this.cacheService.set(cachekey, returnData);
+    return returnData;
   }
 
   async getById(id: string): Promise<AuthorDetailDto | null> {

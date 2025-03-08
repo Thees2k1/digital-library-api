@@ -3,6 +3,7 @@ import { DI_TYPES } from '@src/core/di/types';
 import { inject, injectable } from 'inversify';
 import { AuthorEntity } from '../../domain/entities/author-entity';
 import { AuthorRepository } from '../../domain/repository/author-repository';
+import { GetListParams } from '@src/core/interfaces/base-repository';
 
 @injectable()
 export class PersistenceAuthorRepository implements AuthorRepository {
@@ -10,11 +11,15 @@ export class PersistenceAuthorRepository implements AuthorRepository {
   constructor(@inject(DI_TYPES.PrismaClient) prisma: PrismaClient) {
     this.prisma = prisma;
   }
-
-  async getList(): Promise<AuthorEntity[]> {
-    const data: Author[] = await this.prisma.author.findMany();
+  async getList(params: GetListParams<AuthorEntity>): Promise<AuthorEntity[]> {
+    const data: Author[] = await this.prisma.author.findMany({
+      skip: params.offset,
+      take: params.limit,
+      orderBy: { [params.sortBy || 'id']: params.orderBy },
+    });
     return data.map(PersistenceAuthorRepository.convertToAuthorEntity);
   }
+
   async getById(id: string): Promise<AuthorEntity | null> {
     const data: Author | null = await this.prisma.author.findUnique({
       where: { id: id },

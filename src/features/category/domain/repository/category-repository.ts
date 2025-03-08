@@ -3,7 +3,7 @@ import { Id } from '../../application/dto/category-dtos';
 import { CategoryEntity } from '../entities/category';
 
 export abstract class CategoryRepository
-  implements Repository<Id, CategoryEntity, void>
+  implements Repository<Id, CategoryEntity>
 {
   getList(): Promise<CategoryEntity[]> {
     throw new Error('Method not implemented.');

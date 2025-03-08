@@ -9,6 +9,7 @@ import { ZodError } from 'zod';
 import { ApiResponse, idSchema } from '@src/core/types';
 import {
   BookCreateDto,
+  BookDetailDto,
   BookList,
   bookQuerySchema,
   BookUpdateDto,
@@ -37,13 +38,23 @@ export class BookController {
     try {
       const data = req.body;
       const result = await this.service.create(data);
-      res.json({ message: 'Book created successfully', data: result });
+
+      res.json({
+        message: 'Book created successfully',
+        data: result,
+        status: 'success',
+        timestamp: Date.now(),
+      });
     } catch (error) {
       next(error);
     }
   }
 
-  async getBooks(req: Request, res: Response, next: NextFunction) {
+  async getBooks(
+    req: Request,
+    res: Response<ApiResponse<BookList>>,
+    next: NextFunction,
+  ) {
     try {
       const query = bookQuerySchema.parse(req.query);
 
@@ -106,7 +117,14 @@ export class BookController {
       if (!result) {
         throw AppError.notFound('Book not found');
       }
-      res.json({ data: result, message: 'Book fetched successfully' });
+
+      const responseBody: ApiResponse<BookDetailDto> = {
+        status: 'success',
+        message: 'Book fetched successfully',
+        data: result,
+        timestamp: Date.now(),
+      };
+      res.json(responseBody);
     } catch (error) {
       if (error instanceof ZodError) {
         const validationErrors = error.issues.map((issue) => {
@@ -131,7 +149,11 @@ export class BookController {
       const id = idSchema.parse(req.params.id);
       const data = req.body;
       await this.service.update(id, data);
-      res.json({ message: 'Book updated successfully' });
+      res.json({
+        message: 'Book updated successfully',
+        status: 'success',
+        timestamp: Date.now(),
+      });
     } catch (error) {
       if (error instanceof ZodError) {
         const validationErrors = error.issues.map((issue) => {
@@ -151,7 +173,11 @@ export class BookController {
     try {
       const id = idSchema.parse(req.params.id);
       await this.service.delete(id);
-      res.json({ message: 'Book deleted successfully' });
+      res.json({
+        message: 'Book deleted successfully',
+        status: 'success',
+        timestamp: Date.now(),
+      });
     } catch (error) {
       if (error instanceof ZodError) {
         const validationErrors = error.issues.map((issue) => {
@@ -180,7 +206,11 @@ export class BookController {
         bookId: req.params.id,
       };
       await this.service.addReview(input);
-      res.json({ message: 'Review added successfully' });
+      res.json({
+        message: 'Review added successfully',
+        status: 'success',
+        timestamp: Date.now(),
+      });
     } catch (error) {
       next(error);
     }
@@ -192,6 +222,13 @@ export class BookController {
       const page = parseInt(req.query.page as string, 10) || 1;
       const limit = parseInt(req.query.limit as string, 10) || 10;
       const result = await this.service.getReviews(bookId, page, limit);
+
+      // const responseBody: ApiResponse<any> = {
+      //   status: 'success',
+      //   message: 'Reviews fetched successfully',
+      //   data: result,
+      //   timestamp: Date.now(),
+      // }
       res.json(result);
     } catch (error) {
       next(error);
@@ -207,7 +244,11 @@ export class BookController {
       const bookId = idSchema.parse(req.params.id);
       const userId = req.body.userId;
       await this.service.toggleLike(userId, bookId);
-      res.json({ message: 'Like status toggled successfully' });
+      res.json({
+        message: 'Like status toggled successfully',
+        status: 'success',
+        timestamp: Date.now(),
+      });
     } catch (error) {
       next(error);
     }
