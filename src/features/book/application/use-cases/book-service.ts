@@ -219,6 +219,8 @@ export class BookService implements IBookService {
     try {
       const { paging, filter, sort } = options;
 
+      console.log('cacheKey', cacheKey);
+
       const cachedData = await this.cacheService.get<GetListResult>(cacheKey);
 
       if (cachedData) {

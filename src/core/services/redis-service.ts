@@ -10,7 +10,6 @@ export class RedisService implements CacheService {
 
   constructor() {
     const url = config.redisUrl;
-    console.log(`Connecting to Redis at ${url}`);
 
     this.client = createClient({ url });
 

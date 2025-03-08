@@ -146,10 +146,6 @@ export class PersistenceBookRepository extends BookRepository {
     filter: BooksFilter | undefined,
     sort: SortOptions | undefined,
   ): Promise<BookEntity[]> {
-    // const pagingData = paging ?? { page: 1, limit: 10 };
-    // const skip = (pagingData.page - 1) * pagingData.limit;
-    // const take = pagingData.limit;
-
     const query = this._setupQuery(filter);
     const bookData = await this.prisma.book.findMany({
       select: {
@@ -663,10 +659,11 @@ export class PersistenceBookRepository extends BookRepository {
         query.publisherId = filter.publisherId;
       }
       if (filter.genres) {
+        console.log(filter.genres.map((id) => id));
         query.genres = {
           some: {
             genreId: {
-              in: filter.genres.map((id) => id),
+              in: [...filter.genres.map((id) => id)],
             },
           },
         };
