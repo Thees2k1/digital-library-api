@@ -1,4 +1,4 @@
-import { createClient, RedisClientType } from 'redis';
+import { createClient, RedisClientType, SetOptions } from 'redis';
 import { CacheService } from '../interfaces/cache-service';
 import { config } from '../config/config';
 import { injectable } from 'inversify';
