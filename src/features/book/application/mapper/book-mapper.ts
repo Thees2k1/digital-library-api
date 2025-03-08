@@ -1,5 +1,5 @@
 import { BookEntity } from '../../domain/entities/book-entity';
-import { BookDetailDto } from '../dtos/book-dto';
+import { BookDetailDto, BookIndexRecord, BookList } from '../dtos/book-dto';
 
 export class BookMapper {
   static toBookDetailDto(book: BookEntity) {
@@ -22,23 +22,56 @@ export class BookMapper {
         name: book.publisher ? book.publisher.name : null,
       },
       category: {
-        id: book.category.id,
-        name: book.category.name,
+        id: book.category?.id,
+        name: book.category?.name,
       },
-      genres: book.genres.map((genre) => {
+      genres: book.genres?.map((genre) => {
         return {
           id: genre.id,
           name: genre.name,
         };
       }),
-      digitalItems: book.digitalItems.map((item) => {
+      digitalItems: book.digitalItems?.map((item) => {
         return {
           format: item.format,
           url: item.url,
         };
       }),
       releaseDate: book.releaseDate?.toISOString(),
-      updateAt: book.updatedAt.toISOString(),
+      updateAt: book.updatedAt?.toISOString(),
     } as BookDetailDto;
+  }
+
+  static toBooks(books: BookEntity[]): BookList {
+    return books.map((book) => {
+      return {
+        id: book.id,
+        title: book.title,
+        cover: book.cover,
+        author: book.author,
+        createdAt: book.createdAt.toDateString(),
+        averageRating: book.averageRating,
+      };
+    });
+  }
+
+  static toBookIndexRecord(book: BookEntity): BookIndexRecord {
+    return {
+      id: book.id,
+      title: book.title,
+      releaseDate: book.releaseDate?.toISOString(),
+      authorName: book.author.name,
+      categoryName: book.category?.name,
+      rating: book.averageRating,
+      genres: book.genres?.map((genre) => genre.name) || [],
+    } as BookIndexRecord;
+  }
+
+  static toBookIndexCollection(books: BookEntity[]) {
+    const booksIndex: BookIndexRecord[] = books.map((book) => {
+      return this.toBookIndexRecord(book);
+    });
+
+    return booksIndex;
   }
 }

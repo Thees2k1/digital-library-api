@@ -1,3 +1,4 @@
+import { GetListOptions, PagingOptions } from '@src/core/types';
 import { z } from 'zod';
 
 export const idSchema = z.string().uuid();
@@ -25,3 +26,12 @@ export type CategoryCreateDto = z.infer<typeof categoryCreateSchema>;
 export type CategoryUpdateDto = z.infer<typeof categoryUpdateSchema>;
 
 export type CategoryDetailDto = z.infer<typeof categoryDetailSchema>;
+
+export type GetCategoriesParams = GetListOptions<any>;
+
+export type GetCategoriesResult = {
+  data: Array<CategoryDetailDto>;
+  total?: number;
+  nextCursor?: string;
+  hasNextPage: boolean;
+};

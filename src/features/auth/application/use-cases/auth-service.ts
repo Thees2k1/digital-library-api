@@ -21,22 +21,27 @@ import {
   RegisterResultSchema,
 } from '../dtos/register-dto';
 import { IAuthService } from './interfaces/auth-service-interface';
+import { CacheService } from '@src/core/interfaces/cache-service';
+import { generateCacheKey } from '@src/core/utils/generate-cache-key';
 //import { RedisService } from "@src/features/shared/infrastructure/services/redis-service";
 
 @injectable()
 export class AuthService implements IAuthService {
   private readonly userRepository: UserRepository;
   private readonly authRepository: AuthRepository;
+  private readonly cacheService: CacheService;
   private readonly jwtService: JwtService;
   // private readonly redisService : RedisService;
   constructor(
     @inject(DI_TYPES.UserRepository) userRepository: UserRepository,
     @inject(DI_TYPES.AuthRepository) authRepository: AuthRepository,
+    @inject(DI_TYPES.CacheService) cacheService: CacheService,
     @inject(JwtService) jwtService: JwtService,
     //@inject(RedisService) redisService,
   ) {
     this.userRepository = userRepository;
     this.authRepository = authRepository;
+    this.cacheService = cacheService;
     this.jwtService = jwtService;
   }
 
@@ -80,6 +85,14 @@ export class AuthService implements IAuthService {
         expiration: REFRESH_TOKEN_EXPIRES_IN,
       });
 
+      const cacheKey = generateCacheKey('auth', { userId: user.id });
+
+      await this.cacheService.set(cacheKey, sessionIdentity, {
+        PX: REFRESH_TOKEN_EXPIRES_IN,
+      });
+
+      console.log('cached session', cacheKey);
+
       return { accessToken, refreshToken };
     } catch (error) {
       throw error;
@@ -117,7 +130,11 @@ export class AuthService implements IAuthService {
       if (!res.success) {
         return EMPTY_STRING;
       }
+      const userId = (res.data as JwtPayload).userId;
       const sessionIdentity = refreshToken.split('.')[2];
+      const cacheKey = generateCacheKey('auth', { userId });
+      await this.cacheService.delete(cacheKey);
+      console.log('deleted session cache', cacheKey);
       await this.authRepository.deleteSession(sessionIdentity);
       return LOGOUT_SUCCESS;
     } catch (error) {
@@ -130,13 +147,24 @@ export class AuthService implements IAuthService {
     if (!res.success) {
       throw AppError.unauthorized(res.error);
     }
+    const cacheKey = generateCacheKey('auth', {
+      userId: (res.data as JwtPayload).userId,
+    });
 
-    const session = await this.authRepository.verifySession(
-      refreshToken.split('.')[2],
-    );
-    const isSessionInvalid = session === 'invalid';
-    if (isSessionInvalid) {
-      throw AppError.unauthorized('Invalid session');
+    const sessionIdentity = refreshToken.split('.')[2];
+
+    const isCachedSession = await this.cacheService.get<string>(cacheKey);
+
+    console.log('compared session', isCachedSession, sessionIdentity);
+    if (isCachedSession !== sessionIdentity) {
+      console.log('checking in db');
+      const session = await this.authRepository.verifySession(
+        refreshToken.split('.')[2],
+      );
+
+      if (session === 'invalid') {
+        throw AppError.unauthorized('Invalid session');
+      }
     }
 
     const payload = res.data as JwtPayload | undefined;
@@ -158,13 +186,18 @@ export class AuthService implements IAuthService {
       audience: payload.aud,
     });
 
-    const sessionIdentity = newRefreshToken.split('.')[2];
+    const newIdentity = newRefreshToken.split('.')[2];
 
     await this.authRepository.saveSession({
       userId: payload.userId,
-      sessionIdentity,
+      sessionIdentity: newIdentity,
       expiration: REFRESH_TOKEN_EXPIRES_IN,
     });
+
+    await this.cacheService.set(cacheKey, newIdentity, {
+      PX: REFRESH_TOKEN_EXPIRES_IN,
+    });
+    console.log('refreshed session cache', cacheKey);
 
     return { accessToken: newAccessToken, refreshToken: newRefreshToken };
   }

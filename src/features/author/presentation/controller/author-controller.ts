@@ -1,14 +1,23 @@
 import { DI_TYPES } from '@src/core/di/types';
 import { AppError } from '@src/core/errors/custom-error';
-import { idSchema } from '@src/core/types';
+import {
+  ApiResponse,
+  idSchema,
+  PagingOptions,
+  SortOptions,
+} from '@src/core/types';
 import { NextFunction, Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
 import { ZodError } from 'zod';
 import {
   AuthorCreateDto,
+  AuthorDetailDto,
+  AuthorList,
   AuthorUpdateDto,
+  GetAuthorsParams,
 } from '../../application/dtos/author-dto';
 import { IAuthorService } from '../../application/use-cases/interfaces/author-service-interface';
+import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
 
 @injectable()
 export class AuthorController {
@@ -24,17 +33,60 @@ export class AuthorController {
   ) {
     try {
       const data = req.body;
-      const result = await this.service.create(data);
-      res.json({ message: 'Author created successfully', data: result });
+      await this.service.create(data);
+
+      const resBody: ApiResponse<AuthorCreateDto> = {
+        message: 'Author created successfully',
+        data,
+        status: 'success',
+        timestamp: Date.now(),
+      };
+      res.json(resBody);
     } catch (error) {
       next(error);
     }
   }
 
-  async getAuthors(req: Request, res: Response, next: NextFunction) {
+  async getAuthors(
+    req: Request,
+    res: Response<ApiResponse<AuthorList>>,
+    next: NextFunction,
+  ) {
     try {
-      const result = await this.service.getList();
-      res.json({ data: result, message: 'Authors fetched successfully' });
+      const query = req.query;
+      const filter = {};
+
+      const sortOptions: SortOptions = {
+        field: '',
+        order: 'asc',
+      };
+
+      const paginOptions: PagingOptions = {
+        cursor: query?.cursor as string,
+        limit: query.limit
+          ? parseInt(query.limit as string)
+          : DEFAULT_LIST_LIMIT,
+      };
+      const params: GetAuthorsParams = {
+        filter,
+        sort: sortOptions,
+        paging: paginOptions,
+      };
+      const result = await this.service.getList(params);
+
+      const resBody = {
+        message: 'Authors fetched successfully',
+        status: 'success',
+        data: result.data,
+        pagination: {
+          nextCursor: result.nextCursor,
+          limit: result.limit,
+          total: result.total,
+          hasNextPage: result.hasNextPage,
+        },
+        timestamp: Date.now(),
+      } as ApiResponse<AuthorList>;
+      res.json(resBody);
     } catch (error) {
       next(error);
     }
@@ -47,7 +99,13 @@ export class AuthorController {
       if (!result) {
         throw AppError.notFound('Author not found');
       }
-      res.json({ data: result, message: 'Author fetched successfully' });
+      const resBody: ApiResponse<AuthorDetailDto> = {
+        message: 'Author fetched successfully',
+        status: 'success',
+        data: result,
+        timestamp: Date.now(),
+      };
+      res.json(resBody);
     } catch (error) {
       if (error instanceof ZodError) {
         next(AppError.badRequest(error.toString()));
@@ -66,7 +124,13 @@ export class AuthorController {
       const id = idSchema.parse(req.params.id);
       const data = req.body;
       await this.service.update(id, data);
-      res.json({ message: 'Author updated successfully' });
+
+      const resBody = {
+        message: 'Author updated successfully',
+        status: 'success',
+        timestamp: Date.now(),
+      };
+      res.json(resBody);
     } catch (error) {
       if (error instanceof ZodError) {
         next(AppError.badRequest(error.message));
@@ -80,7 +144,13 @@ export class AuthorController {
     try {
       const id = idSchema.parse(req.params.id);
       await this.service.delete(id);
-      res.json({ message: 'Author deleted successfully' });
+
+      const resBody = {
+        message: 'Author deleted successfully',
+        status: 'success',
+        timestamp: Date.now(),
+      };
+      res.json(resBody);
     } catch (error) {
       if (error instanceof ZodError) {
         next(AppError.badRequest(error.message));

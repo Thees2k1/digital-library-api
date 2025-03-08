@@ -1,11 +1,9 @@
 import { Repository } from '@src/core/interfaces/base-repository';
 import { GenreEntity } from '../entities/genre-entity';
-import { Id } from '@src/core/types';
+import { GetListOptions, Id } from '@src/core/types';
 
-export abstract class GenreRepository
-  implements Repository<Id, GenreEntity, void>
-{
-  getList(): Promise<GenreEntity[]> {
+export abstract class GenreRepository implements Repository<Id, GenreEntity> {
+  getList(params: GetListOptions<GenreEntity>): Promise<GenreEntity[]> {
     throw new Error('Method not implemented.');
   }
   getById(id: string): Promise<GenreEntity | null> {
@@ -23,5 +21,9 @@ export abstract class GenreRepository
 
   getByNameAsync(name: string): Promise<null | GenreEntity> {
     throw new Error('Method not implemented,');
+  }
+
+  count(filter: any): Promise<number> {
+    throw new Error('Method not implemented.');
   }
 }

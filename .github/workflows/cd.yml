@@ -1,0 +1,45 @@
+name: Backend CD
+
+on:
+  push:
+    branches:
+      - main
+  repository_dispatch:
+    types: [client_rebuilt]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production # This gives access to production secrets
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Pull Docker Image and Deploy Services
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -e
+            cd ~/chyra-library/digital-library-api
+            git pull origin main
+
+            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
+            echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
+            echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
+            echo "POSTGRES_DB=${{ vars.POSTGRES_DB }}" >> .env
+            echo "REDIS_URL=${{ vars.REDIS_URL }}" >> .env
+            echo "ACCESS_TOKEN_SECRET=${{ vars.ACCESS_TOKEN_SECRET }}" >> .env
+            echo "VITE_MEILISEARCH_HOST=${{ vars.VITE_MEILISEARCH_HOST }}" >> .env
+            echo "VITE_MEILISEARCH_API_KEY=${{ secrets.VITE_MEILISEARCH_API_KEY }}" >> .env
+
+            # Pull the latest images
+            docker compose pull
+
+            # Bring down the existing containers and bring up new ones
+            docker compose down
+            docker compose up -d

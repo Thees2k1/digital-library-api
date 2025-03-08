@@ -3,7 +3,7 @@ import { Id } from '@src/core/types';
 import { PublisherEntity } from '../entities/publisher-entity';
 
 export abstract class PublisherRepository
-  implements Repository<Id, PublisherEntity, void>
+  implements Repository<Id, PublisherEntity>
 {
   getList(): Promise<PublisherEntity[]> {
     throw new Error('Method not implemented.');

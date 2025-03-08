@@ -1,7 +1,8 @@
 import { config } from '@src/core/config/config';
 import { DI_TYPES } from '@src/core/di/types';
 import { AppError } from '@src/core/errors/custom-error';
-import { Id } from '@src/core/types';
+import { SearchService } from '@src/core/interfaces/search-service';
+import { GetListOptions, Id } from '@src/core/types';
 import { inject, injectable } from 'inversify';
 import { BookEntity } from '../../domain/entities/book-entity';
 import {
@@ -15,29 +16,33 @@ import {
   BookCreateDto,
   BookDetailDto,
   BookIndexRecord,
-  BookListQueryDto,
-  BookListResultDto,
+  bookListSchema,
+  BooksFilter,
   BookUpdateDto,
+  GetListResult,
   ReviewCreateDto,
-  ReviewDetailDto,
   ReviewListResultDto,
 } from '../dtos/book-dto';
 import { BookMapper } from '../mapper/book-mapper';
 import { IBookService } from './interfaces/book-service-interface';
-import { SearchService } from '@src/core/interfaces/search-service';
-import { SearchParams } from 'meilisearch';
+import { CacheService } from '@src/core/interfaces/cache-service';
+import { generateCacheKey } from '@src/core/utils/generate-cache-key';
+import { eventEmitter, EVENTS } from '@src/core/events';
 
 @injectable()
 export class BookService implements IBookService {
   private readonly repository: BookRepository;
   private readonly searchService: SearchService;
+  private readonly cacheService: CacheService;
 
   constructor(
     @inject(DI_TYPES.BookRepository) repository: BookRepository,
     @inject(DI_TYPES.SearchService) searchService: SearchService,
+    @inject(DI_TYPES.CacheService) cacheService: CacheService,
   ) {
     this.repository = repository;
     this.searchService = searchService;
+    this.cacheService = cacheService;
   }
   async create(data: BookCreateDto): Promise<BookDetailDto> {
     try {
@@ -100,12 +105,6 @@ export class BookService implements IBookService {
       const book = await this.repository.create(bookData);
       await this.repository.updateBookGenres(data.genres, book.id);
 
-      // await Promise.all(
-      //   data.digitalItems.map(async (item) => {
-      //     return await this.repository.addBookDigitalItem(item, book.id);
-      //   }),
-      // );
-
       const returnData = {
         id: book.id,
         title: book.title,
@@ -116,34 +115,22 @@ export class BookService implements IBookService {
           name: book.author.name,
         },
         category: {
-          id: book.category.id,
-          name: book.category.name,
+          id: book.category?.id || '',
+          name: book.category?.name || '',
         },
-        genres: book.genres.map((genre) => {
-          return {
-            id: genre.id,
-            name: genre.name,
-          };
-        }),
+        genres: book.genres
+          ? book.genres?.map((genre) => {
+              return {
+                id: genre.id,
+                name: genre.name,
+              };
+            })
+          : [],
         releaseDate: book.releaseDate?.toISOString(),
-        updateAt: book.updatedAt.toISOString(),
+        updateAt: book.updatedAt?.toISOString() || '',
       } as BookDetailDto;
 
-      const searchData: BookIndexRecord = {
-        id: book.id,
-        title: book.title,
-        cover: book.cover,
-        description: book.description,
-        authorName: book.author.name,
-        categoryName: book.category.name,
-        rating: book.averageRating,
-        genres: book.genres.map((genre) => genre.name),
-        releaseDate: book.releaseDate?.toISOString() || '',
-      };
-      await this.searchService.index({
-        indexName: 'books',
-        documents: [searchData],
-      });
+      eventEmitter.emit(EVENTS.NEED_INDEXING, book);
 
       return returnData;
     } catch (error) {
@@ -217,65 +204,54 @@ export class BookService implements IBookService {
 
       await this.repository.update(id, bookData);
 
-      const updated = await this.getById(id);
+      const updated = await this.repository.getById(id);
 
       if (updated) {
-        const searchData: BookIndexRecord = {
-          id: updated.id,
-          title: updated.title,
-          cover: updated.cover,
-          description: updated.description,
-          authorName: updated.author.name,
-          categoryName: updated.category.name,
-          rating: updated.averageRating || 0,
-          genres: updated.genres.map((genre) => genre.name),
-          releaseDate: updated.releaseDate,
-        };
-
-        await this.searchService.index({
-          indexName: 'books',
-          documents: [searchData],
-        });
+        eventEmitter.emit(EVENTS.NEED_INDEXING, updated);
       }
       return id;
     } catch (error) {
       throw error;
     }
   }
-  async getList(query: BookListQueryDto): Promise<BookListResultDto> {
+  async getList(options: GetListOptions<BooksFilter>): Promise<GetListResult> {
+    const cacheKey = generateCacheKey('books:list', options);
     try {
-      const { page, limit, authorId, categoryId, publisherId, genres } = query;
+      const { paging, filter, sort } = options;
 
-      const paging = {
-        page,
-        limit,
-      };
+      const cachedData = await this.cacheService.get<GetListResult>(cacheKey);
 
-      const filter: any = {
-        authorId,
-        categoryId,
-        publisherId,
-        genres,
-      };
+      if (cachedData) {
+        return cachedData;
+      }
+
       const [books, total] = await Promise.all([
-        this.repository.getList(paging, filter),
+        this.repository.getList(paging, filter, sort),
         this.repository.count(filter),
       ]);
 
-      const totalPages = Math.ceil(total / limit);
+      const data = BookMapper.toBooks(books);
 
-      const data = books.map((book) => BookMapper.toBookDetailDto(book));
+      const hasNextPage = books.length === (paging?.limit ?? 20);
+      const nextCursor = hasNextPage ? books[books.length - 1].id : null;
 
-      await this.indexAllBooks(data);
+      const bookList = bookListSchema.safeParse(data);
 
-      return {
-        data,
-        pagination: {
-          ...paging,
-          total,
-          totalPages,
-        },
-      } as BookListResultDto;
+      if (bookList.error) {
+        console.error('invaid return data', bookList.error);
+        throw AppError.internalServer('Something went wrong.');
+      }
+
+      const returnData: GetListResult = {
+        data: bookList.data,
+        nextCursor: nextCursor || '',
+        total,
+        hasNextPage,
+      };
+
+      // Cache the data for future requests
+      await this.cacheService.set(cacheKey, returnData, { EX: 60 }); // Cache for 60 seconds
+      return returnData;
     } catch (error) {
       throw error;
     }
@@ -295,15 +271,6 @@ export class BookService implements IBookService {
         },
       });
 
-      // const data = result.hits.map((item: any) => {
-      //   return {
-      //     id: item.id,
-      //     title: item.title,
-      //     cover: item.cover,
-      //     description: item.description,
-      //   };
-      // });
-
       return result;
     } catch (error: any) {
       throw error;
@@ -311,12 +278,26 @@ export class BookService implements IBookService {
   }
 
   async getById(id: string): Promise<BookDetailDto | null> {
+    const cacheKey = `books:detail:${id}`;
     try {
+      const cachedData = await this.cacheService.get<BookDetailDto>(cacheKey);
+
+      if (cachedData) {
+        console.log('Cache hit');
+        return cachedData;
+      }
+
+      console.log('Cache miss. Fetching from database...');
       const res = await this.repository.getById(id);
       if (!res) {
-        return null;
+        throw AppError.notFound('Book not found.');
       }
-      return BookMapper.toBookDetailDto(res);
+      const bookDetail = BookMapper.toBookDetailDto(res);
+
+      // Cache the data for future requests
+      await this.cacheService.set(cacheKey, bookDetail, { EX: 60 }); // Cache for 60 seconds
+
+      return bookDetail;
     } catch (error) {
       throw error;
     }
@@ -337,10 +318,7 @@ export class BookService implements IBookService {
 
       await this.repository.delete(id, isHardDelete);
 
-      await this.searchService.delete({
-        indexName: 'books',
-        id: id,
-      });
+      eventEmitter.emit(EVENTS.NEED_INDEXING, { id, action: 'delete' });
 
       return id;
     } catch (error) {

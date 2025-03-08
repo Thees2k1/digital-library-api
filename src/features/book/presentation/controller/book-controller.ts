@@ -1,19 +1,28 @@
 import { DI_TYPES } from '@src/core/di/types';
+import { NextFunction, Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
-import { Request, Response, NextFunction } from 'express';
 
 import { AppError } from '@src/core/errors/custom-error';
-import { ZodError } from 'zod';
 import { ValidationError } from '@src/core/errors/validation-error';
+import { ZodError } from 'zod';
 
-import { idSchema } from '@src/core/types';
-import { IBookService } from '../../application/use-cases/interfaces/book-service-interface';
+import {
+  ApiResponse,
+  idSchema,
+  PagingOptions,
+  SortOptions,
+} from '@src/core/types';
 import {
   BookCreateDto,
-  bookListQueryDtoSchema,
+  BookDetailDto,
+  BookList,
+  bookQuerySchema,
+  BooksFilter,
   BookUpdateDto,
+  GetBooksOptions,
   ReviewCreateDto,
 } from '../../application/dtos/book-dto';
+import { IBookService } from '../../application/use-cases/interfaces/book-service-interface';
 
 @injectable()
 export class BookController {
@@ -30,17 +39,73 @@ export class BookController {
     try {
       const data = req.body;
       const result = await this.service.create(data);
-      res.json({ message: 'Book created successfully', data: result });
+
+      res.json({
+        message: 'Book created successfully',
+        data: result,
+        status: 'success',
+        timestamp: Date.now(),
+      });
     } catch (error) {
       next(error);
     }
   }
 
-  async getBooks(req: Request, res: Response, next: NextFunction) {
+  async getBooks(
+    req: Request,
+    res: Response<ApiResponse<BookList>>,
+    next: NextFunction,
+  ) {
     try {
-      const query = bookListQueryDtoSchema.parse(req.query);
-      const result = await this.service.getList(query);
-      res.json(result);
+      const query = bookQuerySchema.parse(req.query);
+
+      const filters: BooksFilter = {
+        query: query.q,
+        genres: query.genres ? query.genres.split(',') : undefined,
+        authorId: query.author,
+        categoryId: query.category,
+        publisherId: query.publisher,
+        releaseDateRange:
+          query.release_date_gte && query.release_date_lte
+            ? {
+                from: query.release_date_gte,
+                to: query.release_date_lte,
+              }
+            : undefined,
+      };
+
+      const sortOptions: SortOptions | undefined = query.sort && {
+        field: query.sort.includes('-') ? query.sort.slice(1) : query.sort,
+        order: query.sort.includes('-') ? 'desc' : 'asc',
+      };
+
+      const paginOptions: PagingOptions = {
+        cursor: query.cursor,
+        limit: query.limit,
+      };
+
+      const options: GetBooksOptions = {
+        filter: filters,
+        sort: sortOptions,
+        paging: paginOptions,
+      };
+
+      const result = await this.service.getList(options);
+
+      const reponseBody: ApiResponse<BookList> = {
+        status: 'success',
+        message: 'Books fetched successfully',
+        data: result.data,
+        filters: filters,
+        pagination: {
+          limit: paginOptions.limit,
+          total: result.total,
+          hasNextPage: result.hasNextPage,
+          nextCursor: result.nextCursor,
+        },
+        timestamp: Date.now(),
+      };
+      res.json(reponseBody);
     } catch (error) {
       next(error);
     }
@@ -53,7 +118,14 @@ export class BookController {
       if (!result) {
         throw AppError.notFound('Book not found');
       }
-      res.json({ data: result, message: 'Book fetched successfully' });
+
+      const responseBody: ApiResponse<BookDetailDto> = {
+        status: 'success',
+        message: 'Book fetched successfully',
+        data: result,
+        timestamp: Date.now(),
+      };
+      res.json(responseBody);
     } catch (error) {
       if (error instanceof ZodError) {
         const validationErrors = error.issues.map((issue) => {
@@ -78,7 +150,11 @@ export class BookController {
       const id = idSchema.parse(req.params.id);
       const data = req.body;
       await this.service.update(id, data);
-      res.json({ message: 'Book updated successfully' });
+      res.json({
+        message: 'Book updated successfully',
+        status: 'success',
+        timestamp: Date.now(),
+      });
     } catch (error) {
       if (error instanceof ZodError) {
         const validationErrors = error.issues.map((issue) => {
@@ -98,7 +174,11 @@ export class BookController {
     try {
       const id = idSchema.parse(req.params.id);
       await this.service.delete(id);
-      res.json({ message: 'Book deleted successfully' });
+      res.json({
+        message: 'Book deleted successfully',
+        status: 'success',
+        timestamp: Date.now(),
+      });
     } catch (error) {
       if (error instanceof ZodError) {
         const validationErrors = error.issues.map((issue) => {
@@ -127,7 +207,11 @@ export class BookController {
         bookId: req.params.id,
       };
       await this.service.addReview(input);
-      res.json({ message: 'Review added successfully' });
+      res.json({
+        message: 'Review added successfully',
+        status: 'success',
+        timestamp: Date.now(),
+      });
     } catch (error) {
       next(error);
     }
@@ -154,7 +238,11 @@ export class BookController {
       const bookId = idSchema.parse(req.params.id);
       const userId = req.body.userId;
       await this.service.toggleLike(userId, bookId);
-      res.json({ message: 'Like status toggled successfully' });
+      res.json({
+        message: 'Like status toggled successfully',
+        status: 'success',
+        timestamp: Date.now(),
+      });
     } catch (error) {
       next(error);
     }

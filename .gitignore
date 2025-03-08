@@ -8,7 +8,7 @@ logs
 
 nodemon.json
 
-docker-compose.yml
+# docker-compose.yml
 
 dist
 

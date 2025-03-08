@@ -12,18 +12,19 @@ export class BookEntity {
     public readonly id: string,
     public readonly title: string,
     public readonly cover: string,
-    public readonly description: string,
-    public readonly pages: number | undefined,
-    public readonly language: string | undefined,
-    public readonly releaseDate: Date | undefined,
     public readonly createdAt: Date,
-    public readonly updatedAt: Date,
     public readonly author: Author,
-    public readonly category: Category,
-    public readonly publisher: Publisher | undefined,
-    public readonly genres: Genre[],
-    public readonly reviews: Review[],
-    public readonly digitalItems: DigitalItemData[],
+    public readonly reviews?: Review[],
+    public readonly description?: string,
+    public readonly pages?: number,
+    public readonly language?: string,
+    public readonly releaseDate?: Date,
+    public readonly updatedAt?: Date,
+    public readonly category?: Category,
+    public readonly publisher?: Publisher,
+    public readonly genres?: Genre[],
+    public readonly digitalItems?: DigitalItemData[],
+    public readonly likes?: number,
   ) {}
 
   copyWith(updates: Partial<BookEntity>): BookEntity {
@@ -31,23 +32,24 @@ export class BookEntity {
       updates.id ?? this.id,
       updates.title ?? this.title,
       updates.cover ?? this.cover,
+      updates.createdAt ?? this.createdAt,
+      updates.author ?? this.author,
+      updates.reviews ?? this.reviews,
       updates.description ?? this.description,
       updates.pages ?? this.pages,
       updates.language ?? this.language,
       updates.releaseDate ?? this.releaseDate,
-      updates.createdAt ?? this.createdAt,
       updates.updatedAt ?? this.updatedAt,
-      updates.author ?? this.author,
       updates.category ?? this.category,
       updates.publisher ?? this.publisher,
       updates.genres ?? this.genres,
-      updates.reviews ?? this.reviews,
       updates.digitalItems ?? this.digitalItems,
+      updates.likes ?? this.likes,
     );
   }
 
   get averageRating(): number {
-    if (this.reviews.length === 0) {
+    if (!this.reviews || this.reviews.length === 0) {
       return 0;
     }
 

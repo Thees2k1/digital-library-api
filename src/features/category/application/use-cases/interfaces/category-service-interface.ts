@@ -3,11 +3,14 @@ import {
   CategoryCreateDto,
   CategoryDetailDto,
   CategoryUpdateDto,
+  GetCategoriesParams,
+  GetCategoriesResult,
   Id,
 } from '@src/features/category/application/dto/category-dtos';
 
 export interface ICategoryService
-  extends BaseUseCase<any, CategoryDetailDto, Id> {
+  extends BaseUseCase<GetCategoriesParams, CategoryDetailDto, Id> {
+  getList(query: GetCategoriesParams): Promise<GetCategoriesResult>;
   create(data: CategoryCreateDto): Promise<CategoryDetailDto>;
   update(id: Id, data: CategoryUpdateDto): Promise<string>;
 }

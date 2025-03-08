@@ -2,15 +2,15 @@ import { Id } from '@src/core/types';
 import {
   BookCreateDto,
   BookDetailDto,
-  BookListQueryDto,
-  BookListResultDto,
   BookUpdateDto,
+  GetBooksOptions,
+  GetListResult,
   ReviewCreateDto,
   ReviewListResultDto,
 } from '../../dtos/book-dto';
 
 export interface IBookService {
-  getList(query: BookListQueryDto): Promise<BookListResultDto>;
+  getList(options: GetBooksOptions): Promise<GetListResult>;
   create(data: BookCreateDto): Promise<BookDetailDto>;
   update(id: Id, data: BookUpdateDto): Promise<string>;
   getById(id: string): Promise<BookDetailDto | null>;

@@ -5,17 +5,26 @@ import {
   GenreCreateDto,
   GenreDetailDto,
   GenreUpdateDto,
+  GetGenresParams,
+  GetGenresResult,
 } from '../dto/genre-dtos';
 import logger from '@src/core/utils/logger/logger';
 import { GenreRepository } from '../../domain/repository/genre-repository';
 import { IGenreService } from './interfaces/genre-service-interface';
 import { GenreEntity } from '../../domain/entities/genre-entity';
 import { Id } from '@src/core/types';
+import { CacheService } from '@src/core/interfaces/cache-service';
+import { generateCacheKey } from '@src/core/utils/generate-cache-key';
 
 @injectable()
 export class GenreService implements IGenreService {
   private readonly repository: GenreRepository;
-  constructor(@inject(DI_TYPES.GenreRepository) repository: GenreRepository) {
+  private readonly cacheService: CacheService;
+  constructor(
+    @inject(DI_TYPES.GenreRepository) repository: GenreRepository,
+    @inject(DI_TYPES.CacheService) cacheService: CacheService,
+  ) {
+    this.cacheService = cacheService;
     this.repository = repository;
   }
   async create(data: GenreCreateDto): Promise<GenreDetailDto> {
@@ -61,11 +70,32 @@ export class GenreService implements IGenreService {
       throw error;
     }
   }
-  async getList(): Promise<Array<GenreDetailDto>> {
+  async getList(params: GetGenresParams): Promise<GetGenresResult> {
     try {
-      const res = await this.repository.getList();
+      const cacheKey = generateCacheKey('genres', params);
+      const cacheData = await this.cacheService.get<GetGenresResult>(cacheKey);
+      if (cacheData) {
+        return cacheData;
+      }
 
-      return res.map((entity) => this._convertToResultDto(entity));
+      const res = await this.repository.getList(params);
+      const total = await this.repository.count({});
+
+      const resultData: GetGenresResult = {
+        data: res.map((genre) => {
+          return this._convertToResultDto(genre);
+        }),
+        paging: {
+          total: total,
+          limit: params.paging.limit,
+          hasNextPage: res.length >= params.paging.limit,
+          nextCursor: res.length > 0 ? res[res.length - 1].id : '',
+        },
+      };
+
+      await this.cacheService.set(cacheKey, resultData, { EX: 60 });
+
+      return resultData;
     } catch (error) {
       logger.error(error);
       throw AppError.internalServer('Internal server error.');
@@ -73,11 +103,19 @@ export class GenreService implements IGenreService {
   }
   async getById(id: string): Promise<GenreDetailDto | null> {
     try {
-      const res = await this.repository.getById(id);
+      const cacheKey = generateCacheKey('genre', { id });
 
+      const cacheData = await this.cacheService.get<GenreDetailDto>(cacheKey);
+      if (cacheData) {
+        return cacheData;
+      }
+
+      const res = await this.repository.getById(id);
       if (!res) {
         return null;
       }
+
+      await this.cacheService.set(cacheKey, this._convertToResultDto(res));
 
       return this._convertToResultDto(res);
     } catch (error) {

@@ -1,5 +1,5 @@
 import { BaseRepository } from '@src/core/interfaces/base-repository';
-import { CreateUserDto, UpdateUserDto } from '../../application/dtos/user-dto';
+import { CreateUserDto } from '../../application/dtos/user-dto';
 import { type UserEntity } from '../entities/user';
 
 export abstract class UserRepository
