@@ -33,6 +33,7 @@ export const bookListItemSchema = z.object({
     id: z.string().uuid(),
     name: z.string().max(255),
   }),
+  desscription: z.string(),
   averageRating: z.number().optional(),
   createdAt: isoDateStringShema,
 });
@@ -140,18 +141,6 @@ export type BookIndexRecord = {
   id: string;
   title: string;
   description: string;
-  releaseDate: string;
-  rating: number;
-  authorName: string;
-  categoryName: string;
-  genres: string[];
-};
-
-export type BookIndexRecord = {
-  id: string;
-  title: string;
-  description: string;
-  cover: string;
   releaseDate: string;
   rating: number;
   authorName: string;

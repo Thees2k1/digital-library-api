@@ -23,7 +23,7 @@ import {
   ReviewCreateDto,
   ReviewListResultDto,
 } from '../dtos/book-dto';
-import { BookMapper } from '../mapper/book-mapper';
+// import { BookEntity } from '../mapper/book-mapper';
 import { IBookService } from './interfaces/book-service-interface';
 import { CacheService } from '@src/core/interfaces/cache-service';
 import { generateCacheKey } from '@src/core/utils/generate-cache-key';
@@ -216,6 +216,7 @@ export class BookService implements IBookService {
   }
   async getList(options: GetListOptions<BooksFilter>): Promise<GetListResult> {
     const cacheKey = generateCacheKey('books:list', options);
+    console.log('cacheKey', cacheKey);
     try {
       const { paging, filter, sort } = options;
 
@@ -230,7 +231,7 @@ export class BookService implements IBookService {
         this.repository.count(filter),
       ]);
 
-      const data = BookMapper.toBooks(books);
+      const data = BookEntity.toBooks(books);
 
       const hasNextPage = books.length === (paging?.limit ?? 20);
       const nextCursor = hasNextPage ? books[books.length - 1].id : null;
@@ -292,7 +293,7 @@ export class BookService implements IBookService {
       if (!res) {
         throw AppError.notFound('Book not found.');
       }
-      const bookDetail = BookMapper.toBookDetailDto(res);
+      const bookDetail = BookEntity.toBookDetailDto(res);
 
       // Cache the data for future requests
       await this.cacheService.set(cacheKey, bookDetail, { EX: 60 }); // Cache for 60 seconds
@@ -358,26 +359,25 @@ export class BookService implements IBookService {
     return await this.repository.getLikeCount(bookId);
   }
 
-  async indexAllBooks(documents: BookDetailDto[]): Promise<void> {
-    const indexDatas: Array<BookIndexRecord> = documents.map((item) => {
-      return {
-        id: item.id,
-        title: item.title,
-        cover: item.cover,
-        description: item.description,
-        authorName: item.author.name,
-        categoryName: item.category.name,
-        rating: item.averageRating || 0,
-        genres: item.genres.map((genre) => genre.name),
-        releaseDate: item.releaseDate,
-      } satisfies BookIndexRecord;
-    });
+  // async indexAllBooks(documents: BookDetailDto[]): Promise<void> {
+  //   const indexDatas: Array<BookIndexRecord> = documents.map((item) => {
+  //     return {
+  //       id: item.id,
+  //       title: item.title,
+  //       description: item.description,
+  //       authorName: item.author.name,
+  //       categoryName: item.category.name,
+  //       rating: item.averageRating || 0,
+  //       genres: item.genres.map((genre) => genre.name),
+  //       releaseDate: item.releaseDate,
+  //     } satisfies BookIndexRecord;
+  //   });
 
-    await this.searchService.index({
-      indexName: 'books',
-      documents: indexDatas,
-    });
+  //   await this.searchService.index({
+  //     indexName: 'books',
+  //     documents: indexDatas,
+  //   });
 
-    console.log('updated all books');
-  }
+  //   console.log('updated all books');
+  // }
 }

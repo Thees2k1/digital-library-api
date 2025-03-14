@@ -150,6 +150,7 @@ export class PersistenceBookRepository extends BookRepository {
         title: true,
         cover: true,
         createdAt: true,
+        description: true,
         author: {
           select: {
             id: true,
@@ -194,6 +195,7 @@ export class PersistenceBookRepository extends BookRepository {
         book.createdAt,
         bookAuthor,
         bookReviews,
+        book.description ?? '',
       );
     });
   }
