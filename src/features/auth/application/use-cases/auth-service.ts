@@ -134,7 +134,6 @@ export class AuthService implements IAuthService {
       const sessionIdentity = refreshToken.split('.')[2];
       const cacheKey = generateCacheKey('auth', { userId });
       await this.cacheService.delete(cacheKey);
-      console.log('deleted session cache', cacheKey);
       await this.authRepository.deleteSession(sessionIdentity);
       return LOGOUT_SUCCESS;
     } catch (error) {
@@ -155,9 +154,7 @@ export class AuthService implements IAuthService {
 
     const isCachedSession = await this.cacheService.get<string>(cacheKey);
 
-    console.log('compared session', isCachedSession, sessionIdentity);
     if (isCachedSession !== sessionIdentity) {
-      console.log('checking in db');
       const session = await this.authRepository.verifySession(
         refreshToken.split('.')[2],
       );
@@ -197,7 +194,6 @@ export class AuthService implements IAuthService {
     await this.cacheService.set(cacheKey, newIdentity, {
       PX: REFRESH_TOKEN_EXPIRES_IN,
     });
-    console.log('refreshed session cache', cacheKey);
 
     return { accessToken: newAccessToken, refreshToken: newRefreshToken };
   }

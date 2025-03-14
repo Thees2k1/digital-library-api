@@ -150,6 +150,7 @@ export class PersistenceBookRepository extends BookRepository {
         title: true,
         cover: true,
         createdAt: true,
+        description: true,
         author: {
           select: {
             id: true,
@@ -194,6 +195,7 @@ export class PersistenceBookRepository extends BookRepository {
         book.createdAt,
         bookAuthor,
         bookReviews,
+        book.description ?? '',
       );
     });
   }
@@ -674,5 +676,15 @@ export class PersistenceBookRepository extends BookRepository {
     }
 
     return query;
+  }
+
+  getBookAuthor(bookId: string): Promise<object> {
+    throw new Error('Method not implemented.');
+  }
+  getBookCategory(bookId: string): Promise<object> {
+    throw new Error('Method not implemented.');
+  }
+  getBookGenres(bookId: string): Promise<object[]> {
+    throw new Error('Method not implemented.');
   }
 }

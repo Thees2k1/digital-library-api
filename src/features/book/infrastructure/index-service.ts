@@ -7,7 +7,7 @@ import {
 } from '@src/features/book/application/dtos/book-dto';
 import { SearchService } from '@src/core/interfaces/search-service';
 import { BookRepository } from '../domain/repository/book-repository';
-import { BookMapper } from '../application/mapper/book-mapper';
+// import { BookMapper } from '../application/mapper/book-mapper';
 import { BookEntity } from '../domain/entities/book-entity';
 import logger from '@src/core/utils/logger/logger';
 
@@ -34,7 +34,7 @@ export class IndexingService {
         id: data.id,
       });
     } else {
-      const indexData = BookMapper.toBookIndexRecord(data as BookEntity);
+      const indexData = BookEntity.toBookIndexRecord(data as BookEntity);
       this.searchService.index({
         indexName: 'books',
         documents: [indexData],
@@ -46,7 +46,7 @@ export class IndexingService {
     logger.info('Reindexing all books...');
     const books = await this.bookRepository.getAllBooks();
 
-    BookMapper.toBookIndexCollection(books);
+    BookEntity.toBookIndexCollection(books);
 
     // Index all books
     await this.searchService.index({

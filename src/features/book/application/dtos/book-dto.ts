@@ -33,6 +33,7 @@ export const bookListItemSchema = z.object({
     id: z.string().uuid(),
     name: z.string().max(255),
   }),
+  desscription: z.string(),
   averageRating: z.number().optional(),
   createdAt: isoDateStringShema,
 });
