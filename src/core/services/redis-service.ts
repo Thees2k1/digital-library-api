@@ -2,6 +2,7 @@ import { createClient, RedisClientType, SetOptions } from 'redis';
 import { CacheService } from '../interfaces/cache-service';
 import { config } from '../config/config';
 import { injectable } from 'inversify';
+import logger from '../utils/logger/logger';
 
 @injectable()
 export class RedisService implements CacheService {
@@ -13,18 +14,19 @@ export class RedisService implements CacheService {
 
     this.client = createClient({ url });
 
-    this.client.on('error', (err) => {
-      console.error(`Redis Client Error: ${err.message}`);
-      this.isConnected = false;
+    this.client.on('error', () => {
+      if (this.isConnected) {
+        this.isConnected = false;
+      }
     });
 
     this.client.on('connect', () => {
-      console.log('Redis connected successfully');
+      logger.info('Redis connected successfully');
       this.isConnected = true;
     });
 
     this.client.connect().catch((err) => {
-      console.error(`Failed to connect to Redis: ${err.message}`);
+      logger.error(`Failed to connect to Redis: ${err.message}`);
       this.isConnected = false;
     });
   }

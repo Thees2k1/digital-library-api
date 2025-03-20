@@ -112,7 +112,7 @@ export class BookEntity {
         title: book.title,
         cover: book.cover,
         author: book.author,
-        desscription: book.description ?? '',
+        description: book.description ?? '',
         createdAt: book.createdAt.toDateString(),
         averageRating: book.averageRating,
       };

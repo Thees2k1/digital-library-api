@@ -33,7 +33,7 @@ export const bookListItemSchema = z.object({
     id: z.string().uuid(),
     name: z.string().max(255),
   }),
-  desscription: z.string(),
+  description: z.string(),
   averageRating: z.number().optional(),
   createdAt: isoDateStringShema,
 });
@@ -121,6 +121,13 @@ export const bookQuerySchema = z.object({
 
 export const bookListSchema = z.array(bookListItemSchema);
 
+export const updateReadingSchema = z.object({
+  currentPage: z.number().int().min(0),
+  progress: z.number().int().min(0).max(100),
+  lastReadAt: isoDateStringShema,
+  isFinished: z.boolean(),
+});
+
 export type BookQuery = z.infer<typeof bookQuerySchema>;
 export type BookListItem = z.infer<typeof bookListItemSchema>;
 export type BookList = z.infer<typeof bookListSchema>;
@@ -177,3 +184,28 @@ export type BooksFilter = {
 };
 
 export type GetBooksOptions = GetListOptions<BooksFilter>;
+
+export type ReadingDto = {
+  bookId: string;
+  progress: number;
+  lastReadAt: string;
+  isFinished: boolean;
+};
+
+export type ReadingBook = {
+  id: string;
+  title: string;
+  cover: string;
+  author: {
+    id: string;
+    name: string;
+  };
+  progress: number;
+  lastReadAt: string;
+  isFinished: boolean;
+  isLiked: boolean;
+};
+
+export type ReadingBookList = Array<ReadingBook>;
+
+export type UpdateReadingDto = z.infer<typeof updateReadingSchema>;

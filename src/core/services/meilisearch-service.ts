@@ -61,8 +61,6 @@ export class MeiliSearchService implements SearchService {
       offset: params.offset,
     })) as SearchResponse<T, SearchParams>;
 
-    console.log(result);
-
     return {
       query: result.query,
       hits: result.hits,

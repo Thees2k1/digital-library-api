@@ -1,17 +1,20 @@
 import { PagingOptions, SortOptions } from '@src/core/types';
 import {
   BooksFilter,
+  BookUpdateDto,
   ReviewCreateDto,
   ReviewListResultDto,
+  UpdateReadingDto,
 } from '../../application/dtos/book-dto';
 import { BookEntity } from '../entities/book-entity';
+import { BookReading } from '../entities/book-reading';
 
 export abstract class BookRepository {
   abstract getList(
     paging: PagingOptions | undefined,
     filter: BooksFilter | undefined,
     sort: SortOptions | undefined,
-  ): Promise<BookEntity[]>;
+  ): Promise<Array<BookEntity>>;
   abstract getById(id: string): Promise<BookEntity | null>;
   abstract create(data: Partial<BookEntity>): Promise<BookEntity>;
   abstract update(id: string, data: Partial<BookEntity>): Promise<void>;
@@ -19,7 +22,10 @@ export abstract class BookRepository {
 
   abstract getByTitleAsync(title: string): Promise<BookEntity | null>;
 
-  abstract updateBookGenres(genres: string[], bookId: string): Promise<void>;
+  abstract updateBookGenres(
+    genres: Array<string>,
+    bookId: string,
+  ): Promise<void>;
 
   abstract addBookDigitalItem(
     itemData: object,
@@ -49,5 +55,26 @@ export abstract class BookRepository {
 
   abstract getLikeCount(bookId: string): Promise<number>;
 
-  abstract getAllBooks(): Promise<BookEntity[]>;
+  abstract getAllBooks(): Promise<Array<BookEntity>>;
+
+  abstract getUserLikeList(userId: string): Promise<Array<string>>;
+
+  abstract getReadingList(userId: string): Promise<Array<BookReading>>;
+
+  abstract getReading(
+    userId: string,
+    bookId: string,
+  ): Promise<BookReading | null>;
+
+  abstract createReading(
+    userId: string,
+    bookId: string,
+    data: BookReading,
+  ): Promise<void>;
+
+  abstract updateReading(
+    userId: string,
+    bookId: string,
+    data: UpdateReadingDto,
+  ): Promise<void>;
 }

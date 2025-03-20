@@ -19,6 +19,7 @@ import { ErrorMiddleware } from './core/middlewares/error-middleware';
 import 'reflect-metadata';
 import { container } from './core/di/container';
 import { IndexingService } from './features/book/infrastructure/index-service';
+import logger from './core/utils/logger/logger';
 
 interface ServerOptions {
   port: number;
@@ -42,20 +43,19 @@ export class Server {
 
   async start(): Promise<void> {
     this.app.listen(this.port, () => {
-      console.info(`Server running on port ${this.port}`);
+      logger.info(`Server running on port ${this.port}`);
     });
   }
 
   private init(): void {
-    console.log('Initializing server...');
-    console.log('NODE_ENV', process.env.NODE_ENV);
+    logger.info('Initializing server...');
     try {
       this.initializeServices();
       this.initializeMiddlewares();
       this.initializeRoutes();
       this.initializeErrorHandling();
     } catch (error) {
-      console.error('Error initializing server', error);
+      logger.error('Error initializing server', error);
     }
   }
 

@@ -20,7 +20,10 @@ import {
   BooksFilter,
   BookUpdateDto,
   GetBooksOptions,
+  ReadingBookList,
+  ReadingDto,
   ReviewCreateDto,
+  updateReadingSchema,
 } from '../../application/dtos/book-dto';
 import { IBookService } from '../../application/use-cases/interfaces/book-service-interface';
 
@@ -194,6 +197,18 @@ export class BookController {
     }
   }
 
+  async searchBooks(req: Request, res: Response, next: NextFunction) {
+    try {
+      const query = req.query.q as string;
+      const page = parseInt(req.query.page as string, 10) || 1;
+      const limit = parseInt(req.query.limit as string, 10) || 10;
+      const result = await this.service.search(query, page, limit);
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async addReview(
     req: Request<any, any, ReviewCreateDto & { userId: string }>,
     res: Response,
@@ -258,14 +273,139 @@ export class BookController {
     }
   }
 
-  async searchBooks(req: Request, res: Response, next: NextFunction) {
+  async getUserLikeList(
+    req: Request<any, any, { userId: string }>,
+    res: Response,
+    next: NextFunction,
+  ) {
     try {
-      const query = req.query.q as string;
-      const page = parseInt(req.query.page as string, 10) || 1;
-      const limit = parseInt(req.query.limit as string, 10) || 10;
-      const result = await this.service.search(query, page, limit);
+      const parseRes = idSchema.safeParse(req.query.userId);
+      if (parseRes.success === false) {
+        const validationErrors = parseRes.error.issues.map((issue) => {
+          return {
+            fields: issue.path.map((path) => path.toString()),
+            constraint: issue.message,
+          };
+        });
+        next(new ValidationError(validationErrors));
+        return;
+      }
+
+      const userId = parseRes.data;
+
+      const result: Array<string> = await this.service.getUserLikeList(userId);
+
+      const reponseBody: ApiResponse<Array<string>> = {
+        status: 'success',
+        data: result,
+        timestamp: Date.now(),
+      };
+      res.json(reponseBody);
       res.json(result);
     } catch (error) {
+      next(error);
+    }
+  }
+
+  async getReading(req: Request, res: Response, next: NextFunction) {
+    try {
+      const bookId = idSchema.parse(req.params.id);
+      const userId: string | undefined = req.body.userId;
+
+      if (!userId) {
+        next(AppError.badRequest('User id is required.'));
+        return;
+      }
+
+      const result = await this.service.getReading(userId, bookId);
+
+      const responseBody: ApiResponse<ReadingDto> = {
+        status: 'success',
+        data: result,
+        timestamp: Date.now(),
+      };
+      res.json(responseBody);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationErrors = error.issues.map((issue) => {
+          return {
+            fields: issue.path.map((path) => path.toString()),
+            constraint: issue.message,
+          };
+        });
+        next(new ValidationError(validationErrors));
+        return;
+      }
+      next(error);
+    }
+  }
+
+  async getReadingList(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId: string | undefined = req.body.userId;
+
+      if (!userId) {
+        next(AppError.badRequest('User id is required.'));
+        return;
+      }
+
+      const result = await this.service.getReadingList(userId);
+      if (!result) {
+        throw AppError.notFound('Book not found');
+      }
+
+      const responseBody: ApiResponse<ReadingBookList> = {
+        status: 'success',
+        data: result,
+        timestamp: Date.now(),
+      };
+      res.json(responseBody);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationErrors = error.issues.map((issue) => {
+          return {
+            fields: issue.path.map((path) => path.toString()),
+            constraint: issue.message,
+          };
+        });
+        next(new ValidationError(validationErrors));
+        return;
+      }
+      next(error);
+    }
+  }
+
+  async updateReading(req: Request, res: Response, next: NextFunction) {
+    try {
+      const bookId = idSchema.parse(req.params.id);
+      const userId: string | undefined = req.body.userId;
+
+      if (!userId) {
+        next(AppError.badRequest('User id is required.'));
+        return;
+      }
+
+      const data = updateReadingSchema.parse(req.body);
+
+      await this.service.updateReading(userId, bookId, data);
+
+      const responseBody: ApiResponse<string> = {
+        status: 'success',
+        timestamp: Date.now(),
+      };
+      res.json(responseBody);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const validationErrors = error.issues.map((issue) => {
+          return {
+            fields: issue.path.map((path) => path.toString()),
+            constraint: issue.message,
+          };
+        });
+        next(new ValidationError(validationErrors));
+        return;
+      }
+
       next(error);
     }
   }

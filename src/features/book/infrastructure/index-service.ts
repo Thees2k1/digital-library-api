@@ -43,15 +43,18 @@ export class IndexingService {
   };
 
   async reindexAllBooks(): Promise<void> {
-    logger.info('Reindexing all books...');
-    const books = await this.bookRepository.getAllBooks();
+    try {
+      const books = await this.bookRepository.getAllBooks();
 
-    BookEntity.toBookIndexCollection(books);
+      const documents = BookEntity.toBookIndexCollection(books);
 
-    // Index all books
-    await this.searchService.index({
-      indexName: 'books',
-      documents: books,
-    });
+      // Index all books
+      await this.searchService.index({
+        indexName: 'books',
+        documents,
+      });
+    } catch (error) {
+      logger.error('Error reindexing all books', error);
+    }
   }
 }
