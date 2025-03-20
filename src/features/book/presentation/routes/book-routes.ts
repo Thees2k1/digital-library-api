@@ -8,6 +8,7 @@ import {
   bookCreateDtoSchema,
   bookUpdateDtoSchema,
   reviewCreateDtoSchema,
+  updateFavoriteDtoSchema,
 } from '../../application/dtos/book-dto';
 import { BookController } from '../controller/book-controller';
 
@@ -49,6 +50,17 @@ export class BookRouterFactory extends BaseRouterFactory<BookController> {
       BookRoutes.userLikeList,
       authMiddleware,
       this.controller.getUserLikeList.bind(this.controller),
+    );
+    this._router.get(
+      BookRoutes.favorites,
+      this.controller.getFavoriteBooks.bind(this.controller),
+    );
+
+    this._router.post(
+      BookRoutes.favorites,
+      authMiddleware,
+      validationMiddleware(updateFavoriteDtoSchema),
+      this.controller.updateFavorite.bind(this.controller),
     );
     this._router.get(
       BookRoutes.book,
@@ -107,30 +119,6 @@ export class BookRouterFactory extends BaseRouterFactory<BookController> {
       authMiddleware,
       this.controller.updateReading.bind(this.controller),
     );
-
-    // this._router.post(
-    //   BookRoutes.readings,
-    //   authMiddleware,
-    //   this.controller.updateReading.bind(this.controller),
-    // );
-
-    // this._router.get(
-    //   BookRoutes.favorites,
-    //   authMiddleware,
-    //   this.controller.getFavorites.bind(this.controller),
-    // );
-
-    // this._router.post(
-    //   BookRoutes.favorites,
-    //   authMiddleware,
-    //   this.controller.addFavorite.bind(this.controller),
-    // );
-
-    // this._router.delete(
-    //   BookRoutes.favorites,
-    //   authMiddleware,
-    //   this.controller.removeFavorite.bind(this.controller),
-    // );
   }
   get routes(): Router {
     return this._router;

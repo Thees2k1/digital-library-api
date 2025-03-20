@@ -9,6 +9,7 @@ import {
   ReadingDto,
   ReviewCreateDto,
   ReviewListResultDto,
+  UserFavoriteBookList,
 } from '../../dtos/book-dto';
 
 export interface IBookService {
@@ -30,4 +31,10 @@ export interface IBookService {
   getReading(userId: string, bookId: string): Promise<ReadingDto>;
   getReadingList(userId: string): Promise<ReadingBookList>;
   getUserLikeList(userId: string): Promise<Array<string>>;
+  getFavoriteBooks(userId: string): Promise<UserFavoriteBookList>;
+  updateFavorite(
+    userId: string,
+    bookId: string,
+    isFavorite: boolean,
+  ): Promise<void>;
 }

@@ -23,7 +23,9 @@ import {
   ReadingBookList,
   ReadingDto,
   ReviewCreateDto,
+  UpdateFavoriteDto,
   updateReadingSchema,
+  UserFavoriteBookList,
 } from '../../application/dtos/book-dto';
 import { IBookService } from '../../application/use-cases/interfaces/book-service-interface';
 
@@ -406,6 +408,60 @@ export class BookController {
         return;
       }
 
+      next(error);
+    }
+  }
+
+  async getFavoriteBooks(req: Request, res: Response, next: NextFunction) {
+    try {
+      const parseRes = idSchema.safeParse(req.query.userId);
+      if (parseRes.success === false) {
+        const validationErrors = parseRes.error.issues.map((issue) => {
+          return {
+            fields: issue.path.map((path) => path.toString()),
+            constraint: issue.message,
+          };
+        });
+        next(new ValidationError(validationErrors));
+        return;
+      }
+
+      const userId = parseRes.data;
+
+      const result = await this.service.getFavoriteBooks(userId);
+
+      const responseBody: ApiResponse<UserFavoriteBookList> = {
+        status: 'success',
+        data: result,
+        timestamp: Date.now(),
+      };
+      res.json(responseBody);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async updateFavorite(
+    req: Request<any, any, UpdateFavoriteDto>,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const data = req.body;
+      await this.service.updateFavorite(
+        data.userId,
+        data.bookId,
+        data.isFavorite,
+      );
+      res.json({
+        status: 'success',
+        data: {
+          isFavorite: data.isFavorite,
+          bookId: data.bookId,
+        },
+        timestamp: Date.now(),
+      });
+    } catch (error) {
       next(error);
     }
   }

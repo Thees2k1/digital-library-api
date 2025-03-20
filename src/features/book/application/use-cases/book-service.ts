@@ -26,6 +26,7 @@ import {
   ReviewCreateDto,
   ReviewListResultDto,
   UpdateReadingDto,
+  UserFavoriteBookList,
 } from '../dtos/book-dto';
 // import { BookEntity } from '../mapper/book-mapper';
 import { IBookService } from './interfaces/book-service-interface';
@@ -463,6 +464,27 @@ export class BookService implements IBookService {
   getUserLikeList(userId: string): Promise<Array<string>> {
     try {
       return this.repository.getUserLikeList(userId);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getFavoriteBooks(userId: string): Promise<UserFavoriteBookList> {
+    try {
+      const data = await this.repository.getFavoriteBooks(userId);
+
+      return BookEntity.toBooks(data);
+    } catch (error) {
+      throw error;
+    }
+  }
+  async updateFavorite(
+    userId: string,
+    bookId: string,
+    isFavorite: boolean,
+  ): Promise<void> {
+    try {
+      await this.repository.updateFavorite(userId, bookId, isFavorite);
     } catch (error) {
       throw error;
     }

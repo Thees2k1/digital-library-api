@@ -2,6 +2,12 @@ import { GetListOptions, idSchema, isoDateStringShema } from '@src/core/types';
 import { z } from 'zod';
 import { ItemFormat } from '../../domain/interfaces/models';
 
+export const updateFavoriteDtoSchema = z.object({
+  userId: idSchema,
+  bookId: idSchema,
+  isFavorite: z.boolean(),
+});
+
 export const digitalItemDtoSchema = z.object({
   id: z.string().uuid().optional(),
   format: z.nativeEnum(ItemFormat),
@@ -209,3 +215,7 @@ export type ReadingBook = {
 export type ReadingBookList = Array<ReadingBook>;
 
 export type UpdateReadingDto = z.infer<typeof updateReadingSchema>;
+
+export type UpdateFavoriteDto = z.infer<typeof updateFavoriteDtoSchema>;
+
+export type UserFavoriteBookList = Array<BookListItem>;

@@ -77,4 +77,12 @@ export abstract class BookRepository {
     bookId: string,
     data: UpdateReadingDto,
   ): Promise<void>;
+
+  abstract getFavoriteBooks(userId: string): Promise<Array<BookEntity>>;
+
+  abstract updateFavorite(
+    userId: string,
+    bookId: string,
+    isFavorite: boolean,
+  ): Promise<void>;
 }

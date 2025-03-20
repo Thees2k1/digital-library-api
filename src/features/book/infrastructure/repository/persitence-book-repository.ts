@@ -779,6 +779,89 @@ export class PersistenceBookRepository extends BookRepository {
     });
   }
 
+  async getFavoriteBooks(userId: string): Promise<Array<BookEntity>> {
+    const dbData = await this.prisma.book.findMany({
+      where: {
+        status: {
+          not: 'deleted',
+        },
+        favoriteBooks: {
+          some: {
+            userId: userId,
+            isFavorite: true,
+          },
+        },
+      },
+      select: {
+        id: true,
+        title: true,
+        cover: true,
+        createdAt: true,
+        description: true,
+        author: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        reviews: {
+          select: {
+            id: true,
+            rating: true,
+            review: true,
+          },
+        },
+      },
+    });
+
+    return dbData.map((book) => {
+      const bookAuthor = {
+        id: book.author.id,
+        name: book.author.name,
+      } as Author;
+
+      const bookReviews: Array<Review> = book.reviews.map((review) => {
+        return {
+          id: review.id,
+          rating: review.rating,
+          comment: review.review ?? '',
+        } as Review;
+      });
+
+      return new BookEntity(
+        book.id,
+        book.title,
+        book.cover,
+        book.createdAt,
+        bookAuthor,
+        bookReviews,
+        book.description ?? '',
+      );
+    });
+  }
+  async updateFavorite(
+    userId: string,
+    bookId: string,
+    isFavorite: boolean,
+  ): Promise<void> {
+    await this.prisma.userFavoriteBook.upsert({
+      where: {
+        userId_bookId: {
+          userId,
+          bookId,
+        },
+      },
+      create: {
+        userId,
+        bookId,
+        isFavorite,
+      },
+      update: {
+        isFavorite,
+      },
+    });
+  }
+
   private _setupQuery(filter: BooksFilter | undefined): any {
     const query: any = {
       status: {
@@ -787,6 +870,12 @@ export class PersistenceBookRepository extends BookRepository {
     };
 
     if (filter) {
+      if (filter.query) {
+        query.title = {
+          contains: filter.query,
+          mode: 'insensitive',
+        };
+      }
       if (filter.authorId) {
         query.authorId = filter.authorId;
       }
@@ -814,15 +903,5 @@ export class PersistenceBookRepository extends BookRepository {
     }
 
     return query;
-  }
-
-  getBookAuthor(bookId: string): Promise<object> {
-    throw new Error('Method not implemented.');
-  }
-  getBookCategory(bookId: string): Promise<object> {
-    throw new Error('Method not implemented.');
-  }
-  getBookGenres(bookId: string): Promise<object[]> {
-    throw new Error('Method not implemented.');
   }
 }
