@@ -1,7 +1,10 @@
 name: Backend CD
 
 on:
-  push:
+  workflow_run:
+    workflows: ['Backend CI'] # Change this to match the exact name of your CI workflow
+    types:
+      - completed
     branches:
       - main
   repository_dispatch:
