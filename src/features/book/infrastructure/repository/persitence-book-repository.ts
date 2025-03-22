@@ -763,14 +763,22 @@ export class PersistenceBookRepository extends BookRepository {
     bookId: string,
     data: UpdateReadingDto,
   ): Promise<void> {
-    await this.prisma.userReadBook.update({
+    await this.prisma.userReadBook.upsert({
       where: {
         userId_bookId: {
           userId: userId,
           bookId: bookId,
         },
       },
-      data: {
+      create: {
+        userId: userId,
+        bookId: bookId,
+        currentPage: data.currentPage,
+        latestProcess: data.progress,
+        isFavorite: data.isFinished,
+        updatedAt: data.lastReadAt,
+      },
+      update: {
         currentPage: data.currentPage,
         latestProcess: data.progress,
         isFavorite: data.isFinished,

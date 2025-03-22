@@ -367,23 +367,7 @@ export class BookService implements IBookService {
     data: UpdateReadingDto,
   ): Promise<any> {
     try {
-      const readed = await this.repository.getReading(userId, bookId);
-
-      if (readed) {
-        await this.repository.updateReading(userId, bookId, data);
-      }
-
-      const bookReading = new BookReading(
-        '',
-        bookId,
-        userId,
-        data.currentPage,
-        data.progress,
-        data.isFinished,
-        new Date(data.lastReadAt),
-      );
-
-      await this.repository.createReading(userId, bookId, bookReading);
+      await this.repository.updateReading(userId, bookId, data);
 
       //clear cache
       await this.cacheService.delete(`readings:user:${userId}`);
@@ -410,6 +394,7 @@ export class BookService implements IBookService {
 
       return {
         bookId: data.bookId,
+        currentPage: data.currentPage,
         progress: data.progress,
         lastReadAt: data.lastRead.toISOString(),
         isFinished: data.isFinished,

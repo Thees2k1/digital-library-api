@@ -193,6 +193,7 @@ export type GetBooksOptions = GetListOptions<BooksFilter>;
 
 export type ReadingDto = {
   bookId: string;
+  currentPage: number;
   progress: number;
   lastReadAt: string;
   isFinished: boolean;
