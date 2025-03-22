@@ -39,8 +39,9 @@ jobs:
           echo "POSTGRES_DB=${{ vars.POSTGRES_DB }}" >> .env
           echo "REDIS_URL=${{ vars.REDIS_URL }}" >> .env
           echo "ACCESS_TOKEN_SECRET=${{ vars.ACCESS_TOKEN_SECRET }}" >> .env
-          echo "VITE_MEILISEARCH_HOST=${{ vars.VITE_MEILISEARCH_HOST }}" >> .env
-          echo "VITE_MEILISEARCH_API_KEY=${{ secrets.VITE_MEILISEARCH_API_KEY }}" >> .env
+          echo "MEILISEARCH_HOST=${{ vars.VITE_MEILISEARCH_HOST }}" >> .env
+          echo "MEILISEARCH_API_KEY=${{ secrets.VITE_MEILISEARCH_API_KEY }}" >> .env
+          echo "MEILI_MASTER_KEY=${{ secrets.VITE_MEILISEARCH_API_KEY }}" >> .env
           pnpm build
 
       - name: Docker Login
