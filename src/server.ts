@@ -42,7 +42,7 @@ export class Server {
   }
 
   async start(): Promise<void> {
-    this.app.listen(this.port, () => {
+    this.app.listen(this.port, '0.0.0.0', () => {
       logger.info(`Server running on port ${this.port}`);
     });
   }
