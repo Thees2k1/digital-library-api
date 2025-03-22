@@ -90,9 +90,6 @@ export class AuthService implements IAuthService {
       await this.cacheService.set(cacheKey, sessionIdentity, {
         PX: REFRESH_TOKEN_EXPIRES_IN,
       });
-
-      console.log('cached session', cacheKey);
-
       return { accessToken, refreshToken };
     } catch (error) {
       throw error;

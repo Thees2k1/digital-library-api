@@ -5,6 +5,7 @@ import {
   BooksFilter,
   ReviewCreateDto,
   ReviewListResultDto,
+  UpdateReadingDto,
 } from '../../application/dtos/book-dto';
 import { BookEntity } from '../../domain/entities/book-entity';
 import {
@@ -15,6 +16,7 @@ import {
 } from '../../domain/interfaces/models';
 import { BookRepository } from '../../domain/repository/book-repository';
 import { PagingOptions, SortOptions } from '@src/core/types';
+import { BookReading } from '../../domain/entities/book-reading';
 
 @injectable()
 export class PersistenceBookRepository extends BookRepository {
@@ -238,7 +240,6 @@ export class PersistenceBookRepository extends BookRepository {
           }),
         });
       }
-      console.log(data.digitalItems);
       if (data.digitalItems) {
         await prisma.bookDigitalItem.createMany({
           data: data.digitalItems.map((item) => {
@@ -302,8 +303,6 @@ export class PersistenceBookRepository extends BookRepository {
           }),
         });
       }
-
-      console.log(data.digitalItems);
       if (data.digitalItems) {
         for (const item of data.digitalItems) {
           await prisma.bookDigitalItem.upsert({
@@ -640,6 +639,237 @@ export class PersistenceBookRepository extends BookRepository {
     });
   }
 
+  async getUserLikeList(userId: string): Promise<Array<string>> {
+    const dbData = await this.prisma.like.findMany({
+      where: { userId: userId, status: 'liked' },
+    });
+
+    return dbData.map((like) => like.bookId);
+  }
+
+  async getReadingList(userId: string): Promise<Array<BookReading>> {
+    const dbData = await this.prisma.userReadBook.findMany({
+      where: {
+        userId: userId,
+      },
+      select: {
+        id: true,
+        userId: true,
+        book: {
+          select: {
+            id: true,
+            title: true,
+            cover: true,
+            author: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+        currentPage: true,
+        latestProcess: true,
+        isFavorite: true,
+        updatedAt: true,
+      },
+    });
+
+    const readingList: Array<BookReading> = dbData.map((data) => {
+      return new BookReading(
+        data.id,
+        data.book.id,
+        data.userId,
+        data.currentPage ?? 0,
+        data.latestProcess ?? 0,
+        data.isFavorite,
+        data.updatedAt,
+        data.book.title,
+        data.book.cover,
+        { id: data.book.author.id, name: data.book.author.name },
+      );
+    });
+
+    return readingList;
+  }
+  async getReading(
+    userId: string,
+    bookId: string,
+  ): Promise<BookReading | null> {
+    const dbData = await this.prisma.userReadBook.findFirst({
+      where: {
+        userId: userId,
+        bookId: bookId,
+      },
+      select: {
+        id: true,
+        userId: true,
+        currentPage: true,
+        latestProcess: true,
+        updatedAt: true,
+        isFavorite: true,
+        book: {
+          select: {
+            id: true,
+            title: true,
+            cover: true,
+            author: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!dbData) {
+      return null;
+    }
+
+    return new BookReading(
+      dbData.id,
+      dbData.book.id,
+      dbData.userId,
+      dbData.currentPage ?? 0,
+      dbData.latestProcess ?? 0,
+      dbData.isFavorite,
+      dbData.updatedAt,
+      dbData.book.title,
+      dbData.book.cover,
+      { id: dbData.book.author.id, name: dbData.book.author.name },
+    );
+  }
+
+  async createReading(
+    userId: string,
+    bookId: string,
+    data: BookReading,
+  ): Promise<void> {
+    await this.prisma.userReadBook.create({
+      data: {
+        userId: userId,
+        bookId: bookId,
+        currentPage: data.currentPage,
+        latestProcess: data.progress,
+        isFavorite: data.isFinished,
+        updatedAt: data.lastRead,
+      },
+    });
+  }
+  async updateReading(
+    userId: string,
+    bookId: string,
+    data: UpdateReadingDto,
+  ): Promise<void> {
+    await this.prisma.userReadBook.upsert({
+      where: {
+        userId_bookId: {
+          userId: userId,
+          bookId: bookId,
+        },
+      },
+      create: {
+        userId: userId,
+        bookId: bookId,
+        currentPage: data.currentPage,
+        latestProcess: data.progress,
+        isFavorite: data.isFinished,
+        updatedAt: data.lastReadAt,
+      },
+      update: {
+        currentPage: data.currentPage,
+        latestProcess: data.progress,
+        isFavorite: data.isFinished,
+        updatedAt: data.lastReadAt,
+      },
+    });
+  }
+
+  async getFavoriteBooks(userId: string): Promise<Array<BookEntity>> {
+    const dbData = await this.prisma.book.findMany({
+      where: {
+        status: {
+          not: 'deleted',
+        },
+        favoriteBooks: {
+          some: {
+            userId: userId,
+            isFavorite: true,
+          },
+        },
+      },
+      select: {
+        id: true,
+        title: true,
+        cover: true,
+        createdAt: true,
+        description: true,
+        author: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        reviews: {
+          select: {
+            id: true,
+            rating: true,
+            review: true,
+          },
+        },
+      },
+    });
+
+    return dbData.map((book) => {
+      const bookAuthor = {
+        id: book.author.id,
+        name: book.author.name,
+      } as Author;
+
+      const bookReviews: Array<Review> = book.reviews.map((review) => {
+        return {
+          id: review.id,
+          rating: review.rating,
+          comment: review.review ?? '',
+        } as Review;
+      });
+
+      return new BookEntity(
+        book.id,
+        book.title,
+        book.cover,
+        book.createdAt,
+        bookAuthor,
+        bookReviews,
+        book.description ?? '',
+      );
+    });
+  }
+  async updateFavorite(
+    userId: string,
+    bookId: string,
+    isFavorite: boolean,
+  ): Promise<void> {
+    await this.prisma.userFavoriteBook.upsert({
+      where: {
+        userId_bookId: {
+          userId,
+          bookId,
+        },
+      },
+      create: {
+        userId,
+        bookId,
+        isFavorite,
+      },
+      update: {
+        isFavorite,
+      },
+    });
+  }
+
   private _setupQuery(filter: BooksFilter | undefined): any {
     const query: any = {
       status: {
@@ -648,6 +878,12 @@ export class PersistenceBookRepository extends BookRepository {
     };
 
     if (filter) {
+      if (filter.query) {
+        query.title = {
+          contains: filter.query,
+          mode: 'insensitive',
+        };
+      }
       if (filter.authorId) {
         query.authorId = filter.authorId;
       }
@@ -658,7 +894,6 @@ export class PersistenceBookRepository extends BookRepository {
         query.publisherId = filter.publisherId;
       }
       if (filter.genres) {
-        console.log(filter.genres.map((id) => id));
         query.genres = {
           some: {
             genreId: {
@@ -676,15 +911,5 @@ export class PersistenceBookRepository extends BookRepository {
     }
 
     return query;
-  }
-
-  getBookAuthor(bookId: string): Promise<object> {
-    throw new Error('Method not implemented.');
-  }
-  getBookCategory(bookId: string): Promise<object> {
-    throw new Error('Method not implemented.');
-  }
-  getBookGenres(bookId: string): Promise<object[]> {
-    throw new Error('Method not implemented.');
   }
 }

@@ -115,8 +115,6 @@ export class AuthController {
       next(AppError.notFound('Session not found'));
       return;
     }
-
-    console.log('refreshToken', refreshToken);
     try {
       // Verify refresh token
       const verified = this.service.verifySession(refreshToken);

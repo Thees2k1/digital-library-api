@@ -20,14 +20,20 @@ import {
   BooksFilter,
   BookUpdateDto,
   GetListResult,
+  ReadingBook,
+  ReadingBookList,
+  ReadingDto,
   ReviewCreateDto,
   ReviewListResultDto,
+  UpdateReadingDto,
+  UserFavoriteBookList,
 } from '../dtos/book-dto';
 // import { BookEntity } from '../mapper/book-mapper';
 import { IBookService } from './interfaces/book-service-interface';
 import { CacheService } from '@src/core/interfaces/cache-service';
 import { generateCacheKey } from '@src/core/utils/generate-cache-key';
 import { eventEmitter, EVENTS } from '@src/core/events';
+import { BookReading } from '../../domain/entities/book-reading';
 
 @injectable()
 export class BookService implements IBookService {
@@ -44,6 +50,7 @@ export class BookService implements IBookService {
     this.searchService = searchService;
     this.cacheService = cacheService;
   }
+
   async create(data: BookCreateDto): Promise<BookDetailDto> {
     try {
       const bookExisted = await this.repository.getByTitleAsync(data.title);
@@ -216,7 +223,6 @@ export class BookService implements IBookService {
   }
   async getList(options: GetListOptions<BooksFilter>): Promise<GetListResult> {
     const cacheKey = generateCacheKey('books:list', options);
-    console.log('cacheKey', cacheKey);
     try {
       const { paging, filter, sort } = options;
 
@@ -261,7 +267,6 @@ export class BookService implements IBookService {
   async search(query: string, page: number, limit: number): Promise<any> {
     try {
       if (query === '') {
-        console.log('empty query');
         return { hits: [], total: 0, offset: 0, limit: 0, query: '' };
       }
       const result = await this.searchService.search<BookIndexRecord>(query, {
@@ -284,11 +289,8 @@ export class BookService implements IBookService {
       const cachedData = await this.cacheService.get<BookDetailDto>(cacheKey);
 
       if (cachedData) {
-        console.log('Cache hit');
         return cachedData;
       }
-
-      console.log('Cache miss. Fetching from database...');
       const res = await this.repository.getById(id);
       if (!res) {
         throw AppError.notFound('Book not found.');
@@ -359,25 +361,117 @@ export class BookService implements IBookService {
     return await this.repository.getLikeCount(bookId);
   }
 
-  // async indexAllBooks(documents: BookDetailDto[]): Promise<void> {
-  //   const indexDatas: Array<BookIndexRecord> = documents.map((item) => {
-  //     return {
-  //       id: item.id,
-  //       title: item.title,
-  //       description: item.description,
-  //       authorName: item.author.name,
-  //       categoryName: item.category.name,
-  //       rating: item.averageRating || 0,
-  //       genres: item.genres.map((genre) => genre.name),
-  //       releaseDate: item.releaseDate,
-  //     } satisfies BookIndexRecord;
-  //   });
+  async updateReading(
+    userId: string,
+    bookId: string,
+    data: UpdateReadingDto,
+  ): Promise<any> {
+    try {
+      await this.repository.updateReading(userId, bookId, data);
 
-  //   await this.searchService.index({
-  //     indexName: 'books',
-  //     documents: indexDatas,
-  //   });
+      //clear cache
+      await this.cacheService.delete(`readings:user:${userId}`);
+      await this.cacheService.delete(`readings:user:${userId}:book:${bookId}`);
+    } catch (error) {
+      throw error;
+    }
+  }
+  async getReading(userId: string, bookId: string): Promise<ReadingDto> {
+    const cacheKey = `readings:user:${userId}:book:${bookId}`;
+    try {
+      const cachedData = await this.cacheService.get<ReadingDto>(cacheKey);
+      if (cachedData) {
+        return cachedData;
+      }
 
-  //   console.log('updated all books');
-  // }
+      const data = await this.repository.getReading(userId, bookId);
+
+      if (data === null) {
+        throw AppError.notFound('Reading not found.');
+      }
+
+      await this.cacheService.set(cacheKey, data, { EX: 60 * 5 });
+
+      return {
+        bookId: data.bookId,
+        currentPage: data.currentPage,
+        progress: data.progress,
+        lastReadAt: data.lastRead.toISOString(),
+        isFinished: data.isFinished,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+  async getReadingList(userId: string): Promise<ReadingBookList> {
+    const cacheKey = `readings:user:${userId}`;
+    try {
+      const cachedData = await this.cacheService.get<ReadingBookList>(cacheKey);
+      if (cachedData) {
+        return cachedData;
+      }
+
+      const data = await this.repository.getReadingList(userId);
+
+      const readingList = data.map((item) => {
+        return {
+          id: item.bookId,
+          title: item.title || '',
+          cover: item.cover || '',
+          author: {
+            id: item.author?.id || '',
+            name: item.author?.name || '',
+          },
+          lastReadAt: item.lastRead.toISOString(),
+          progress: item.progress,
+          isFinished: item.isFinished,
+          isLiked: false,
+        } as ReadingBook;
+      });
+
+      await Promise.all(
+        readingList.map(async (item) => {
+          const likeStatus = await this.repository.getLikeStatus(
+            userId,
+            item.id,
+          );
+          item.isLiked = likeStatus === 'liked';
+        }),
+      );
+
+      await this.cacheService.set(cacheKey, readingList, { EX: 60 * 5 }); // Cache for 5 minutes
+
+      return readingList;
+    } catch (error) {
+      throw error;
+    }
+  }
+  getUserLikeList(userId: string): Promise<Array<string>> {
+    try {
+      return this.repository.getUserLikeList(userId);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getFavoriteBooks(userId: string): Promise<UserFavoriteBookList> {
+    try {
+      const data = await this.repository.getFavoriteBooks(userId);
+
+      return BookEntity.toBooks(data);
+    } catch (error) {
+      throw error;
+    }
+  }
+  async updateFavorite(
+    userId: string,
+    bookId: string,
+    isFavorite: boolean,
+  ): Promise<void> {
+    try {
+      await this.repository.updateFavorite(userId, bookId, isFavorite);
+    } catch (error) {
+      throw error;
+    }
+  }
 }

@@ -5,8 +5,11 @@ import {
   BookUpdateDto,
   GetBooksOptions,
   GetListResult,
+  ReadingBookList,
+  ReadingDto,
   ReviewCreateDto,
   ReviewListResultDto,
+  UserFavoriteBookList,
 } from '../../dtos/book-dto';
 
 export interface IBookService {
@@ -24,4 +27,14 @@ export interface IBookService {
   toggleLike(userId: string, bookId: string): Promise<void>;
   getLikeCount(bookId: string): Promise<number>;
   search(query: string, page: number, limit: number): Promise<any>;
+  updateReading(userId: string, bookId: string, data: any): Promise<any>;
+  getReading(userId: string, bookId: string): Promise<ReadingDto>;
+  getReadingList(userId: string): Promise<ReadingBookList>;
+  getUserLikeList(userId: string): Promise<Array<string>>;
+  getFavoriteBooks(userId: string): Promise<UserFavoriteBookList>;
+  updateFavorite(
+    userId: string,
+    bookId: string,
+    isFavorite: boolean,
+  ): Promise<void>;
 }

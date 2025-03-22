@@ -2,6 +2,12 @@ import { GetListOptions, idSchema, isoDateStringShema } from '@src/core/types';
 import { z } from 'zod';
 import { ItemFormat } from '../../domain/interfaces/models';
 
+export const updateFavoriteDtoSchema = z.object({
+  userId: idSchema,
+  bookId: idSchema,
+  isFavorite: z.boolean(),
+});
+
 export const digitalItemDtoSchema = z.object({
   id: z.string().uuid().optional(),
   format: z.nativeEnum(ItemFormat),
@@ -33,7 +39,7 @@ export const bookListItemSchema = z.object({
     id: z.string().uuid(),
     name: z.string().max(255),
   }),
-  desscription: z.string(),
+  description: z.string(),
   averageRating: z.number().optional(),
   createdAt: isoDateStringShema,
 });
@@ -121,6 +127,13 @@ export const bookQuerySchema = z.object({
 
 export const bookListSchema = z.array(bookListItemSchema);
 
+export const updateReadingSchema = z.object({
+  currentPage: z.number().int().min(0),
+  progress: z.number().int().min(0).max(100),
+  lastReadAt: isoDateStringShema,
+  isFinished: z.boolean(),
+});
+
 export type BookQuery = z.infer<typeof bookQuerySchema>;
 export type BookListItem = z.infer<typeof bookListItemSchema>;
 export type BookList = z.infer<typeof bookListSchema>;
@@ -177,3 +190,33 @@ export type BooksFilter = {
 };
 
 export type GetBooksOptions = GetListOptions<BooksFilter>;
+
+export type ReadingDto = {
+  bookId: string;
+  currentPage: number;
+  progress: number;
+  lastReadAt: string;
+  isFinished: boolean;
+};
+
+export type ReadingBook = {
+  id: string;
+  title: string;
+  cover: string;
+  author: {
+    id: string;
+    name: string;
+  };
+  progress: number;
+  lastReadAt: string;
+  isFinished: boolean;
+  isLiked: boolean;
+};
+
+export type ReadingBookList = Array<ReadingBook>;
+
+export type UpdateReadingDto = z.infer<typeof updateReadingSchema>;
+
+export type UpdateFavoriteDto = z.infer<typeof updateFavoriteDtoSchema>;
+
+export type UserFavoriteBookList = Array<BookListItem>;

@@ -6,10 +6,9 @@ import logger from '../utils/logger/logger';
 
 export const authMiddleware = async (
   req: Request,
-  res: Response,
+  _: Response,
   next: NextFunction,
 ) => {
-  logger.info('Auth middleware');
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) {
     logger.error('Token not found');

@@ -8,9 +8,9 @@ import {
   bookCreateDtoSchema,
   bookUpdateDtoSchema,
   reviewCreateDtoSchema,
+  updateFavoriteDtoSchema,
 } from '../../application/dtos/book-dto';
 import { BookController } from '../controller/book-controller';
-import { container } from '@src/core/di/container';
 
 export class BookRoutes {
   static readonly books = '/books';
@@ -18,7 +18,11 @@ export class BookRoutes {
   static readonly book = '/books/:id';
   static readonly reviews = '/books/:id/reviews';
   static readonly like = '/books/:id/likes';
-  static readonly likeCount = '/books/:id/like-count';
+  static readonly userLikeList = '/books/liked-list';
+
+  static readonly favorites = '/books/favorites';
+  static readonly readingList = '/books/reading';
+  static readonly reading = '/books/:id/reading';
 }
 
 @injectable()
@@ -38,6 +42,27 @@ export class BookRouterFactory extends BaseRouterFactory<BookController> {
       this.controller.searchBooks.bind(this.controller),
     );
     this._router.get(
+      BookRoutes.readingList,
+      authMiddleware,
+      this.controller.getReadingList.bind(this.controller),
+    );
+    this._router.get(
+      BookRoutes.userLikeList,
+      authMiddleware,
+      this.controller.getUserLikeList.bind(this.controller),
+    );
+    this._router.get(
+      BookRoutes.favorites,
+      this.controller.getFavoriteBooks.bind(this.controller),
+    );
+
+    this._router.post(
+      BookRoutes.favorites,
+      authMiddleware,
+      validationMiddleware(updateFavoriteDtoSchema),
+      this.controller.updateFavorite.bind(this.controller),
+    );
+    this._router.get(
       BookRoutes.book,
       this.controller.getBook.bind(this.controller),
     );
@@ -53,6 +78,7 @@ export class BookRouterFactory extends BaseRouterFactory<BookController> {
       validationMiddleware(bookUpdateDtoSchema),
       this.controller.updateBook.bind(this.controller),
     );
+
     this._router.delete(
       BookRoutes.book,
       authMiddleware,
@@ -78,8 +104,20 @@ export class BookRouterFactory extends BaseRouterFactory<BookController> {
     );
 
     this._router.get(
-      BookRoutes.likeCount,
+      BookRoutes.like,
       this.controller.getLikeCount.bind(this.controller),
+    );
+
+    this._router.get(
+      BookRoutes.reading,
+      authMiddleware,
+      this.controller.getReading.bind(this.controller),
+    );
+
+    this._router.post(
+      BookRoutes.reading,
+      authMiddleware,
+      this.controller.updateReading.bind(this.controller),
     );
   }
   get routes(): Router {

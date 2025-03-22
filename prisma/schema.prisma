@@ -62,9 +62,17 @@ model Book {
   likes        Like[]
   reviews      Review[]
   readBooks    UserReadBook[]
+  favoriteBooks UserFavoriteBook[]
   serieId      String?            @db.Uuid @map("serie_id")
   serie        Serie?            @relation(fields: [serieId], references: [id])
   @@map("book")
+  //index the title ,authorid, publisherid, categoryid, serieid
+  @@index([title], name: "title")
+  @@index([authorId], name: "author_id")
+  @@index([publisherId], name: "publisher_id")
+  @@index([categoryId], name: "category_id")
+  @@index([serieId], name: "serie_id")
+  
 }
 
 model Publisher {
@@ -136,6 +144,7 @@ model User {
   likes      Like[]
   reviews    Review[]
   readBooks  UserReadBook[] 
+  favoriteBooks UserFavoriteBook[]
   @@map("user")
 }
 
@@ -194,13 +203,27 @@ model Like {
   @@map("likes")
 }
 
-model UserReadBook {
+model UserFavoriteBook {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   bookId    String    @db.Uuid @map("book_id")
   book      Book     @relation(fields: [bookId], references: [id])
   userId    String    @db.Uuid @map("user_id")
   user      User     @relation(fields: [userId], references: [id])
   
+  isFavorite Boolean  @default(false) @map("is_favorite")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamp(0)
+  @@map("user_favorite_book")
+  @@unique([userId, bookId]) 
+}
+
+model UserReadBook {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bookId    String    @db.Uuid @map("book_id")
+  book      Book     @relation(fields: [bookId], references: [id])
+  userId    String    @db.Uuid @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  //is Finished. please change typo later.
   isFavorite Boolean  @default(false) @map("is_favorite")
   latestProcess    Int? @default(0) @map("latest_process") @db.SmallInt
   currentPage      Int? @default(0) @map("current_page") @db.Integer
@@ -209,6 +232,7 @@ model UserReadBook {
   updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamp(0)
   
   @@map("user_read_book")
+  @@unique([userId, bookId]) 
 }
 
 enum item_format {

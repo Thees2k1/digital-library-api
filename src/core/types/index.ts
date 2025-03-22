@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const idSchema = z.string().uuid();
+export const idSchema = z.string().uuid({ message: 'Invalid id' });
 
 export type Id = z.infer<typeof idSchema>;
 
@@ -18,6 +18,7 @@ export type IsoDateString = z.infer<typeof isoDateStringShema>;
 export type PagingMetadata = {
   nextCursor?: string;
   offset?: number;
+  page?: number;
   limit: number;
   total: number;
   hasNextPage: boolean;
