@@ -13,8 +13,7 @@ RUN npm install -g pnpm@9.12.2 && pnpm install --prod --frozen-lockfile
 # Clean up unnecessary files
 RUN apk add --no-cache curl \
     && curl -sfL https://gobinaries.com/tj/node-prune | sh \
-    && node-prune \
-    && apk del curl
+    && node-prune 
 
 # Expose the application port
 EXPOSE 8080

@@ -85,7 +85,17 @@ export class Server {
     });
 
     this.app.get('/health', (req: Request, res: Response) => {
-      res.json({ status: 'ok' });
+      const healthcheck = {
+        uptime: process.uptime(),
+        message: 'OK',
+        timestamp: Date.now(),
+      };
+      try {
+        res.send(healthcheck);
+      } catch (error) {
+        healthcheck.message = `${error}`;
+        res.status(StatusCodes.SERVICE_UNAVAILABLE).send();
+      }
     });
 
     this.routes.all(
