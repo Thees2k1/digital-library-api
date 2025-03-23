@@ -1,7 +1,10 @@
 name: Backend CD
 
 on:
-  push:
+  workflow_run:
+    workflows: ['Backend CI'] # Change this to match the exact name of your CI workflow
+    types:
+      - completed
     branches:
       - main
   repository_dispatch:
@@ -28,14 +31,16 @@ jobs:
             cd ~/chyra-library/digital-library-api
             git pull origin main
 
-            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
+            echo "PORT=8080" > .env
+            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
             echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
             echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
             echo "POSTGRES_DB=${{ vars.POSTGRES_DB }}" >> .env
             echo "REDIS_URL=${{ vars.REDIS_URL }}" >> .env
             echo "ACCESS_TOKEN_SECRET=${{ vars.ACCESS_TOKEN_SECRET }}" >> .env
-            echo "VITE_MEILISEARCH_HOST=${{ vars.VITE_MEILISEARCH_HOST }}" >> .env
-            echo "VITE_MEILISEARCH_API_KEY=${{ secrets.VITE_MEILISEARCH_API_KEY }}" >> .env
+            echo "MEILISEARCH_HOST=${{ vars.VITE_MEILISEARCH_HOST }}" >> .env
+            echo "MEILISEARCH_API_KEY=${{ secrets.VITE_MEILISEARCH_API_KEY }}" >> .env
+            echo "MEILI_MASTER_KEY=${{ secrets.VITE_MEILISEARCH_API_KEY }}" >> .env
 
             # Pull the latest images
             docker compose pull
