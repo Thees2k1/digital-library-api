@@ -14,7 +14,9 @@ import { BaseRouterFactory } from '@src/core/interfaces/base-router-factory';
 export class CategoryRoutes {
   static readonly categories = '/categories';
   static readonly category = '/categories/:id';
+  static readonly popularCategories = '/categories/popular';
 }
+
 @injectable()
 export class CategoryRouterFactory extends BaseRouterFactory<CategoryController> {
   constructor(
@@ -48,6 +50,10 @@ export class CategoryRouterFactory extends BaseRouterFactory<CategoryController>
       CategoryRoutes.category,
       authMiddleware,
       this.controller.deleteCategory.bind(this.controller),
+    );
+    this._router.get(
+      CategoryRoutes.popularCategories,
+      this.controller.getPopularCategories.bind(this.controller),
     );
   }
   get routes(): Router {

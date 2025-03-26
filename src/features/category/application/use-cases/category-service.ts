@@ -129,6 +129,42 @@ export class CategoryService implements ICategoryService {
     }
   }
 
+  async getPopularCategories(
+    params: GetCategoriesParams,
+  ): Promise<GetCategoriesResult> {
+    try {
+      const cacheKey = generateCacheKey('popular_categories', params);
+      const cacheData =
+        await this.cacheService.get<GetCategoriesResult>(cacheKey);
+
+      if (cacheData) {
+        return cacheData;
+      }
+
+      const res = await this.repository.getList({
+        ...params,
+        sort: { field: 'popularityPoints', order: 'desc' },
+      });
+
+      const total = await this.repository.count({});
+      const hasNextPage = res.length >= params.paging.limit;
+      const nextCursor = hasNextPage ? res[res.length - 1].id : '';
+
+      const returnData: GetCategoriesResult = {
+        data: res.map((entity) => this._convertToResultDto(entity)),
+        hasNextPage,
+        nextCursor,
+        total,
+      };
+
+      await this.cacheService.set(cacheKey, returnData, { EX: 60 });
+      return returnData;
+    } catch (error) {
+      logger.error(error);
+      throw AppError.internalServer('Internal server error.');
+    }
+  }
+
   private _convertToResultDto(entity: CategoryEntity): CategoryDetailDto {
     return {
       id: entity.id,

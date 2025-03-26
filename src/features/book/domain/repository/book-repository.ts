@@ -1,7 +1,6 @@
 import { PagingOptions, SortOptions } from '@src/core/types';
 import {
   BooksFilter,
-  BookUpdateDto,
   ReviewCreateDto,
   ReviewListResultDto,
   UpdateReadingDto,
@@ -87,4 +86,7 @@ export abstract class BookRepository {
   ): Promise<void>;
 
   abstract getPopularBooks(limit: number): Promise<BookEntity[]>;
+
+  abstract getAll(): Promise<Array<BookEntity>>;
+  abstract updatePopularityScore(bookId: string, score: number): Promise<void>;
 }

@@ -62,6 +62,39 @@ export class PersistenceAuthorRepository implements AuthorRepository {
     await this.prisma.author.delete({ where: { id: id } });
   }
 
+  async getPopularAuthors(
+    limit: number,
+    cursor?: string,
+  ): Promise<{ authors: AuthorEntity[]; nextCursor: string | null }> {
+    const data = await this.prisma.author.findMany({
+      take: limit + 1,
+      skip: cursor ? 1 : 0,
+      ...(cursor ? { cursor: { id: cursor } } : {}),
+      orderBy: { popularityPoints: 'desc' },
+    });
+
+    const authors = data
+      .slice(0, limit)
+      .map(PersistenceAuthorRepository.convertToAuthorEntity);
+    const nextCursor = data.length > limit ? data[limit].id : null;
+
+    return { authors, nextCursor };
+  }
+
+  async updatePopularityPoints(
+    authorId: string,
+    points: number,
+  ): Promise<void> {
+    await this.prisma.author.update({
+      where: { id: authorId },
+      data: { popularityPoints: points },
+    });
+  }
+  async getAll(): Promise<AuthorEntity[]> {
+    const data: Author[] = await this.prisma.author.findMany();
+    return data.map(PersistenceAuthorRepository.convertToAuthorEntity);
+  }
+
   static convertToAuthorEntity(data: Author): AuthorEntity {
     return new AuthorEntity(
       data.id,

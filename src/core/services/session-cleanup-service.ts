@@ -5,8 +5,6 @@ import cron from 'node-cron';
 import { DI_TYPES } from '@src/core/di/types';
 import logger from '@src/core/utils/logger/logger';
 import { CleanupSessionsUseCase } from '@src/features/auth/application/use-cases/cleanup-session-usecase';
-import { NotificationService } from '../interfaces/notification-service';
-import { MetricsService } from '../interfaces/mertric-service';
 
 @injectable()
 export class SessionCleanupService {

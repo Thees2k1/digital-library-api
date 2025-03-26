@@ -1,5 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { JwtService } from '@src/core/services/jwt-service';
+import { BookPopularityService } from '@src/features/analytics/application/services/book-popularity-service';
+import { PopularityService } from '@src/features/analytics/application/services/popularity-service';
 import { AuthService } from '@src/features/auth/application/use-cases/auth-service';
 import { CleanupSessionsUseCase } from '@src/features/auth/application/use-cases/cleanup-session-usecase';
 import { IAuthService } from '@src/features/auth/application/use-cases/interfaces/auth-service-interface';
@@ -67,8 +69,6 @@ import { DiscordNotificationService } from '../services/notification-service/dis
 import { RedisService } from '../services/redis-service';
 import { SessionCleanupService } from '../services/session-cleanup-service';
 import { DI_TYPES } from './types';
-
-// import { RedisService } from "../services/redis-service";
 
 export const container = new Container();
 
@@ -172,6 +172,15 @@ export function initializeInfrastucture() {
   container
     .bind<IBookService>(DI_TYPES.BookService)
     .to(BookService)
+    .inSingletonScope();
+
+  container
+    .bind<BookPopularityService>(DI_TYPES.BookPopularityService)
+    .to(BookPopularityService)
+    .inSingletonScope();
+  container
+    .bind<PopularityService>(DI_TYPES.PopularityService)
+    .to(PopularityService)
     .inSingletonScope();
 
   //binding controllers

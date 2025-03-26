@@ -31,6 +31,8 @@ export const DI_TYPES = {
   TagService: Symbol.for('TagService'),
   SerieService: Symbol.for('SerieService'),
   BookService: Symbol.for('BookService'),
+  BookPopularityService: Symbol.for('BookPopularityService'),
+  PopularityService: Symbol.for('PopularityService'),
 
   UserController: Symbol.for('UserController'),
   AuthController: Symbol.for('AuthController'),

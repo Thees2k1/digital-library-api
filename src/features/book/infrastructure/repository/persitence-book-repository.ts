@@ -987,6 +987,57 @@ export class PersistenceBookRepository extends BookRepository {
     });
   }
 
+  async getAll(): Promise<BookEntity[]> {
+    const books = await this.prisma.book.findMany({
+      where: { status: { not: 'deleted' } },
+      select: {
+        id: true,
+        title: true,
+        cover: true,
+        createdAt: true,
+        updatedAt: true,
+        author: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        category: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    return books.map((book) => {
+      const bookAuthor = { id: book.author.id, name: book.author.name };
+      const bookCategory = { id: book.category.id, name: book.category.name };
+      return new BookEntity(
+        book.id,
+        book.title,
+        book.cover,
+        book.createdAt,
+        bookAuthor,
+        [],
+        '',
+        undefined,
+        undefined,
+        undefined,
+        book.updatedAt,
+        bookCategory,
+      );
+    });
+  }
+
+  async updatePopularityScore(bookId: string, score: number): Promise<void> {
+    await this.prisma.book.update({
+      where: { id: bookId },
+      data: { popularityPoints: score },
+    });
+  }
+
   private _setupQuery(filter: BooksFilter | undefined): any {
     const query: any = {
       status: {

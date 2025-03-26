@@ -14,6 +14,7 @@ import { inject, injectable } from 'inversify';
 export class AuthorRoutes {
   static authors = '/authors';
   static author = '/authors/:id';
+  static popularAuthors = '/authors/popular';
 }
 
 @injectable()
@@ -29,6 +30,10 @@ export class AuthorRouterFactory extends BaseRouterFactory<AuthorController> {
     this._router.get(
       AuthorRoutes.author,
       this.controller.getAuthor.bind(this.controller),
+    );
+    this._router.get(
+      AuthorRoutes.popularAuthors,
+      this.controller.getPopularAuthors.bind(this.controller),
     );
     this._router.post(
       AuthorRoutes.authors,

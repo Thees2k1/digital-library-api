@@ -117,4 +117,22 @@ export class AuthorService implements IAuthorService {
     await this.repository.delete(id);
     return id;
   }
+
+  async getPopularAuthors(
+    limit: number,
+    cursor?: string,
+  ): Promise<GetAuthorsResult> {
+    const { authors, nextCursor } = await this.repository.getPopularAuthors(
+      limit,
+      cursor,
+    );
+
+    return {
+      data: authors.map(AuthorMapper.toAuthorDetailDto),
+      limit,
+      total: authors.length,
+      nextCursor: nextCursor || '',
+      hasNextPage: !!nextCursor,
+    };
+  }
 }
