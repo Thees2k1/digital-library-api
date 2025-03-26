@@ -11,13 +11,15 @@ import {
   LoginResultDTO,
   LoginResultSchema,
 } from '../../application/dtos/login-dto';
-import { RefreshBodyDTO } from '../../application/dtos/refresh-token';
+import { RefreshTokenParamsSchema } from '../../application/dtos/refresh-token';
 import {
   RegisterBodyDTO,
   RegisterResultDTO,
   RegisterResultSchema,
 } from '../../application/dtos/register-dto';
 import { IAuthService } from '../../application/use-cases/interfaces/auth-service-interface';
+import { getDeviceInfo } from '@src/core/utils/get-device-info';
+import { LogoutParamsSchema } from '../../application/dtos/logout-dto';
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
@@ -54,18 +56,15 @@ export class AuthController {
   ) {
     try {
       const credentials = req.body;
-      const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress; // Get the IP address
-      let ipAddress: string | undefined;
-      if (ip && typeof ip === 'string') {
-        ipAddress = ip;
-      } else if (ip && Array.isArray(ip)) {
-        ipAddress = ip[0];
-      }
-      const userAgent = req.headers['user-agent']; // Get the user-agent
+
+      const { ip, userAgent, device, location } = getDeviceInfo(req);
+
       const result = await this.service.login({
         ...credentials,
-        ipAddress,
+        ipAddress: ip,
         userAgent,
+        device,
+        location,
       });
 
       const verifiedResult: LoginResultDTO = LoginResultSchema.parse(result);
@@ -79,6 +78,7 @@ export class AuthController {
 
       res.json({
         accessToken: verifiedResult.accessToken,
+        refreshToken: verifiedResult.refreshToken,
       });
     } catch (error) {
       next(error);
@@ -87,20 +87,37 @@ export class AuthController {
 
   async refreshToken(req: Request, res: Response, next: NextFunction) {
     try {
-      const refreshToken = req.cookies[REFRESH_TOKEN];
-      const result = await this.service.refreshTokens(refreshToken);
+      const { ip, userAgent, device, location } = getDeviceInfo(req);
+      const refreshToken = req.cookies[REFRESH_TOKEN] as string | undefined;
+
+      if (!refreshToken) {
+        next(AppError.badRequest('Missing refresh token'));
+        return;
+      }
+      const result = await this.service.refreshTokens(
+        RefreshTokenParamsSchema.parse({
+          refreshToken,
+          ipAddress: ip,
+          userAgent,
+          device,
+          location,
+        }),
+      );
 
       res.cookie(REFRESH_TOKEN, result.refreshToken, {
         httpOnly: true,
-        secure: IS_PRODUCTION, // chỉ sử dụng HTTPS
+        secure: IS_PRODUCTION,
         sameSite: 'none',
-        //sameSite: 'Strict', // ngăn chặn CSRF
-        maxAge: REFRESH_TOKEN_EXPIRES_IN, // 7 ngày cho refresh token
+        maxAge: REFRESH_TOKEN_EXPIRES_IN,
       });
 
-      res.json({ accessToken: result.accessToken });
+      res.json({
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
+      });
     } catch (error) {
       if (error instanceof Error) {
+        res.clearCookie(REFRESH_TOKEN);
         next(AppError.unauthorized(error.message));
       } else {
         next(error);
@@ -108,37 +125,18 @@ export class AuthController {
     }
   }
 
-  async checkSession(req: Request, res: Response, next: NextFunction) {
-    const { refreshToken } = req.cookies;
-
-    if (!refreshToken) {
-      next(AppError.notFound('Session not found'));
-      return;
-    }
+  async logout(req: Request, res: Response, next: NextFunction) {
     try {
-      // Verify refresh token
-      const verified = this.service.verifySession(refreshToken);
-      if (!verified) {
-        next(AppError.badRequest('Invalid session'));
-        return;
-      }
-
-      res.status(200).json({ session: true });
-      return;
-    } catch (error) {
-      next(AppError.badRequest('Invalid session'));
-    }
-  }
-
-  async logout(
-    req: Request<any, any, RefreshBodyDTO>,
-    res: Response,
-    next: NextFunction,
-  ) {
-    try {
-      const refreshToken = req.cookies[REFRESH_TOKEN];
+      const { userAgent, device } = getDeviceInfo(req);
       res.clearCookie(REFRESH_TOKEN);
-      const result = await this.service.logout(refreshToken);
+      const refreshToken = req.cookies[REFRESH_TOKEN];
+      const result = await this.service.logout(
+        LogoutParamsSchema.parse({
+          refreshToken,
+          userAgent,
+          device,
+        }),
+      );
       res.json(result);
     } catch (error) {
       if (error instanceof Error) {

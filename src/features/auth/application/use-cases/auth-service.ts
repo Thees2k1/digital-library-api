@@ -14,7 +14,7 @@ import { inject, injectable } from 'inversify';
 import { JwtPayload } from 'jsonwebtoken';
 import { AuthRepository } from '../../domain/repository/auth-repository';
 import { LoginBodyDTO, LoginResultDTO } from '../dtos/login-dto';
-import { RefreshResultDTO } from '../dtos/refresh-token';
+import { RefreshResultDTO, RefreshTokenParamsDTO } from '../dtos/refresh-token';
 import {
   RegisterBodyDTO,
   RegisterResultDTO,
@@ -23,7 +23,11 @@ import {
 import { IAuthService } from './interfaces/auth-service-interface';
 import { CacheService } from '@src/core/interfaces/cache-service';
 import { generateCacheKey } from '@src/core/utils/generate-cache-key';
-//import { RedisService } from "@src/features/shared/infrastructure/services/redis-service";
+import { extractJWTSignature } from '@src/core/utils/extract-jwt-signature';
+import { AuthSession } from '../../domain/entities/auth';
+import { SessionDtoSchema } from '../dtos/session-dto';
+import { ZodError } from 'zod';
+import { LogoutParamsDTO } from '../dtos/logout-dto';
 
 @injectable()
 export class AuthService implements IAuthService {
@@ -31,13 +35,11 @@ export class AuthService implements IAuthService {
   private readonly authRepository: AuthRepository;
   private readonly cacheService: CacheService;
   private readonly jwtService: JwtService;
-  // private readonly redisService : RedisService;
   constructor(
     @inject(DI_TYPES.UserRepository) userRepository: UserRepository,
     @inject(DI_TYPES.AuthRepository) authRepository: AuthRepository,
     @inject(DI_TYPES.CacheService) cacheService: CacheService,
     @inject(JwtService) jwtService: JwtService,
-    //@inject(RedisService) redisService,
   ) {
     this.userRepository = userRepository;
     this.authRepository = authRepository;
@@ -45,13 +47,11 @@ export class AuthService implements IAuthService {
     this.jwtService = jwtService;
   }
 
-  verifySession(refreshToken: string): Promise<boolean> {
-    const res = this.jwtService.verify(refreshToken);
-    return Promise.resolve(res.success);
-  }
-
-  async login(data: LoginBodyDTO): Promise<LoginResultDTO> {
-    const { email, password } = data;
+  async login({
+    email,
+    password,
+    ...rest
+  }: LoginBodyDTO): Promise<LoginResultDTO> {
     try {
       const user = await this.userRepository.findByEmail(email);
       if (!user) {
@@ -67,31 +67,42 @@ export class AuthService implements IAuthService {
         userId: user.id,
       };
       const accessToken = await this.jwtService.generate(payload, {
-        audience: data.userAgent,
+        audience: rest.userAgent,
         expiresIn: '15m',
       });
       const refreshToken = await this.jwtService.generate(payload, {
-        audience: data.userAgent,
+        audience: rest.userAgent,
         expiresIn: '7d',
       });
 
-      const sessionIdentity = refreshToken.split('.')[2];
+      const sessionIdentity = extractJWTSignature(refreshToken);
 
-      await this.authRepository.saveSession({
+      const sessionInfo: AuthSession = await this.authRepository.saveSession(
+        SessionDtoSchema.parse({
+          userId: user.id,
+          sessionIdentity,
+          ipAddress: rest.ipAddress,
+          userAgent: rest.userAgent,
+          device: rest.device,
+          location: rest.location,
+          expiration: REFRESH_TOKEN_EXPIRES_IN,
+        }),
+      );
+
+      const cacheKey = generateCacheKey('auth', {
         userId: user.id,
-        sessionIdentity,
-        ipAddress: data.ipAddress,
-        userAgent: data.userAgent,
-        expiration: REFRESH_TOKEN_EXPIRES_IN,
+        userAgent: rest.userAgent,
+        device: rest.device,
       });
 
-      const cacheKey = generateCacheKey('auth', { userId: user.id });
-
-      await this.cacheService.set(cacheKey, sessionIdentity, {
+      await this.cacheService.set(cacheKey, sessionInfo, {
         PX: REFRESH_TOKEN_EXPIRES_IN,
       });
       return { accessToken, refreshToken };
     } catch (error) {
+      if (error instanceof ZodError) {
+        throw AppError.forbidden(error.message);
+      }
       throw error;
     }
   }
@@ -121,44 +132,38 @@ export class AuthService implements IAuthService {
     }
   }
 
-  async logout(refreshToken: string): Promise<string> {
+  async logout({
+    refreshToken,
+    userAgent,
+    device,
+  }: LogoutParamsDTO): Promise<string> {
     try {
       const res = this.jwtService.verify(refreshToken);
       if (!res.success) {
         return EMPTY_STRING;
       }
-      const userId = (res.data as JwtPayload).userId;
-      const sessionIdentity = refreshToken.split('.')[2];
-      const cacheKey = generateCacheKey('auth', { userId });
-      await this.cacheService.delete(cacheKey);
+
+      const { userId } = res.data as JwtPayload;
+      const sessionIdentity = extractJWTSignature(refreshToken);
+      const cacheKey = generateCacheKey('auth', {
+        userId: userId,
+        userAgent: userAgent,
+        device: device,
+      });
       await this.authRepository.deleteSession(sessionIdentity);
+      await this.cacheService.delete(cacheKey);
       return LOGOUT_SUCCESS;
     } catch (error) {
       throw error;
     }
   }
 
-  async refreshTokens(refreshToken: string): Promise<RefreshResultDTO> {
-    const res = this.jwtService.verify(refreshToken);
+  async refreshTokens(
+    params: RefreshTokenParamsDTO,
+  ): Promise<RefreshResultDTO> {
+    const res = this.jwtService.verify(params.refreshToken);
     if (!res.success) {
       throw AppError.unauthorized(res.error);
-    }
-    const cacheKey = generateCacheKey('auth', {
-      userId: (res.data as JwtPayload).userId,
-    });
-
-    const sessionIdentity = refreshToken.split('.')[2];
-
-    const isCachedSession = await this.cacheService.get<string>(cacheKey);
-
-    if (isCachedSession !== sessionIdentity) {
-      const session = await this.authRepository.verifySession(
-        refreshToken.split('.')[2],
-      );
-
-      if (session === 'invalid') {
-        throw AppError.unauthorized('Invalid session');
-      }
     }
 
     const payload = res.data as JwtPayload | undefined;
@@ -167,28 +172,91 @@ export class AuthService implements IAuthService {
       throw AppError.internalServer('Payload is null');
     }
 
+    console.log('payload', payload);
+    const { userId, aud } = payload;
+    const cacheKey = generateCacheKey('auth', {
+      userId,
+      userAgent: params.userAgent,
+      device: params.device,
+    });
+
+    const isCachedSession =
+      await this.cacheService.get<AuthRepository>(cacheKey);
+
+    if (isCachedSession) {
+      console.log('redis hit');
+      const newPayload: JwtPayload = {
+        userId,
+      };
+
+      const newAccessToken = this.jwtService.generate(newPayload, {
+        expiresIn: '15m',
+        audience: aud,
+      });
+      const newRefreshToken = this.jwtService.generate(newPayload, {
+        expiresIn: '7d',
+        audience: aud,
+      });
+      const newIdentity = extractJWTSignature(newRefreshToken);
+
+      //TODO: save new session to db
+      const session = await this.authRepository.saveSession(
+        SessionDtoSchema.parse({
+          userId: payload.userId,
+          sessionIdentity: newIdentity,
+          expiration: REFRESH_TOKEN_EXPIRES_IN,
+          userAgent: params.userAgent,
+          device: params.device,
+          ipAddress: params.ipAddress,
+          location: params.location,
+        }),
+      );
+
+      await this.cacheService.set(cacheKey, session, {
+        PX: REFRESH_TOKEN_EXPIRES_IN,
+      });
+
+      return { accessToken: newAccessToken, refreshToken: newRefreshToken };
+    }
+
+    console.log("redis miss, let's check db");
+
+    const session = await this.authRepository.findSessionByUserDevice(
+      userId,
+      params.userAgent,
+      params.device,
+    );
+
+    if (session === null) {
+      throw AppError.forbidden('Invalid session');
+    }
+
     const newPayload: JwtPayload = {
-      userId: payload.userId,
+      userId,
     };
 
     const newAccessToken = this.jwtService.generate(newPayload, {
       expiresIn: '15m',
-      audience: payload.aud,
+      audience: aud,
     });
     const newRefreshToken = this.jwtService.generate(newPayload, {
       expiresIn: '7d',
-      audience: payload.aud,
+      audience: aud,
     });
+    const newIdentity = extractJWTSignature(newRefreshToken);
+    const newSession = await this.authRepository.saveSession(
+      SessionDtoSchema.parse({
+        userId: payload.userId,
+        sessionIdentity: newIdentity,
+        expiration: REFRESH_TOKEN_EXPIRES_IN,
+        userAgent: params.userAgent,
+        device: params.userAgent,
+        ipAddress: params.ipAddress,
+        location: params.location,
+      }),
+    );
 
-    const newIdentity = newRefreshToken.split('.')[2];
-
-    await this.authRepository.saveSession({
-      userId: payload.userId,
-      sessionIdentity: newIdentity,
-      expiration: REFRESH_TOKEN_EXPIRES_IN,
-    });
-
-    await this.cacheService.set(cacheKey, newIdentity, {
+    await this.cacheService.set(cacheKey, newSession, {
       PX: REFRESH_TOKEN_EXPIRES_IN,
     });
 

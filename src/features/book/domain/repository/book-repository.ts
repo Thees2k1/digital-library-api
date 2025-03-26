@@ -85,4 +85,6 @@ export abstract class BookRepository {
     bookId: string,
     isFavorite: boolean,
   ): Promise<void>;
+
+  abstract getPopularBooks(limit: number): Promise<BookEntity[]>;
 }

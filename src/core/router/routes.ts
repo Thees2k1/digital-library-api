@@ -12,6 +12,7 @@ import { CategoryRouterFactory } from '@src/features/category/presentation/route
 import { GenreRouterFactory } from '@src/features/genre/presentation/routes/genre-routes';
 import { AuthorRouterFactory } from '@src/features/author/presentation/routes/author-routes';
 import { AuthRouterFactory } from '@src/features/auth/presentation/routes/auth-routes';
+import { TagRouterFactory } from '@src/features/tag/presentation/routes/tag-routes';
 
 @injectable()
 export class AppRouter {
@@ -32,6 +33,9 @@ export class AppRouter {
     const genreRouter = container.get<GenreRouterFactory>(
       DI_TYPES.GenreRouter,
     ).router;
+    const tagRouter = container.get<TagRouterFactory>(
+      DI_TYPES.TagRouter,
+    ).router;
     const publisherRouter = container.get<PublisherRouterFactory>(
       DI_TYPES.PublisherRouter,
     ).router;
@@ -47,6 +51,7 @@ export class AppRouter {
     router.use(authorRouter);
     router.use(categoryRouter);
     router.use(genreRouter);
+    router.use(tagRouter);
     router.use(publisherRouter);
     router.use(bookRouter);
     router.use(serieRouter);

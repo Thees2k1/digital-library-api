@@ -20,6 +20,8 @@ import {
   BooksFilter,
   BookUpdateDto,
   GetListResult,
+  PopularBookList,
+  popularBooksSchema,
   ReadingBook,
   ReadingBookList,
   ReadingDto,
@@ -463,6 +465,43 @@ export class BookService implements IBookService {
       throw error;
     }
   }
+
+  async getPopularBooks(limit: number = 5): Promise<PopularBookList> {
+    try {
+      const cacheKey = `popular-books:${limit}`;
+
+      const cachedData = await this.cacheService.get<PopularBookList>(cacheKey);
+      if (cachedData) {
+        return cachedData;
+      }
+
+      const books = await this.repository.getPopularBooks(limit);
+
+      const data = books.map((book) => ({
+        id: book.id,
+        title: book.title,
+        cover: book.cover,
+        author: {
+          id: book.author.id,
+          name: book.author.name,
+        },
+        desscription: book.description,
+        averageRating: book.averageRating,
+        createdAt: book.createdAt.toISOString(),
+      }));
+
+      const result = popularBooksSchema.parse(data);
+
+      // set cache in 1 hour
+      await this.cacheService.set(cacheKey, data, { EX: 60 * 60 });
+
+      return result;
+    } catch (error) {
+      console.error('Error in getPopularBooks:', error);
+      throw error;
+    }
+  }
+
   async updateFavorite(
     userId: string,
     bookId: string,

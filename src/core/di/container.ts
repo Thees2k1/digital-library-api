@@ -55,6 +55,12 @@ import { GenreRouterFactory } from '@src/features/genre/presentation/routes/genr
 import { PublisherRouterFactory } from '@src/features/publisher/presentation/routes/publisher-routes';
 import { SerieRouterFactory } from '@src/features/serie/presentation/routes/serie-routes';
 import { IndexingService } from '@src/features/book/infrastructure/index-service';
+import { TagRepository } from '@src/features/tag/domain/repository/tag-repository';
+import { PersistenceTagRepository } from '@src/features/tag/infrastructure/repository/persistence-tag-repository';
+import { ITagService } from '@src/features/tag/application/use-cases/interfaces/tag-service-interface';
+import { TagService } from '@src/features/tag/application/use-cases/tag-service';
+import { TagController } from '@src/features/tag/presentation/controller/tag-controller';
+import { TagRouterFactory } from '@src/features/tag/presentation/routes/tag-routes';
 
 // import { RedisService } from "../services/redis-service";
 
@@ -74,7 +80,6 @@ export function initializeInfrastucture() {
     .bind<CacheService>(DI_TYPES.CacheService)
     .to(RedisService)
     .inSingletonScope();
-
   container.bind<IndexingService>(IndexingService).toSelf().inSingletonScope();
 
   //binding repositories
@@ -96,6 +101,9 @@ export function initializeInfrastucture() {
   container
     .bind<GenreRepository>(DI_TYPES.GenreRepository)
     .to(PersistenceGenreRepository);
+  container
+    .bind<TagRepository>(DI_TYPES.TagRepository)
+    .to(PersistenceTagRepository);
   container
     .bind<SerieRepository>(DI_TYPES.SerieRepository)
     .to(PersistenceSerieRepository);
@@ -127,6 +135,10 @@ export function initializeInfrastucture() {
   container
     .bind<IGenreService>(DI_TYPES.GenreService)
     .to(GenreService)
+    .inSingletonScope();
+  container
+    .bind<ITagService>(DI_TYPES.TagService)
+    .to(TagService)
     .inSingletonScope();
   container
     .bind<ISerieService>(DI_TYPES.SerieService)
@@ -163,6 +175,10 @@ export function initializeInfrastucture() {
     .to(GenreController)
     .inSingletonScope();
   container
+    .bind<TagController>(DI_TYPES.TagController)
+    .to(TagController)
+    .inSingletonScope();
+  container
     .bind<SerieController>(DI_TYPES.SerieController)
     .to(SerieController)
     .inSingletonScope();
@@ -196,6 +212,10 @@ export function initializeInfrastucture() {
   container
     .bind<GenreRouterFactory>(DI_TYPES.GenreRouter)
     .to(GenreRouterFactory)
+    .inSingletonScope();
+  container
+    .bind<TagRouterFactory>(DI_TYPES.TagRouter)
+    .to(TagRouterFactory)
     .inSingletonScope();
   container
     .bind<PublisherRouterFactory>(DI_TYPES.PublisherRouter)

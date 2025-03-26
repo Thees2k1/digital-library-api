@@ -33,17 +33,13 @@ export class AuthRouterFactory extends BaseRouterFactory<AuthController> {
       validationMiddleware(LoginBodySchema),
       this.controller.login.bind(this.controller),
     );
-    this._router.get(
+    this._router.post(
       AuthRoutes.refreshToken,
       this.controller.refreshToken.bind(this.controller),
     );
     this._router.post(
       AuthRoutes.logout,
       this.controller.logout.bind(this.controller),
-    );
-    this._router.get(
-      AuthRoutes.checkSession,
-      this.controller.checkSession.bind(this.controller),
     );
   }
   get routes(): Router {

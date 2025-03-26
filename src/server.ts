@@ -11,15 +11,13 @@ import express, {
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { StatusCodes } from 'http-status-codes';
-import { ONE_HUNDRED, ONE_THOUSAND, SIXTY } from './core/constants/constants';
+import { ONE_THOUSAND, SIXTY } from './core/constants/constants';
 import { AppError } from './core/errors/custom-error';
 import { ErrorMiddleware } from './core/middlewares/error-middleware';
-
-// import "./features/shared/infrastructure/utils/logger/global-logger";
 import 'reflect-metadata';
 import { container } from './core/di/container';
-import { IndexingService } from './features/book/infrastructure/index-service';
 import logger from './core/utils/logger/logger';
+import { IndexingService } from './features/book/infrastructure/index-service';
 
 interface ServerOptions {
   port: number;

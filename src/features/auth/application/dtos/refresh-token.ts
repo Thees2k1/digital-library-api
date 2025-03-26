@@ -1,14 +1,19 @@
 import { z } from 'zod';
-export const RefreshTokenBodySchema = z.object({
-  refreshToken: z.string(),
-});
 
 export const RefreshTokenResultSchema = z.object({
   accessToken: z.string(),
   refreshToken: z.string(),
 });
-
-export interface RefreshBodyDTO
-  extends z.infer<typeof RefreshTokenBodySchema> {}
 export interface RefreshResultDTO
   extends z.infer<typeof RefreshTokenResultSchema> {}
+
+export const RefreshTokenParamsSchema = z.object({
+  refreshToken: z.string(),
+  userAgent: z.string(),
+  device: z.string(),
+  ipAddress: z.string(),
+  location: z.string().default(''),
+});
+
+export interface RefreshTokenParamsDTO
+  extends z.infer<typeof RefreshTokenParamsSchema> {}

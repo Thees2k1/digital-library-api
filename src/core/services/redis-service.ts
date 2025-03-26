@@ -1,7 +1,7 @@
-import { createClient, RedisClientType, SetOptions } from 'redis';
-import { CacheService } from '../interfaces/cache-service';
-import { config } from '../config/config';
 import { injectable } from 'inversify';
+import { createClient, RedisClientType } from 'redis';
+import { config } from '../config/config';
+import { CacheService } from '../interfaces/cache-service';
 import logger from '../utils/logger/logger';
 
 @injectable()

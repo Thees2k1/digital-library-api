@@ -13,6 +13,7 @@ export const DI_TYPES = {
   CategoryRepository: Symbol.for('CategoryRepository'),
   PublisherRepository: Symbol.for('PublisherRepository'),
   GenreRepository: Symbol.for('GenreRepository'),
+  TagRepository: Symbol.for('TagRepository'),
   SerieRepository: Symbol.for('SerieRepository'),
   BookRepository: Symbol.for('BookRepository'),
 
@@ -22,6 +23,7 @@ export const DI_TYPES = {
   CategoryService: Symbol.for('CategoryService'),
   PublisherService: Symbol.for('PublisherService'),
   GenreService: Symbol.for('GenreService'),
+  TagService: Symbol.for('TagService'),
   SerieService: Symbol.for('SerieService'),
   BookService: Symbol.for('BookService'),
 
@@ -31,6 +33,7 @@ export const DI_TYPES = {
   CategoryController: Symbol.for('CategoryController'),
   PublisherController: Symbol.for('PublisherController'),
   GenreController: Symbol.for('GenreController'),
+  TagController: Symbol.for('TagController'),
   SerieController: Symbol.for('SerieController'),
   BookController: Symbol.for('BookController'),
 
@@ -40,6 +43,7 @@ export const DI_TYPES = {
   CategoryRouter: Symbol.for('CategoryRouter'),
   PublisherRouter: Symbol.for('PublisherRouter'),
   GenreRouter: Symbol.for('GenreRouter'),
+  TagRouter: Symbol.for('TagRouter'),
   SerieRouter: Symbol.for('SerieRouter'),
   BookRouter: Symbol.for('BookRouter'),
 };
