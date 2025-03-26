@@ -21,6 +21,9 @@ import { IndexingService } from './features/book/infrastructure/index-service';
 import { DI_TYPES } from './core/di/types';
 import { SessionCleanupService } from './core/services/session-cleanup-service';
 
+import { collectDefaultMetrics, register } from 'prom-client';
+
+collectDefaultMetrics();
 interface ServerOptions {
   port: number;
   routes: Router;
@@ -95,6 +98,16 @@ export class Server {
       } catch (error) {
         healthcheck.message = `${error}`;
         res.status(StatusCodes.SERVICE_UNAVAILABLE).send();
+      }
+    });
+
+    this.app.get('/metrics', async (req, res) => {
+      try {
+        res.set('Content-Type', register.contentType);
+        const metrics = await register.metrics();
+        res.end(metrics);
+      } catch (error) {
+        res.status(500).end('Error generating metrics');
       }
     });
 

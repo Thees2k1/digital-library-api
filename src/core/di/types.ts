@@ -7,6 +7,9 @@ export const DI_TYPES = {
   Mailer: Symbol.for('Mailer'),
   MessageBroker: Symbol.for('MessageBroker'),
   CleanupSessionsUseCase: Symbol.for('CleanupSessionsUseCase'),
+  NotificationService: Symbol.for('NotificationService'),
+  MetricsService: Symbol.for('MetricsService'),
+
   SessionCleanupService: Symbol.for('SessionCleanupService'),
 
   UserRepository: Symbol.for('UserRepository'),

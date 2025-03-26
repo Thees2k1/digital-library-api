@@ -1,68 +1,72 @@
-import { PrismaClient, Serie } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { JwtService } from '@src/core/services/jwt-service';
 import { AuthService } from '@src/features/auth/application/use-cases/auth-service';
+import { CleanupSessionsUseCase } from '@src/features/auth/application/use-cases/cleanup-session-usecase';
 import { IAuthService } from '@src/features/auth/application/use-cases/interfaces/auth-service-interface';
 import { AuthRepository } from '@src/features/auth/domain/repository/auth-repository';
 import { PersistenceAuthRepository } from '@src/features/auth/infrastructure/repository/persitence-auth-repository';
 import { AuthController } from '@src/features/auth/presentation/controller/auth-controller';
+import { AuthRouterFactory } from '@src/features/auth/presentation/routes/auth-routes';
 import { AuthorService } from '@src/features/author/application/use-cases/author-service';
 import { IAuthorService } from '@src/features/author/application/use-cases/interfaces/author-service-interface';
 import { AuthorRepository } from '@src/features/author/domain/repository/author-repository';
 import { PersistenceAuthorRepository } from '@src/features/author/infrastructure/repository/persistence-author-repository';
 import { AuthorController } from '@src/features/author/presentation/controller/author-controller';
+import { AuthorRouterFactory } from '@src/features/author/presentation/routes/author-routes';
 import { BookService } from '@src/features/book/application/use-cases/book-service';
 import { IBookService } from '@src/features/book/application/use-cases/interfaces/book-service-interface';
 import { BookRepository } from '@src/features/book/domain/repository/book-repository';
+import { IndexingService } from '@src/features/book/infrastructure/index-service';
 import { PersistenceBookRepository } from '@src/features/book/infrastructure/repository/persitence-book-repository';
 import { BookController } from '@src/features/book/presentation/controller/book-controller';
+import { BookRouterFactory } from '@src/features/book/presentation/routes/book-routes';
 import { CategoryService } from '@src/features/category/application/use-cases/category-service';
 import { ICategoryService } from '@src/features/category/application/use-cases/interfaces/category-service-interface';
 import { CategoryRepository } from '@src/features/category/domain/repository/category-repository';
 import { PersistenceCategoryRepository } from '@src/features/category/infrastructure/repository/persistence-category-repository';
 import { CategoryController } from '@src/features/category/presentation/controller/category-controller';
+import { CategoryRouterFactory } from '@src/features/category/presentation/routes/category-routes';
 import { GenreService } from '@src/features/genre/application/use-cases/genre-service';
 import { IGenreService } from '@src/features/genre/application/use-cases/interfaces/genre-service-interface';
 import { GenreRepository } from '@src/features/genre/domain/repository/genre-repository';
 import { PersistenceGenreRepository } from '@src/features/genre/infrastructure/repository/persistence-genre-repository';
 import { GenreController } from '@src/features/genre/presentation/controller/genre-controller';
+import { GenreRouterFactory } from '@src/features/genre/presentation/routes/genre-routes';
 import { IPublisherService } from '@src/features/publisher/application/use-cases/interfaces/publisher-service-interface';
 import { PublisherService } from '@src/features/publisher/application/use-cases/publisher-service';
 import { PublisherRepository } from '@src/features/publisher/domain/repository/publisher-repository';
 import { PersistencePublisherRepository } from '@src/features/publisher/infrastructure/repository/persistence-publisher-repository';
 import { PublisherController } from '@src/features/publisher/presentation/controller/publisher-controller';
+import { PublisherRouterFactory } from '@src/features/publisher/presentation/routes/publisher-routes';
 import { ISerieService } from '@src/features/serie/application/use-cases/interfaces/serie-service-interface';
 import { SerieService } from '@src/features/serie/application/use-cases/serie-service';
 import { SerieRepository } from '@src/features/serie/domain/repository/serie-repository';
 import { PersistenceSerieRepository } from '@src/features/serie/infrastructure/repository/persistence-serie-repository';
 import { SerieController } from '@src/features/serie/presentation/controller/serie-controller';
+import { SerieRouterFactory } from '@src/features/serie/presentation/routes/serie-routes';
+import { ITagService } from '@src/features/tag/application/use-cases/interfaces/tag-service-interface';
+import { TagService } from '@src/features/tag/application/use-cases/tag-service';
+import { TagRepository } from '@src/features/tag/domain/repository/tag-repository';
+import { PersistenceTagRepository } from '@src/features/tag/infrastructure/repository/persistence-tag-repository';
+import { TagController } from '@src/features/tag/presentation/controller/tag-controller';
+import { TagRouterFactory } from '@src/features/tag/presentation/routes/tag-routes';
 import { IUserService } from '@src/features/user/application/use-cases/interfaces/user-service-interface';
 import { UserService } from '@src/features/user/application/use-cases/user-service';
 import { UserRepository } from '@src/features/user/domain/repository/user-repository';
 import { PersistenceUserRepository } from '@src/features/user/infrastructure/repository/persitence-user-repository';
 import { UserController } from '@src/features/user/presentation/controller/user-controller';
+import { UserRouterFactory } from '@src/features/user/presentation/routes/user-routes';
 import { Container } from 'inversify';
-import { DI_TYPES } from './types';
+import { CacheService } from '../interfaces/cache-service';
+import { MetricsService } from '../interfaces/mertric-service';
+import { NotificationService } from '../interfaces/notification-service';
 import { SearchService } from '../interfaces/search-service';
 import { MeiliSearchService } from '../services/meilisearch-service';
+import { PrometheusMetricsService } from '../services/metrics-service/prometheus-metrics-service';
+import { DiscordNotificationService } from '../services/notification-service/discord-webhook-notification-service';
 import { RedisService } from '../services/redis-service';
-import { CacheService } from '../interfaces/cache-service';
-import { UserRouterFactory } from '@src/features/user/presentation/routes/user-routes';
-import { BookRouterFactory } from '@src/features/book/presentation/routes/book-routes';
-import { AuthRouterFactory } from '@src/features/auth/presentation/routes/auth-routes';
-import { AuthorRouterFactory } from '@src/features/author/presentation/routes/author-routes';
-import { CategoryRouterFactory } from '@src/features/category/presentation/routes/category-routes';
-import { GenreRouterFactory } from '@src/features/genre/presentation/routes/genre-routes';
-import { PublisherRouterFactory } from '@src/features/publisher/presentation/routes/publisher-routes';
-import { SerieRouterFactory } from '@src/features/serie/presentation/routes/serie-routes';
-import { IndexingService } from '@src/features/book/infrastructure/index-service';
-import { TagRepository } from '@src/features/tag/domain/repository/tag-repository';
-import { PersistenceTagRepository } from '@src/features/tag/infrastructure/repository/persistence-tag-repository';
-import { ITagService } from '@src/features/tag/application/use-cases/interfaces/tag-service-interface';
-import { TagService } from '@src/features/tag/application/use-cases/tag-service';
-import { TagController } from '@src/features/tag/presentation/controller/tag-controller';
-import { TagRouterFactory } from '@src/features/tag/presentation/routes/tag-routes';
-import { CleanupSessionsUseCase } from '@src/features/auth/application/use-cases/cleanup-session-usecase';
 import { SessionCleanupService } from '../services/session-cleanup-service';
+import { DI_TYPES } from './types';
 
 // import { RedisService } from "../services/redis-service";
 
@@ -83,6 +87,16 @@ export function initializeInfrastucture() {
     .to(RedisService)
     .inSingletonScope();
   container.bind<IndexingService>(IndexingService).toSelf().inSingletonScope();
+  container
+    .bind<NotificationService>(DI_TYPES.NotificationService)
+    .to(DiscordNotificationService)
+    .inSingletonScope();
+
+  // Metrics service
+  container
+    .bind<MetricsService>(DI_TYPES.MetricsService)
+    .to(PrometheusMetricsService)
+    .inSingletonScope();
 
   //binding repositories
   container
