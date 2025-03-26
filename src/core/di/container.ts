@@ -61,6 +61,8 @@ import { ITagService } from '@src/features/tag/application/use-cases/interfaces/
 import { TagService } from '@src/features/tag/application/use-cases/tag-service';
 import { TagController } from '@src/features/tag/presentation/controller/tag-controller';
 import { TagRouterFactory } from '@src/features/tag/presentation/routes/tag-routes';
+import { CleanupSessionsUseCase } from '@src/features/auth/application/use-cases/cleanup-session-usecase';
+import { SessionCleanupService } from '../services/session-cleanup-service';
 
 // import { RedisService } from "../services/redis-service";
 
@@ -110,6 +112,15 @@ export function initializeInfrastucture() {
   container
     .bind<BookRepository>(DI_TYPES.BookRepository)
     .to(PersistenceBookRepository);
+
+  container
+    .bind<CleanupSessionsUseCase>(DI_TYPES.CleanupSessionsUseCase)
+    .to(CleanupSessionsUseCase)
+    .inSingletonScope();
+  container
+    .bind<SessionCleanupService>(DI_TYPES.SessionCleanupService)
+    .to(SessionCleanupService)
+    .inSingletonScope();
 
   //binding services
   container

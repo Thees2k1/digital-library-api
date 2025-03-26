@@ -3,6 +3,7 @@ import {
   INVALID_CREDENTIALS,
   LOGOUT_SUCCESS,
   REFRESH_TOKEN_EXPIRES_IN,
+  SESSION_LIMIT,
 } from '@src/core/constants/constants';
 import { DI_TYPES } from '@src/core/di/types';
 import { AppError } from '@src/core/errors/custom-error';
@@ -62,6 +63,8 @@ export class AuthService implements IAuthService {
       if (!isPasswordValid) {
         throw AppError.badRequest(INVALID_CREDENTIALS);
       }
+
+      await this.authRepository.enforceSessionLimit(user.id, SESSION_LIMIT);
 
       const payload: JwtPayload = {
         userId: user.id,
@@ -172,7 +175,6 @@ export class AuthService implements IAuthService {
       throw AppError.internalServer('Payload is null');
     }
 
-    console.log('payload', payload);
     const { userId, aud } = payload;
     const cacheKey = generateCacheKey('auth', {
       userId,
@@ -184,11 +186,11 @@ export class AuthService implements IAuthService {
       await this.cacheService.get<AuthRepository>(cacheKey);
 
     if (isCachedSession) {
-      console.log('redis hit');
       const newPayload: JwtPayload = {
         userId,
       };
 
+      await this.authRepository.enforceSessionLimit(userId, SESSION_LIMIT);
       const newAccessToken = this.jwtService.generate(newPayload, {
         expiresIn: '15m',
         audience: aud,
@@ -199,7 +201,6 @@ export class AuthService implements IAuthService {
       });
       const newIdentity = extractJWTSignature(newRefreshToken);
 
-      //TODO: save new session to db
       const session = await this.authRepository.saveSession(
         SessionDtoSchema.parse({
           userId: payload.userId,
@@ -219,8 +220,6 @@ export class AuthService implements IAuthService {
       return { accessToken: newAccessToken, refreshToken: newRefreshToken };
     }
 
-    console.log("redis miss, let's check db");
-
     const session = await this.authRepository.findSessionByUserDevice(
       userId,
       params.userAgent,
@@ -228,8 +227,13 @@ export class AuthService implements IAuthService {
     );
 
     if (session === null) {
+      await this.authRepository.revokeSession(
+        extractJWTSignature(params.refreshToken),
+      );
       throw AppError.forbidden('Invalid session');
     }
+
+    await this.authRepository.enforceSessionLimit(userId, SESSION_LIMIT);
 
     const newPayload: JwtPayload = {
       userId,

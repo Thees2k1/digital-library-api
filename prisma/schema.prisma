@@ -143,6 +143,7 @@ model User {
   sessions   UserSession[]
   createdAt  DateTime       @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt  DateTime       @default(now()) @map("updated_at") @db.Timestamp(0)
+  preferences    UserPreference[] 
   likes      Like[]
   reviews    Review[]
   readBooks  UserReadBook[] 
@@ -180,6 +181,19 @@ model UserSession {
   @@unique([userId,userAgent,device], map: "user_agent_device")
   @@index([expiresAt], map: "expires_at")
   @@map("user_session")
+}
+
+model UserPreference {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @db.Uuid @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  key       String   @db.VarChar(50) // Preference key (e.g., "language", "theme")
+  value     String   @db.Text        // Preference value (e.g., "en", "dark")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamp(0)
+
+  @@unique([userId, key], map: "user_preference_unique") // Ensure unique key per user
+  @@map("user_preference")
 }
 model Tag {
   id     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid

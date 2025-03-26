@@ -14,8 +14,11 @@ export abstract class AuthRepository {
     device: string,
   ): Promise<AuthSession | null>;
   abstract countUserSessions(userId: string): Promise<number>;
-  abstract enforceSessionLimit(userId: string, limit: number): Promise<void>;
-  abstract cleanupExpiredSessions(): Promise<void>;
+  abstract enforceSessionLimit(
+    userId: string,
+    limit: number | undefined,
+  ): Promise<void>;
+  abstract cleanupExpiredSessions(): Promise<number>;
   abstract revokeAllSessions(userId: string): Promise<void>;
   abstract revokeSession(sessionIdentity: string): Promise<void>;
   abstract revokeSessions(sessionIdentities: string[]): Promise<void>;

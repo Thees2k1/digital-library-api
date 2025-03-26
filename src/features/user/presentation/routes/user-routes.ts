@@ -15,7 +15,10 @@ export class UserRoutes {
   static readonly users = '/users';
   static readonly user = '/users/:id';
   static readonly currentUser = '/users/me';
+  static readonly currentUserPreferences = `/users/me/preferences`;
   static readonly likedBooks = '/users/me/liked-books';
+  static readonly userPreferences = '/users/:id/preferences';
+  static readonly userPreference = '/users/:id/preferences/:key';
 }
 
 @injectable()
@@ -38,6 +41,21 @@ export class UserRouterFactory extends BaseRouterFactory<UserController> {
       UserRoutes.currentUser,
       authMiddleware,
       this.controller.getCurrentUser.bind(this.controller),
+    );
+    this._router.get(
+      UserRoutes.currentUserPreferences,
+      authMiddleware,
+      this.controller.getUserPreferences.bind(this.controller),
+    );
+    this._router.post(
+      UserRoutes.currentUserPreferences,
+      authMiddleware,
+      this.controller.addUserPreference.bind(this.controller),
+    );
+    this._router.delete(
+      UserRoutes.currentUserPreferences,
+      authMiddleware,
+      this.controller.deleteUserPreference.bind(this.controller),
     );
     this._router.get(
       UserRoutes.user,
@@ -65,6 +83,22 @@ export class UserRouterFactory extends BaseRouterFactory<UserController> {
       UserRoutes.likedBooks,
       authMiddleware,
       this.controller.getBookLikes.bind(this.controller),
+    );
+
+    this._router.get(
+      UserRoutes.userPreferences,
+      authMiddleware,
+      this.controller.getUserPreferences.bind(this.controller),
+    );
+    this._router.post(
+      UserRoutes.userPreferences,
+      authMiddleware,
+      this.controller.addUserPreference.bind(this.controller),
+    );
+    this._router.delete(
+      UserRoutes.userPreference,
+      authMiddleware,
+      this.controller.deleteUserPreference.bind(this.controller),
     );
   }
   get router(): Router {

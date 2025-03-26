@@ -20,6 +20,8 @@ export const SOMETHING_WENT_WRONG = 'Something went wrong.';
 export const DEFAULT_LIST_LIMIT = 20;
 export const DEFAULT_LIST_OFFSET = 0;
 
+export const SESSION_LIMIT = 5;
+
 //MESSAGES
 
 export const SUCCESSFUL = 'Successful';

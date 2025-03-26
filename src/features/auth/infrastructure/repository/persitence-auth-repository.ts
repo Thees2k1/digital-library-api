@@ -72,11 +72,22 @@ export class PersistenceAuthRepository extends AuthRepository {
       );
     }
   }
-  async enforceSessionLimit(userId: string, limit: number): Promise<void> {
+  async enforceSessionLimit(
+    userId: string,
+    limit: number | undefined = 5,
+  ): Promise<void> {
     try {
-      const count = await this.countUserSessions(userId);
-      if (count >= limit) {
-        throw AppError.badRequest('Session limit exceeded');
+      const activeSessions = await this.prismaClient.userSession.findMany({
+        where: { userId, active: true },
+        orderBy: { createdAt: 'asc' }, // Oldest first
+      });
+
+      if (activeSessions.length >= 5) {
+        // Revoke oldest session
+        await this.prismaClient.userSession.update({
+          where: { id: activeSessions[0].id },
+          data: { active: false },
+        });
       }
     } catch (error) {
       logger.error('Error enforce session limit, err:' + error);
@@ -85,15 +96,17 @@ export class PersistenceAuthRepository extends AuthRepository {
       );
     }
   }
-  async cleanupExpiredSessions(): Promise<void> {
+  async cleanupExpiredSessions(): Promise<number> {
     try {
-      await this.prismaClient.userSession.deleteMany({
+      const { count } = await this.prismaClient.userSession.deleteMany({
         where: {
           expiresAt: {
             lt: new Date(),
           },
         },
       });
+      logger.info(`Cleaned up ${count} expired sessions`);
+      return count;
     } catch (error) {
       logger.error('Error cleanup expired sessions, err:' + error);
       throw AppError.internalServer(

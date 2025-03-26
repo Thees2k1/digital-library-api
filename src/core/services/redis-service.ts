@@ -4,6 +4,11 @@ import { config } from '../config/config';
 import { CacheService } from '../interfaces/cache-service';
 import logger from '../utils/logger/logger';
 
+const DEFAULT_CACHE_EXPIRATION = 60 * 60; // 1 hour
+
+const DEFAULT_CACHE_OPTIONS = {
+  EX: DEFAULT_CACHE_EXPIRATION,
+};
 @injectable()
 export class RedisService implements CacheService {
   private client: RedisClientType;
@@ -46,10 +51,13 @@ export class RedisService implements CacheService {
     }
   }
 
-  async set<T>(key: string, value: T, options?: { EX: number }): Promise<void> {
+  async set<T>(key: string, value: T, options: { EX: number }): Promise<void> {
     if (!this.isConnected) {
       console.warn('Redis is not connected. Skipping cache.');
       return;
+    }
+    if (!options) {
+      options = DEFAULT_CACHE_OPTIONS;
     }
 
     try {

@@ -192,4 +192,48 @@ export class UserController {
       next(error);
     }
   }
+
+  async getUserPreferences(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.params.id ?? req.body.userId;
+      const preferences = await this.service.getUserPreferences(userId);
+      res.status(200).json({ data: preferences, message: SUCCESSFUL });
+    } catch (error) {
+      logger.error(error);
+      next(error);
+    }
+  }
+
+  async addUserPreference(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.params.id ?? req.body.userId;
+
+      const { key, value } = req.body;
+      await this.service.addUserPreference(userId, key, value);
+      res.status(201).json({ message: SUCCESSFUL });
+    } catch (error) {
+      logger.error(error);
+      next(error);
+    }
+  }
+
+  async deleteUserPreference(req: Request, res: Response, next: NextFunction) {
+    try {
+      const paramId = idSchema.safeParse(req.params.id);
+      if (paramId.success) {
+        var userId = paramId.data;
+      } else {
+        var userId = idSchema.parse(req.body.userId);
+      }
+
+      console.log(userId);
+
+      const key = req.params.key;
+      await this.service.deleteUserPreference(userId, key);
+      res.status(200).json({ message: SUCCESSFUL });
+    } catch (error) {
+      logger.error(error);
+      next(error);
+    }
+  }
 }

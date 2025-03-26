@@ -18,6 +18,8 @@ import 'reflect-metadata';
 import { container } from './core/di/container';
 import logger from './core/utils/logger/logger';
 import { IndexingService } from './features/book/infrastructure/index-service';
+import { DI_TYPES } from './core/di/types';
+import { SessionCleanupService } from './core/services/session-cleanup-service';
 
 interface ServerOptions {
   port: number;
@@ -113,6 +115,10 @@ export class Server {
     // Initialize services here
     const indexingService = container.get<IndexingService>(IndexingService);
     indexingService.reindexAllBooks();
+    const sessionCleanupService = container.get<SessionCleanupService>(
+      DI_TYPES.SessionCleanupService,
+    );
+    sessionCleanupService.start();
   }
 
   private configurateCors(): CorsOptions {

@@ -11,14 +11,21 @@ import {
 import { DI_TYPES } from '@src/core/di/types';
 import argon2 from 'argon2';
 import { IUserService } from './interfaces/user-service-interface';
+import { CacheService } from '@src/core/interfaces/cache-service';
 
 @injectable()
 export class UserService implements IUserService {
   private repository: UserRepository;
+  private cacheService: CacheService;
 
-  constructor(@inject(DI_TYPES.UserRepository) userRepository: UserRepository) {
+  constructor(
+    @inject(DI_TYPES.UserRepository) userRepository: UserRepository,
+    @inject(DI_TYPES.CacheService) cacheService: CacheService,
+  ) {
     this.repository = userRepository;
+    this.cacheService = cacheService;
   }
+
   async getUsers(): Promise<User[]> {
     try {
       const usersData = await this.repository.findAll();
@@ -162,5 +169,34 @@ export class UserService implements IUserService {
       bookIds: dataReturn.bookIds ?? [],
       count: dataReturn.count ?? 0,
     };
+  }
+
+  async getUserPreferences(userId: string): Promise<Record<string, string>> {
+    const cacheKey = `user:${userId}:preferences`;
+    let preferences =
+      await this.cacheService.get<Record<string, string>>(cacheKey);
+
+    if (!preferences) {
+      preferences = await this.repository.getUserPreferences(userId);
+      await this.cacheService.set(cacheKey, preferences);
+    }
+
+    return preferences;
+  }
+
+  async addUserPreference(
+    userId: string,
+    key: string,
+    value: string,
+  ): Promise<void> {
+    await this.repository.addUserPreference(userId, key, value);
+    const cacheKey = `user:${userId}:preferences`;
+    await this.cacheService.delete(cacheKey); // Invalidate cache
+  }
+
+  async deleteUserPreference(userId: string, key: string): Promise<void> {
+    await this.repository.deleteUserPreference(userId, key);
+    const cacheKey = `user:${userId}:preferences`;
+    await this.cacheService.delete(cacheKey); // Invalidate cache
   }
 }
