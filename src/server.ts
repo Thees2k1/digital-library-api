@@ -22,8 +22,6 @@ import { DI_TYPES } from './core/di/types';
 import { SessionCleanupService } from './core/services/session-cleanup-service';
 
 import { collectDefaultMetrics, register } from 'prom-client';
-
-collectDefaultMetrics();
 interface ServerOptions {
   port: number;
   routes: Router;
@@ -125,7 +123,7 @@ export class Server {
   }
 
   private initializeServices(): void {
-    // Initialize services here
+    collectDefaultMetrics();
     const indexingService = container.get<IndexingService>(IndexingService);
     indexingService.reindexAllBooks();
     const sessionCleanupService = container.get<SessionCleanupService>(

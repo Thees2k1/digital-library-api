@@ -1,9 +1,7 @@
 // @src/infrastructure/services/prometheus-lite-service.ts
 import { MetricsService } from '@src/core/interfaces/mertric-service';
 import { injectable } from 'inversify';
-import { collectDefaultMetrics, Counter, Histogram } from 'prom-client';
-
-collectDefaultMetrics(); // CPU, memory etc.
+import { Counter, Histogram } from 'prom-client';
 
 @injectable()
 export class PrometheusMetricsService implements MetricsService {
