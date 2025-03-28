@@ -35,9 +35,9 @@ export type PagingOptions = {
 };
 
 export type GetListOptions<T> = {
-  filter: T;
+  filter?: T;
   sort?: SortOptions;
-  paging: PagingOptions;
+  paging?: PagingOptions;
 };
 
 export const apiResponseSchema = z.object({

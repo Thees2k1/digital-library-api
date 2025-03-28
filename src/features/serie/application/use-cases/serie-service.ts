@@ -16,6 +16,7 @@ import {
 import { ISerieService } from './interfaces/serie-service-interface';
 import { CacheService } from '@src/core/interfaces/cache-service';
 import { generateCacheKey } from '@src/core/utils/generate-cache-key';
+import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
 
 @injectable()
 export class SerieService implements ISerieService {
@@ -95,13 +96,17 @@ export class SerieService implements ISerieService {
       const data = await this.repository.getList(params);
       const total = await this.repository.count(params);
 
+      const limit = params.paging?.limit ?? DEFAULT_LIST_LIMIT;
+      const hasNextPage = data.length >= limit;
+      const nextCursor = data.length > 0 ? data[data.length - 1].id : '';
+
       const result: GetSeriesResult = {
         data: data.map((item) => this._convertToResultDto(item)),
         paging: {
           total,
-          limit: params.paging.limit,
-          hasNextPage: data.length >= params.paging.limit,
-          nextCursor: data.length > 0 ? data[data.length - 1].id : '',
+          limit,
+          hasNextPage,
+          nextCursor,
         },
       };
 

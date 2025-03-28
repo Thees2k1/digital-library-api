@@ -15,6 +15,7 @@ import { ICategoryService } from './interfaces/category-service-interface';
 import logger from '@src/core/utils/logger/logger';
 import { CacheService } from '@src/core/interfaces/cache-service';
 import { generateCacheKey } from '@src/core/utils/generate-cache-key';
+import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
 
 @injectable()
 export class CategoryService implements ICategoryService {
@@ -80,11 +81,14 @@ export class CategoryService implements ICategoryService {
       const res = await this.repository.getList(params);
       const total = await this.repository.count({});
 
-      const hasNextPage = res.length >= params.paging.limit;
+      const limit = params.paging?.limit ?? DEFAULT_LIST_LIMIT;
+
+      const hasNextPage = res.length >= limit;
       const nextCursor = hasNextPage ? res[res.length - 1].id : '';
 
       const returnData: GetCategoriesResult = {
         data: res.map((entity) => this._convertToResultDto(entity)),
+        limit,
         hasNextPage,
         nextCursor,
         total,
@@ -146,12 +150,14 @@ export class CategoryService implements ICategoryService {
         sort: { field: 'popularityPoints', order: 'desc' },
       });
 
+      const limit = params.paging?.limit ?? DEFAULT_LIST_LIMIT;
       const total = await this.repository.count({});
-      const hasNextPage = res.length >= params.paging.limit;
+      const hasNextPage = res.length >= limit;
       const nextCursor = hasNextPage ? res[res.length - 1].id : '';
 
       const returnData: GetCategoriesResult = {
         data: res.map((entity) => this._convertToResultDto(entity)),
+        limit,
         hasNextPage,
         nextCursor,
         total,

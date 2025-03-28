@@ -73,7 +73,7 @@ export class CategoryController {
         data: result.data,
         status: 'success',
         pagination: {
-          limit: params.paging.limit,
+          limit: result.limit,
           hasNextPage: result.hasNextPage,
           nextCursor: result.nextCursor,
           total: result.total || 0,
@@ -185,7 +185,7 @@ export class CategoryController {
         data: result.data,
         status: 'success',
         pagination: {
-          limit: params.paging.limit,
+          limit: result.limit,
           hasNextPage: result.hasNextPage,
           nextCursor: result.nextCursor,
           total: result.total || 0,

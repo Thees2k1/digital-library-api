@@ -31,6 +31,7 @@ export type GetCategoriesParams = GetListOptions<any>;
 
 export type GetCategoriesResult = {
   data: Array<CategoryDetailDto>;
+  limit: number;
   total?: number;
   nextCursor?: string;
   hasNextPage: boolean;

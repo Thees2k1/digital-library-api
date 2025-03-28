@@ -45,12 +45,14 @@ export class AuthorService implements IAuthorService {
       return AuthorMapper.toAuthorDetailDto(author);
     });
 
-    const hasNextPage = res.length >= params.paging.limit;
+    const hasNextPage = params.paging
+      ? res.length >= params.paging.limit
+      : false;
     const nextCursor = hasNextPage ? res[res.length - 1].id : '';
 
     const returnData: GetAuthorsResult = {
       data,
-      limit: params.paging.limit,
+      limit: params.paging?.limit ?? 20,
       hasNextPage,
       nextCursor,
       total,
