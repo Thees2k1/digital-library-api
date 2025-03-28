@@ -15,6 +15,7 @@ import { ICategoryService } from './interfaces/category-service-interface';
 import logger from '@src/core/utils/logger/logger';
 import { CacheService } from '@src/core/interfaces/cache-service';
 import { generateCacheKey } from '@src/core/utils/generate-cache-key';
+import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
 
 @injectable()
 export class CategoryService implements ICategoryService {
@@ -45,7 +46,11 @@ export class CategoryService implements ICategoryService {
 
       return this._convertToResultDto(res);
     } catch (error) {
-      throw new Error(`error: ${error}`);
+      logger.error(error);
+      if (error instanceof AppError) {
+        throw error;
+      }
+      throw AppError.internalServer('Internal server error.');
     }
   }
   async update(id: Id, data: CategoryUpdateDto): Promise<string> {
@@ -80,11 +85,14 @@ export class CategoryService implements ICategoryService {
       const res = await this.repository.getList(params);
       const total = await this.repository.count({});
 
-      const hasNextPage = res.length >= params.paging.limit;
+      const limit = params.paging?.limit ?? DEFAULT_LIST_LIMIT;
+
+      const hasNextPage = res.length >= limit;
       const nextCursor = hasNextPage ? res[res.length - 1].id : '';
 
       const returnData: GetCategoriesResult = {
         data: res.map((entity) => this._convertToResultDto(entity)),
+        limit,
         hasNextPage,
         nextCursor,
         total,
@@ -123,6 +131,44 @@ export class CategoryService implements ICategoryService {
     try {
       await this.repository.delete(id);
       return id;
+    } catch (error) {
+      logger.error(error);
+      throw AppError.internalServer('Internal server error.');
+    }
+  }
+
+  async getPopularCategories(
+    params: GetCategoriesParams,
+  ): Promise<GetCategoriesResult> {
+    try {
+      const cacheKey = generateCacheKey('popular_categories', params);
+      const cacheData =
+        await this.cacheService.get<GetCategoriesResult>(cacheKey);
+
+      if (cacheData) {
+        return cacheData;
+      }
+
+      const res = await this.repository.getList({
+        ...params,
+        sort: { field: 'popularityPoints', order: 'desc' },
+      });
+
+      const limit = params.paging?.limit ?? DEFAULT_LIST_LIMIT;
+      const total = await this.repository.count({});
+      const hasNextPage = res.length >= limit;
+      const nextCursor = hasNextPage ? res[res.length - 1].id : '';
+
+      const returnData: GetCategoriesResult = {
+        data: res.map((entity) => this._convertToResultDto(entity)),
+        limit,
+        hasNextPage,
+        nextCursor,
+        total,
+      };
+
+      await this.cacheService.set(cacheKey, returnData, { EX: 60 });
+      return returnData;
     } catch (error) {
       logger.error(error);
       throw AppError.internalServer('Internal server error.');

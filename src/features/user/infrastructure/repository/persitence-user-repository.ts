@@ -272,4 +272,37 @@ export class PersistenceUserRepository extends UserRepository {
       count: bookIds.length,
     };
   }
+
+  async getUserPreferences(userId: string): Promise<Record<string, string>> {
+    const preferences = await this.prismaClient.userPreference.findMany({
+      where: { userId },
+      select: { key: true, value: true },
+    });
+
+    return preferences.reduce(
+      (acc, pref) => {
+        acc[pref.key] = pref.value;
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
+  }
+
+  async addUserPreference(
+    userId: string,
+    key: string,
+    value: string,
+  ): Promise<void> {
+    await this.prismaClient.userPreference.upsert({
+      where: { userId_key: { userId, key } },
+      update: { value },
+      create: { userId, key, value },
+    });
+  }
+
+  async deleteUserPreference(userId: string, key: string): Promise<void> {
+    await this.prismaClient.userPreference.delete({
+      where: { userId_key: { userId, key } },
+    });
+  }
 }

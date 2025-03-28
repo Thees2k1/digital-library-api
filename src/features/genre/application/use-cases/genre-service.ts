@@ -15,6 +15,7 @@ import { GenreEntity } from '../../domain/entities/genre-entity';
 import { Id } from '@src/core/types';
 import { CacheService } from '@src/core/interfaces/cache-service';
 import { generateCacheKey } from '@src/core/utils/generate-cache-key';
+import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
 
 @injectable()
 export class GenreService implements IGenreService {
@@ -43,7 +44,11 @@ export class GenreService implements IGenreService {
 
       return this._convertToResultDto(res);
     } catch (error) {
-      throw new Error(`error: ${error}`);
+      logger.error(error);
+      if (error instanceof AppError) {
+        throw error;
+      }
+      throw AppError.internalServer('Internal server error.');
     }
   }
   async update(id: Id, data: GenreUpdateDto): Promise<string> {
@@ -81,15 +86,19 @@ export class GenreService implements IGenreService {
       const res = await this.repository.getList(params);
       const total = await this.repository.count({});
 
+      const limit = params.paging?.limit ?? DEFAULT_LIST_LIMIT;
+      const hasNextPage = res.length >= limit;
+      const nextCursor = hasNextPage ? res[res.length - 1].id : '';
+
       const resultData: GetGenresResult = {
         data: res.map((genre) => {
           return this._convertToResultDto(genre);
         }),
         paging: {
-          total: total,
-          limit: params.paging.limit,
-          hasNextPage: res.length >= params.paging.limit,
-          nextCursor: res.length > 0 ? res[res.length - 1].id : '',
+          total,
+          limit,
+          hasNextPage,
+          nextCursor,
         },
       };
 
@@ -133,6 +142,9 @@ export class GenreService implements IGenreService {
       await this.repository.delete(id);
       return id;
     } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
       throw AppError.internalServer('Internal server error.');
     }
   }

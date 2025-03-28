@@ -73,7 +73,7 @@ export class CategoryController {
         data: result.data,
         status: 'success',
         pagination: {
-          limit: params.paging.limit,
+          limit: result.limit,
           hasNextPage: result.hasNextPage,
           nextCursor: result.nextCursor,
           total: result.total || 0,
@@ -150,6 +150,51 @@ export class CategoryController {
         next(new ValidationError(validationErrors));
         return;
       }
+      next(error);
+    }
+  }
+
+  async getPopularCategories(req: Request, res: Response, next: NextFunction) {
+    try {
+      const query = req.query;
+
+      const filters = {};
+
+      const sortOptions: SortOptions = {
+        field: 'popularityPoints',
+        order: 'desc',
+      };
+
+      const paginOptions: PagingOptions = {
+        cursor: query?.cursor as string,
+        limit: query.limit
+          ? parseInt(query.limit as string)
+          : DEFAULT_LIST_LIMIT,
+      };
+
+      const params: GetCategoriesParams = {
+        filter: filters,
+        paging: paginOptions,
+        sort: sortOptions,
+      };
+
+      const result = await this.service.getPopularCategories(params);
+
+      const resBody: ApiResponse<Array<CategoryDetailDto>> = {
+        message: 'Popular categories fetched successfully',
+        data: result.data,
+        status: 'success',
+        pagination: {
+          limit: result.limit,
+          hasNextPage: result.hasNextPage,
+          nextCursor: result.nextCursor,
+          total: result.total || 0,
+        },
+        timestamp: Date.now(),
+      };
+
+      res.json(resBody);
+    } catch (error) {
       next(error);
     }
   }

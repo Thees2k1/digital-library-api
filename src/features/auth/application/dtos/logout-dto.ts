@@ -1,6 +1,7 @@
 import { z } from 'zod';
-export const LogoutBodySchema = z.object({
+export const LogoutParamsSchema = z.object({
   refreshToken: z.string(),
+  userAgent: z.string(),
+  device: z.string(),
 });
-
-export type LogoutBodyDTO = z.infer<typeof LogoutBodySchema>;
+export interface LogoutParamsDTO extends z.infer<typeof LogoutParamsSchema> {}

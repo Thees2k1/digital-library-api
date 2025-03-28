@@ -5,6 +5,7 @@ export class CategoryEntity {
   description: string;
   createdAt: Date | undefined;
   updatedAt: Date | undefined;
+  books: Book[] = [];
 
   constructor(
     id: string,
@@ -13,6 +14,7 @@ export class CategoryEntity {
     description: string,
     createdAt: Date | undefined,
     updatedAt: Date | undefined,
+    books: Book[] = [],
   ) {
     this.id = id;
     this.name = name;
@@ -20,5 +22,20 @@ export class CategoryEntity {
     this.description = description;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
+    this.books = books;
   }
+}
+
+interface Book {
+  id: string;
+  title: string;
+
+  reviews: Review[];
+  likes?: number;
+  readCount?: number;
+}
+
+interface Review {
+  review: string;
+  rating: number;
 }

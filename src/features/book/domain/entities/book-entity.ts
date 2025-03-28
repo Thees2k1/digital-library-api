@@ -30,6 +30,7 @@ export class BookEntity {
     public readonly genres?: Genre[],
     public readonly digitalItems?: DigitalItemData[],
     public readonly likes?: number,
+    public readonly readCount?: number,
   ) {}
 
   copyWith(updates: Partial<BookEntity>): BookEntity {
@@ -50,6 +51,7 @@ export class BookEntity {
       updates.genres ?? this.genres,
       updates.digitalItems ?? this.digitalItems,
       updates.likes ?? this.likes,
+      updates.readCount ?? this.readCount,
     );
   }
 

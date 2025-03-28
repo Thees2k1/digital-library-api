@@ -20,6 +20,7 @@ import {
   BooksFilter,
   BookUpdateDto,
   GetBooksOptions,
+  PopularBookList,
   ReadingBookList,
   ReadingDto,
   ReviewCreateDto,
@@ -28,6 +29,7 @@ import {
   UserFavoriteBookList,
 } from '../../application/dtos/book-dto';
 import { IBookService } from '../../application/use-cases/interfaces/book-service-interface';
+import logger from '@src/core/utils/logger/logger';
 
 @injectable()
 export class BookController {
@@ -461,6 +463,27 @@ export class BookController {
         },
         timestamp: Date.now(),
       });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getPopularBooks(req: Request, res: Response, next: NextFunction) {
+    console.log('getPopularBooks called');
+    try {
+      const limit = parseInt(req.query.limit as string) || 5;
+      logger.info('Requested limit:', limit);
+      const result = await this.service.getPopularBooks(limit);
+      console.log('Service result:', JSON.stringify(result, null, 2));
+
+      const responseBody: ApiResponse<PopularBookList> = {
+        status: 'success',
+        message: 'Popular books fetched successfully',
+        data: result,
+        timestamp: Date.now(),
+      };
+
+      res.json(responseBody);
     } catch (error) {
       next(error);
     }
