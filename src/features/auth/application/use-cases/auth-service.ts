@@ -253,8 +253,6 @@ export class AuthService implements IAuthService {
     });
 
     const newIdentity = extractJWTSignature(newRefreshToken);
-    console.log('refreshToken', newRefreshToken);
-    console.log('idnetity', newIdentity);
     const newSession = await this.authRepository.saveSession(
       SessionDtoSchema.parse({
         userId: payload.userId,

@@ -226,8 +226,6 @@ export class UserController {
         var userId = idSchema.parse(req.body.userId);
       }
 
-      console.log(userId);
-
       const key = req.params.key;
       await this.service.deleteUserPreference(userId, key);
       res.status(200).json({ message: SUCCESSFUL });

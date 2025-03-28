@@ -34,7 +34,6 @@ export class AuthorService implements IAuthorService {
 
     const cacheData = await this.cacheService.get<GetAuthorsResult>(cachekey);
     if (cacheData) {
-      console.log('Cache hit', cachekey);
       return cacheData;
     }
 

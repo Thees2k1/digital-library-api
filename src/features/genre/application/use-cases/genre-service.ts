@@ -136,14 +136,12 @@ export class GenreService implements IGenreService {
     try {
       const existed = await this.repository.getById(id);
       if (!existed) {
-        console.log('Genre not found.');
         throw AppError.notFound('Genre not found.');
       }
 
       await this.repository.delete(id);
       return id;
     } catch (error) {
-      console.log('Error deleting genre:', error);
       if (error instanceof AppError) {
         throw error;
       }

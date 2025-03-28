@@ -27,12 +27,12 @@ export class AuthorRouterFactory extends BaseRouterFactory<AuthorController> {
       this.controller.getAuthors.bind(this.controller),
     );
     this._router.get(
-      AuthorRoutes.author,
-      this.controller.getAuthor.bind(this.controller),
-    );
-    this._router.get(
       AuthorRoutes.popularAuthors,
       this.controller.getPopularAuthors.bind(this.controller),
+    );
+    this._router.get(
+      AuthorRoutes.author,
+      this.controller.getAuthor.bind(this.controller),
     );
     this._router.post(
       AuthorRoutes.authors,

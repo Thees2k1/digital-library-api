@@ -38,13 +38,12 @@ export class PersistenceAuthRepository extends AuthRepository {
       }
       return AuthSessionSchema.parse(dbData);
     } catch (error) {
+      logger.error('Error find session by user device, err:' + error);
       if (error instanceof ZodError) {
-        console.log(error.errors);
         throw AppError.internalServer('Error parsing session data');
       } else if (error instanceof AppError) {
         throw error;
       } else {
-        logger.error('Error find session by user device, err:' + error);
         throw AppError.internalServer(
           'Something went wrong while fetching session',
         );
@@ -184,15 +183,6 @@ export class PersistenceAuthRepository extends AuthRepository {
     sessionIdentity,
   }: SessionDTO): Promise<AuthSession> {
     const expiryDate = calculateExpiryDate(expiration);
-    console.log('current device', {
-      userId,
-      expiration,
-      ipAddress,
-      userAgent,
-      device,
-      location,
-      sessionIdentity,
-    });
     try {
       const dbData = await this.prismaClient.userSession.upsert({
         where: {

@@ -31,6 +31,10 @@ export class CategoryRouterFactory extends BaseRouterFactory<CategoryController>
       this.controller.getCategories.bind(this.controller),
     );
     this._router.get(
+      CategoryRoutes.popularCategories,
+      this.controller.getPopularCategories.bind(this.controller),
+    );
+    this._router.get(
       CategoryRoutes.category,
       this.controller.getCategory.bind(this.controller),
     );
@@ -50,10 +54,6 @@ export class CategoryRouterFactory extends BaseRouterFactory<CategoryController>
       CategoryRoutes.category,
       authMiddleware,
       this.controller.deleteCategory.bind(this.controller),
-    );
-    this._router.get(
-      CategoryRoutes.popularCategories,
-      this.controller.getPopularCategories.bind(this.controller),
     );
   }
   get routes(): Router {
