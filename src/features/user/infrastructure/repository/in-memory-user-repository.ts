@@ -24,6 +24,15 @@ const USERS_MOCK = [
   },
 ];
 export class InMemoryUserRepository extends UserRepository {
+  getUserPreferences(userId: string): Promise<Record<string, string>> {
+    throw new Error('Method not implemented.');
+  }
+  addUserPreference(userId: string, key: string, value: string): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
+  deleteUserPreference(userId: string, key: string): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
   constructor() {
     super();
   }

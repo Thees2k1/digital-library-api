@@ -16,6 +16,7 @@ model Author {
   birthDate DateTime @map("birth_date") @db.Date
   deathDate DateTime? @map("death_date") @db.Date
   country String? @db.VarChar(100)
+  popularityPoints Int? @default(0) @map("popularity_points")
   books Book[]
   createdAt DateTime    @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt DateTime    @default(now()) @map("updated_at") @db.Timestamp(0)
@@ -57,16 +58,17 @@ model Book {
   category     Category          @relation(fields: [categoryId], references: [id])   
   genres       BookGenre[]
   status       BookStatus        @default(draft)
+  popularityPoints Int? @default(0) @map("popularity_points")
   createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt     DateTime          @default(now()) @map("updated_at") @db.Timestamp(0)
   likes        Like[]
   reviews      Review[]
   readBooks    UserReadBook[]
   favoriteBooks UserFavoriteBook[]
+  tags         BookTag[]
   serieId      String?            @db.Uuid @map("serie_id")
   serie        Serie?            @relation(fields: [serieId], references: [id])
   @@map("book")
-  //index the title ,authorid, publisherid, categoryid, serieid
   @@index([title], name: "title")
   @@index([authorId], name: "author_id")
   @@index([publisherId], name: "publisher_id")
@@ -106,6 +108,7 @@ model Category {
   name  String @db.VarChar(128)
   cover String? @db.VarChar(255)
   description String? @db.Text
+  popularityPoints Int? @default(0) @map("popularity_points")
  books Book[]
  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt     DateTime          @default(now()) @map("updated_at") @db.Timestamp(0)
@@ -138,21 +141,21 @@ model User {
   lastName   String         @map("last_name") @db.VarChar(50)
   avatar     String?        @db.VarChar(255)
   identity   UserIdentity? 
-  sessions   UserSession?
+  sessions   UserSession[]
   createdAt  DateTime       @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt  DateTime       @default(now()) @map("updated_at") @db.Timestamp(0)
+  preferences    UserPreference[] 
   likes      Like[]
   reviews    Review[]
   readBooks  UserReadBook[] 
   favoriteBooks UserFavoriteBook[]
   @@map("user")
 }
-
 model UserIdentity {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email    String    @unique // Đánh index vào trường email
-  password String    @db.VarChar(128) // This should be a hashed password
-  role     user_role @default(user) // You can use an enum or store role as a string
+  email    String    @unique 
+  password String    @db.VarChar(128) 
+  role     user_role @default(user) 
   userId   String     @unique @db.Uuid @map("user_id")
   user     User       @relation(fields: [userId], references: [id])
 
@@ -162,18 +165,54 @@ model UserIdentity {
 
 model UserSession {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId    String    @unique @db.Uuid @map("user_id") // Đánh index vào trường này
-  user      User     @relation(fields: [userId], references: [id])
-  signature String   @unique @db.VarChar(255)
-  ipAddress   String?  @db.VarChar(45)  @map("ip_address")         // IP Address (supports IPv6)
-  userAgent   String?  @db.VarChar(255)  @map("user_agent")       // User-Agent info
-  deviceInfo  String?  @db.VarChar(255)  @map("device_info")       // Device information, if needed
+  userId    String  @db.Uuid @map("user_id")
+  user     User     @relation(fields: [userId], references: [id])
+  signature String   @unique @db.VarChar(88)
+  ipAddress   String  @db.VarChar(45)  @map("ip_address")         
+  userAgent   String  @db.VarChar(512)  @map("user_agent")     
+  device  String  @db.VarChar(100)  
+  location String?  @db.VarChar(100)  @map("location")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamp(0)
   expiresAt DateTime @map("expires_at") @db.Timestamp(0)
+  active Boolean  @default(true)
+  isRevoked Boolean  @default(false) @map("is_revoked")
 
   @@index([userId], map: "session_user_id")
+  @@unique([userId,userAgent,device], map: "user_agent_device")
+  @@index([expiresAt], map: "expires_at")
   @@map("user_session")
+}
+
+model UserPreference {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @db.Uuid @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  key       String   @db.VarChar(50) // Preference key (e.g., "language", "theme")
+  value     String   @db.Text        // Preference value (e.g., "en", "dark")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamp(0)
+
+  @@unique([userId, key], map: "user_preference_unique") // Ensure unique key per user
+  @@map("user_preference")
+}
+model Tag {
+  id     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name  String @db.VarChar(128)
+  description String? @db.Text
+  books BookTag[]
+  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamp(0)
+  updatedAt     DateTime          @default(now()) @map("updated_at") @db.Timestamp(0)
+  @@map("tag")
+}
+
+model BookTag {
+  bookId     String    @db.Uuid @map("book_id")
+  book       Book     @relation(fields: [bookId], references: [id])
+  tagId String    @db.Uuid @map("tag_id")
+  tag   Tag @relation(fields: [tagId], references: [id])
+  @@id([bookId, tagId], name: "book_id_tag_id")
+  @@map("book_tag")
 }
 
 model Review {
@@ -209,7 +248,6 @@ model UserFavoriteBook {
   book      Book     @relation(fields: [bookId], references: [id])
   userId    String    @db.Uuid @map("user_id")
   user      User     @relation(fields: [userId], references: [id])
-  
   isFavorite Boolean  @default(false) @map("is_favorite")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamp(0)
@@ -223,8 +261,7 @@ model UserReadBook {
   book      Book     @relation(fields: [bookId], references: [id])
   userId    String    @db.Uuid @map("user_id")
   user      User     @relation(fields: [userId], references: [id])
-  //is Finished. please change typo later.
-  isFavorite Boolean  @default(false) @map("is_favorite")
+  isFinished Boolean  @default(false) @map("is_finished")
   latestProcess    Int? @default(0) @map("latest_process") @db.SmallInt
   currentPage      Int? @default(0) @map("current_page") @db.Integer
 

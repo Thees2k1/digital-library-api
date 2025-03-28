@@ -18,6 +18,7 @@ export class PersistenceSerieRepository extends SerieRepository {
   }
   async getList({ paging }: GetSeriesParams): Promise<SerieEntity[]> {
     const data: Serie[] = await this.prisma.serie.findMany({
+      include: { books: true },
       take: paging?.limit ?? 20,
       skip: paging?.cursor ? 1 : 0,
       ...(paging?.cursor ? { skip: 1, cursor: { id: paging.cursor } } : {}),
@@ -30,6 +31,7 @@ export class PersistenceSerieRepository extends SerieRepository {
   async getById(id: string): Promise<SerieEntity | null> {
     const data: Serie | null = await this.prisma.serie.findUnique({
       where: { id: id },
+      include: { books: true },
     });
     if (!data) return null;
     return PersistenceSerieRepository.convertToEntity(data);

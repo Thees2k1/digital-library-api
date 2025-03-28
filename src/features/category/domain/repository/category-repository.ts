@@ -26,5 +26,12 @@ export abstract class CategoryRepository
     throw new Error('Method not implemented,');
   }
 
+  abstract getAll(): Promise<CategoryEntity[]>;
+
   abstract count(filter: any): Promise<number>;
+
+  abstract updatePopularityPoints(
+    categoryId: string,
+    points: number,
+  ): Promise<void>;
 }

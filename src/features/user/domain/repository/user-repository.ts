@@ -31,4 +31,12 @@ export abstract class UserRepository
   getBookLikes(id: string): Promise<any> {
     throw new Error('Method not implemented.');
   }
+
+  abstract getUserPreferences(userId: string): Promise<Record<string, string>>;
+  abstract addUserPreference(
+    userId: string,
+    key: string,
+    value: string,
+  ): Promise<void>;
+  abstract deleteUserPreference(userId: string, key: string): Promise<void>;
 }

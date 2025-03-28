@@ -72,4 +72,12 @@ export interface Book {
   title: string;
   cover: string;
   releaseDate: Date;
+  likes?: number;
+  reviews?: Review[];
+  readCount?: number;
+}
+
+export interface Review {
+  content: string;
+  rating: number;
 }

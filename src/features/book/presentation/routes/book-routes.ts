@@ -23,6 +23,8 @@ export class BookRoutes {
   static readonly favorites = '/books/favorites';
   static readonly readingList = '/books/reading';
   static readonly reading = '/books/:id/reading';
+
+  static readonly popular = '/books/popular';
 }
 
 @injectable()
@@ -32,11 +34,15 @@ export class BookRouterFactory extends BaseRouterFactory<BookController> {
   }
 
   setupRoutes(): void {
+    this._router.get(BookRoutes.popular, (req, res, next) => {
+      console.log('Query:', JSON.stringify(req.query, null, 2));
+      this.controller.getPopularBooks(req, res, next);
+    });
+
     this._router.get(
       BookRoutes.books,
       this.controller.getBooks.bind(this.controller),
     );
-    // this._router.get(BookRoutes.books, this.this.controller.getBooks);
     this._router.get(
       BookRoutes.search,
       this.controller.searchBooks.bind(this.controller),

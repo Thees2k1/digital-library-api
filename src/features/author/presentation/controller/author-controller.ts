@@ -159,4 +159,30 @@ export class AuthorController {
       }
     }
   }
+
+  async getPopularAuthors(req: Request, res: Response, next: NextFunction) {
+    try {
+      const limit = parseInt(req.query.limit as string, 10) || 10;
+      const cursor = req.query.cursor as string | undefined;
+
+      const result = await this.service.getPopularAuthors(limit, cursor);
+
+      const resBody: ApiResponse<AuthorList> = {
+        message: 'Popular authors fetched successfully',
+        status: 'success',
+        data: result.data,
+        pagination: {
+          nextCursor: result.nextCursor,
+          limit: result.limit,
+          total: result.total || result.data.length,
+          hasNextPage: result.hasNextPage,
+        },
+        timestamp: Date.now(),
+      };
+
+      res.json(resBody);
+    } catch (error) {
+      next(error);
+    }
+  }
 }
