@@ -1,14 +1,13 @@
 import { PrismaClient } from '@prisma/client';
-import { EMPTY_STRING, SUCCESSFUL } from '@src/core/constants/constants';
 import { DI_TYPES } from '@src/core/di/types';
 import { AppError } from '@src/core/errors/custom-error';
 import { calculateExpiryDate } from '@src/core/utils/calculate-expiry-date';
+import logger from '@src/core/utils/logger/logger';
 import { SessionDTO } from '@src/features/auth/application/dtos/session-dto';
 import { inject, injectable } from 'inversify';
-import { AuthRepository } from '../../domain/repository/auth-repository';
-import { AuthSession, AuthSessionSchema } from '../../domain/entities/auth';
 import { ZodError } from 'zod';
-import logger from '@src/core/utils/logger/logger';
+import { AuthSession, AuthSessionSchema } from '../../domain/entities/auth';
+import { AuthRepository } from '../../domain/repository/auth-repository';
 
 // import { RedisService } from "@src/features/shared/infrastructure/services/redis-service";
 
@@ -206,6 +205,8 @@ export class PersistenceAuthRepository extends AuthRepository {
         update: {
           expiresAt: expiryDate,
           signature: sessionIdentity,
+          location: location,
+          ipAddress: ipAddress,
         },
         create: {
           userId: userId,
@@ -236,22 +237,20 @@ export class PersistenceAuthRepository extends AuthRepository {
 
   async deleteSession(sessionIdentity: string): Promise<string> {
     try {
-      const existed = await this.prismaClient.userSession.findUnique({
-        where: { signature: sessionIdentity },
-      });
-      if (!existed) return EMPTY_STRING;
-
-      await this.prismaClient.userSession.delete({
+      const res = await this.prismaClient.userSession.delete({
         where: {
           signature: sessionIdentity,
         },
       });
-      return SUCCESSFUL;
+      return res.signature;
     } catch (e) {
-      if (e instanceof Error) {
-        throw AppError.internalServer('Error delete session, err:' + e.message);
+      if (
+        e instanceof Error &&
+        e.message.includes('Record to delete does not exist')
+      ) {
+        throw AppError.notFound('Session not found');
       }
-      throw e;
+      throw new Error(e as string);
     }
   }
 

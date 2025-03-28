@@ -104,7 +104,7 @@ export class AuthService implements IAuthService {
       return { accessToken, refreshToken };
     } catch (error) {
       if (error instanceof ZodError) {
-        throw AppError.forbidden(error.message);
+        throw AppError.forbidden('Invalid data');
       }
       throw error;
     }
@@ -131,6 +131,9 @@ export class AuthService implements IAuthService {
 
       return RegisterResultSchema.parse(user);
     } catch (error) {
+      if (error instanceof ZodError) {
+        throw AppError.internalServer('Error parsing data');
+      }
       throw error;
     }
   }
@@ -199,6 +202,7 @@ export class AuthService implements IAuthService {
         expiresIn: '7d',
         audience: aud,
       });
+
       const newIdentity = extractJWTSignature(newRefreshToken);
 
       const session = await this.authRepository.saveSession(
@@ -247,14 +251,17 @@ export class AuthService implements IAuthService {
       expiresIn: '7d',
       audience: aud,
     });
+
     const newIdentity = extractJWTSignature(newRefreshToken);
+    console.log('refreshToken', newRefreshToken);
+    console.log('idnetity', newIdentity);
     const newSession = await this.authRepository.saveSession(
       SessionDtoSchema.parse({
         userId: payload.userId,
         sessionIdentity: newIdentity,
         expiration: REFRESH_TOKEN_EXPIRES_IN,
         userAgent: params.userAgent,
-        device: params.userAgent,
+        device: params.device,
         ipAddress: params.ipAddress,
         location: params.location,
       }),

@@ -13,7 +13,6 @@ class AuthRoutes {
   static register = '/register';
   static refreshToken = '/refresh-token';
   static logout = '/logout';
-  static checkSession = '/check-session';
 }
 
 @injectable()

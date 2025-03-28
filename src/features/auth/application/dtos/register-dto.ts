@@ -13,6 +13,7 @@ export const RegisterResultSchema = z.object({
   firstName: z.string(),
   lastName: z.string().nullable(),
   createdAt: z.date(),
+  role: z.string().optional(),
 });
 
 export interface RegisterBodyDTO extends z.infer<typeof RegisterBodySchema> {}

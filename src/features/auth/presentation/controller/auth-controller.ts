@@ -4,6 +4,7 @@ import {
 } from '@src/core/constants/constants';
 import { DI_TYPES } from '@src/core/di/types';
 import { AppError } from '@src/core/errors/custom-error';
+import { getDeviceInfo } from '@src/core/utils/get-device-info';
 import { NextFunction, Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
 import {
@@ -11,15 +12,13 @@ import {
   LoginResultDTO,
   LoginResultSchema,
 } from '../../application/dtos/login-dto';
+import { LogoutParamsSchema } from '../../application/dtos/logout-dto';
 import { RefreshTokenParamsSchema } from '../../application/dtos/refresh-token';
 import {
   RegisterBodyDTO,
   RegisterResultDTO,
-  RegisterResultSchema,
 } from '../../application/dtos/register-dto';
 import { IAuthService } from '../../application/use-cases/interfaces/auth-service-interface';
-import { getDeviceInfo } from '@src/core/utils/get-device-info';
-import { LogoutParamsSchema } from '../../application/dtos/logout-dto';
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
@@ -38,8 +37,8 @@ export class AuthController {
     try {
       const data = req.body;
       const result = await this.service.register(data);
-      const returnData: RegisterResultDTO = RegisterResultSchema.parse(result);
-      res.json(returnData);
+
+      res.json(result);
     } catch (error) {
       if (error instanceof Error) {
         next(AppError.badRequest(error.message));
@@ -81,7 +80,7 @@ export class AuthController {
         refreshToken: verifiedResult.refreshToken,
       });
     } catch (error) {
-      next(error);
+      next(AppError.unauthorized('Login failed'));
     }
   }
 
