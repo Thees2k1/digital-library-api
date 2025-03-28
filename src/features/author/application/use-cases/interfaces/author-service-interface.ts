@@ -14,4 +14,5 @@ export interface IAuthorService extends BaseUseCase<any, AuthorDetailDto, Id> {
   create(author: AuthorCreateDto): Promise<AuthorDetailDto>;
   update(id: Id, author: AuthorUpdateDto): Promise<string>;
   delete(id: Id): Promise<string>;
+  getPopularAuthors(limit: number, cursor?: string): Promise<GetAuthorsResult>;
 }

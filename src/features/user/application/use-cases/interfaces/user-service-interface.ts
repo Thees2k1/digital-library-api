@@ -13,4 +13,7 @@ export interface IUserService {
   updateUser(id: string, updateData: UpdateUserDto): Promise<string>;
   deleteUser(id: string): Promise<string>;
   getBookLikes(id: string): Promise<BookLikesResult>;
+  getUserPreferences(userId: string): Promise<Record<string, string>>;
+  addUserPreference(userId: string, key: string, value: string): Promise<void>;
+  deleteUserPreference(userId: string, key: string): Promise<void>;
 }

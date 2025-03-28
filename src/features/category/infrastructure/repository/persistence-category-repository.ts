@@ -19,11 +19,12 @@ export class PersistenceCategoryRepository extends CategoryRepository {
   }
 
   async getList(options: GetCategoriesParams): Promise<CategoryEntity[]> {
-    const { paging } = options;
+    const { paging, sort } = options;
     const data: Category[] = await this.prisma.category.findMany({
       take: paging?.limit ?? 20,
       skip: paging?.cursor ? 1 : 0,
-      ...(paging?.cursor ? { skip: 1, cursor: { id: paging.cursor } } : {}),
+      ...(paging?.cursor ? { cursor: { id: paging.cursor } } : {}),
+      orderBy: sort ? { [sort.field]: sort.order } : undefined,
     });
     return data.map((category) =>
       PersistenceCategoryRepository.convertToEntity(category),
@@ -67,6 +68,16 @@ export class PersistenceCategoryRepository extends CategoryRepository {
     await this.prisma.category.delete({ where: { id: id } });
   }
 
+  async updatePopularityPoints(
+    categoryId: string,
+    points: number,
+  ): Promise<void> {
+    await this.prisma.category.update({
+      where: { id: categoryId },
+      data: { popularityPoints: points },
+    });
+  }
+
   static convertToEntity(data: Category): CategoryEntity {
     return new CategoryEntity(
       data.id,
@@ -89,5 +100,51 @@ export class PersistenceCategoryRepository extends CategoryRepository {
       return { ...required, id: data.id };
     }
     return required;
+  }
+
+  async getAll(): Promise<CategoryEntity[]> {
+    const data = await this.prisma.category.findMany({
+      include: {
+        books: {
+          include: {
+            reviews: true,
+            likes: {
+              select: {
+                id: true,
+              },
+            },
+            readBooks: {
+              select: {
+                id: true,
+              },
+            },
+          },
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
+    const categories: CategoryEntity[] = data.map((category) => {
+      const books = category.books.map((book) => {
+        return {
+          id: book.id,
+          title: book.title,
+          reviews: book.reviews,
+          likes: book.likes.length,
+          readCount: book.readBooks.length,
+        };
+      });
+      return new CategoryEntity(
+        category.id,
+        category.name,
+        category.cover ?? '',
+        category.description ?? '',
+        category.createdAt,
+        category.updatedAt,
+        books,
+      );
+    });
+    return categories;
   }
 }

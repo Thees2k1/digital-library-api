@@ -13,5 +13,7 @@ export const LoginResultSchema = z.object({
 export type LoginBodyDTO = z.infer<typeof LoginBodySchema> & {
   ipAddress?: string;
   userAgent?: string;
+  device?: string;
+  location?: string;
 };
 export type LoginResultDTO = z.infer<typeof LoginResultSchema>;

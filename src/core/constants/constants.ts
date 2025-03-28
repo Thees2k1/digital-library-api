@@ -12,13 +12,15 @@ export const REFRESH_TOKEN_EXPIRES_IN = 7 * 24 * 60 * 60 * 1000;
 
 export const INVALID_CREDENTIALS = 'Invalid credentials';
 
-export const LOGOUT_SUCCESS = 'Logout success';
+export const LOGOUT_SUCCESS = 'Logout successful';
 
 export const DEFAULT_TOKEN_ISSUER = 'Chyra-API';
 export const SOMETHING_WENT_WRONG = 'Something went wrong.';
 
 export const DEFAULT_LIST_LIMIT = 20;
 export const DEFAULT_LIST_OFFSET = 0;
+
+export const SESSION_LIMIT = 5;
 
 //MESSAGES
 

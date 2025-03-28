@@ -13,4 +13,7 @@ export interface ICategoryService
   getList(query: GetCategoriesParams): Promise<GetCategoriesResult>;
   create(data: CategoryCreateDto): Promise<CategoryDetailDto>;
   update(id: Id, data: CategoryUpdateDto): Promise<string>;
+  getPopularCategories(
+    query: GetCategoriesParams,
+  ): Promise<GetCategoriesResult>;
 }

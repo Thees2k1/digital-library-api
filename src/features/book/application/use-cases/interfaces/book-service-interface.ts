@@ -5,6 +5,7 @@ import {
   BookUpdateDto,
   GetBooksOptions,
   GetListResult,
+  PopularBookList,
   ReadingBookList,
   ReadingDto,
   ReviewCreateDto,
@@ -37,4 +38,6 @@ export interface IBookService {
     bookId: string,
     isFavorite: boolean,
   ): Promise<void>;
+
+  getPopularBooks(limit?: number): Promise<PopularBookList>;
 }

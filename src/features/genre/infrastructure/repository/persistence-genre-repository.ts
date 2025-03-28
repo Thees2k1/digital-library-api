@@ -4,6 +4,7 @@ import { inject, injectable } from 'inversify';
 import { GenreRepository } from '../../domain/repository/genre-repository';
 import { GenreEntity } from '../../domain/entities/genre-entity';
 import { GetGenresParams } from '../../application/dto/genre-dtos';
+import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
 
 @injectable()
 export class PersistenceGenreRepository extends GenreRepository {
@@ -17,11 +18,12 @@ export class PersistenceGenreRepository extends GenreRepository {
     return this.prisma.genre.count({ where: filter });
   }
 
-  async getList({ paging }: GetGenresParams): Promise<GenreEntity[]> {
+  async getList({ paging, sort }: GetGenresParams): Promise<GenreEntity[]> {
     const data: Genre[] = await this.prisma.genre.findMany({
-      take: paging?.limit ?? 20,
+      take: paging?.limit ?? DEFAULT_LIST_LIMIT,
       skip: paging?.cursor ? 1 : 0,
       ...(paging?.cursor ? { skip: 1, cursor: { id: paging.cursor } } : {}),
+      ...(sort ? { orderBy: [{ [sort.field]: sort.order }] } : {}),
     });
     return data.map((Genre) =>
       PersistenceGenreRepository.convertToEntity(Genre),

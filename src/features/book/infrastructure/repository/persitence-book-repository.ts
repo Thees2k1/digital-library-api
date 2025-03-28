@@ -670,7 +670,7 @@ export class PersistenceBookRepository extends BookRepository {
         },
         currentPage: true,
         latestProcess: true,
-        isFavorite: true,
+        isFinished: true,
         updatedAt: true,
       },
     });
@@ -682,7 +682,7 @@ export class PersistenceBookRepository extends BookRepository {
         data.userId,
         data.currentPage ?? 0,
         data.latestProcess ?? 0,
-        data.isFavorite,
+        data.isFinished,
         data.updatedAt,
         data.book.title,
         data.book.cover,
@@ -707,7 +707,7 @@ export class PersistenceBookRepository extends BookRepository {
         currentPage: true,
         latestProcess: true,
         updatedAt: true,
-        isFavorite: true,
+        isFinished: true,
         book: {
           select: {
             id: true,
@@ -734,7 +734,7 @@ export class PersistenceBookRepository extends BookRepository {
       dbData.userId,
       dbData.currentPage ?? 0,
       dbData.latestProcess ?? 0,
-      dbData.isFavorite,
+      dbData.isFinished,
       dbData.updatedAt,
       dbData.book.title,
       dbData.book.cover,
@@ -753,7 +753,7 @@ export class PersistenceBookRepository extends BookRepository {
         bookId: bookId,
         currentPage: data.currentPage,
         latestProcess: data.progress,
-        isFavorite: data.isFinished,
+        isFinished: data.isFinished,
         updatedAt: data.lastRead,
       },
     });
@@ -775,13 +775,13 @@ export class PersistenceBookRepository extends BookRepository {
         bookId: bookId,
         currentPage: data.currentPage,
         latestProcess: data.progress,
-        isFavorite: data.isFinished,
+        isFinished: data.isFinished,
         updatedAt: data.lastReadAt,
       },
       update: {
         currentPage: data.currentPage,
         latestProcess: data.progress,
-        isFavorite: data.isFinished,
+        isFinished: data.isFinished,
         updatedAt: data.lastReadAt,
       },
     });
@@ -867,6 +867,174 @@ export class PersistenceBookRepository extends BookRepository {
       update: {
         isFavorite,
       },
+    });
+  }
+
+  async getPopularBooks(limit: number): Promise<BookEntity[]> {
+    const books = await this.prisma.book.findMany({
+      take: limit,
+      where: {
+        status: {
+          not: 'deleted',
+        },
+        readBooks: {
+          some: {
+            OR: [{ isFinished: true }, { latestProcess: { gt: 0 } }],
+          },
+        },
+      },
+      orderBy: [
+        {
+          readBooks: {
+            _count: 'desc',
+          },
+        },
+      ],
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        cover: true,
+        releaseDate: true,
+        createdAt: true,
+        author: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+          },
+        },
+        reviews: {
+          select: {
+            id: true,
+            rating: true,
+            review: true,
+          },
+        },
+        readBooks: {
+          where: {
+            OR: [{ isFinished: true }, { latestProcess: { gt: 0 } }],
+          },
+          select: {
+            isFinished: true,
+            latestProcess: true,
+          },
+        },
+        _count: {
+          select: {
+            readBooks: {
+              where: {
+                OR: [{ isFinished: true }, { latestProcess: { gt: 0 } }],
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const sortedBooks = [...books].sort((a, b) => {
+      const aFavorites = a.readBooks.filter((rb) => rb.isFinished).length;
+      const bFavorites = b.readBooks.filter((rb) => rb.isFinished).length;
+
+      if (aFavorites !== bFavorites) {
+        return bFavorites - aFavorites;
+      }
+
+      const aReads = a.readBooks.filter(
+        (rb) => rb.latestProcess && rb.latestProcess > 0,
+      ).length;
+      const bReads = b.readBooks.filter(
+        (rb) => rb.latestProcess && rb.latestProcess > 0,
+      ).length;
+      return bReads - aReads;
+    });
+
+    return sortedBooks.map((book) => {
+      const bookReviews: Review[] = book.reviews.map((review) => ({
+        id: review.id,
+        rating: review.rating,
+        comment: review.review ?? '',
+      }));
+
+      const favoriteCount = book.readBooks.filter((rb) => rb.isFinished).length;
+      const readCount = book.readBooks.filter(
+        (rb) => rb.latestProcess && rb.latestProcess > 0,
+      ).length;
+
+      return new BookEntity(
+        book.id,
+        book.title,
+        book.cover,
+        book.createdAt,
+        {
+          id: book.author.id,
+          name: book.author.name,
+          avatar: book.author.avatar ?? '',
+        },
+        bookReviews,
+        book.description ?? '',
+        undefined,
+        undefined,
+        book.releaseDate,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        favoriteCount,
+        readCount,
+      );
+    });
+  }
+
+  async getAll(): Promise<BookEntity[]> {
+    const books = await this.prisma.book.findMany({
+      where: { status: { not: 'deleted' } },
+      select: {
+        id: true,
+        title: true,
+        cover: true,
+        createdAt: true,
+        updatedAt: true,
+        author: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        category: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    return books.map((book) => {
+      const bookAuthor = { id: book.author.id, name: book.author.name };
+      const bookCategory = { id: book.category.id, name: book.category.name };
+      return new BookEntity(
+        book.id,
+        book.title,
+        book.cover,
+        book.createdAt,
+        bookAuthor,
+        [],
+        '',
+        undefined,
+        undefined,
+        undefined,
+        book.updatedAt,
+        bookCategory,
+      );
+    });
+  }
+
+  async updatePopularityScore(bookId: string, score: number): Promise<void> {
+    await this.prisma.book.update({
+      where: { id: bookId },
+      data: { popularityPoints: score },
     });
   }
 

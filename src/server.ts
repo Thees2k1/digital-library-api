@@ -11,16 +11,19 @@ import express, {
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { StatusCodes } from 'http-status-codes';
-import { ONE_HUNDRED, ONE_THOUSAND, SIXTY } from './core/constants/constants';
+import 'reflect-metadata';
+import { ONE_THOUSAND, SIXTY } from './core/constants/constants';
+import { container } from './core/di/container';
+import { DI_TYPES } from './core/di/types';
 import { AppError } from './core/errors/custom-error';
 import { ErrorMiddleware } from './core/middlewares/error-middleware';
-
-// import "./features/shared/infrastructure/utils/logger/global-logger";
-import 'reflect-metadata';
-import { container } from './core/di/container';
-import { IndexingService } from './features/book/infrastructure/index-service';
+import { SessionCleanupService } from './core/services/session-cleanup-service';
 import logger from './core/utils/logger/logger';
+import { BookPopularityService } from './features/analytics/application/services/book-popularity-service';
+import { IndexingService } from './features/book/infrastructure/index-service';
+import { initializePopularityCron } from './features/analytics/infrastructure/cron/popularity-cron';
 
+import { collectDefaultMetrics, register } from 'prom-client';
 interface ServerOptions {
   port: number;
   routes: Router;
@@ -98,6 +101,16 @@ export class Server {
       }
     });
 
+    this.app.get('/metrics', async (req, res) => {
+      try {
+        res.set('Content-Type', register.contentType);
+        const metrics = await register.metrics();
+        res.end(metrics);
+      } catch (error) {
+        res.status(500).end('Error generating metrics');
+      }
+    });
+
     this.routes.all(
       '*',
       (req: Request, _: Response, next: NextFunction): void => {
@@ -112,9 +125,21 @@ export class Server {
   }
 
   private initializeServices(): void {
-    // Initialize services here
+    collectDefaultMetrics();
     const indexingService = container.get<IndexingService>(IndexingService);
     indexingService.reindexAllBooks();
+
+    const sessionCleanupService = container.get<SessionCleanupService>(
+      DI_TYPES.SessionCleanupService,
+    );
+    sessionCleanupService.start();
+
+    const bookPopularityService = container.get<BookPopularityService>(
+      DI_TYPES.BookPopularityService,
+    );
+    bookPopularityService.start();
+
+    initializePopularityCron();
   }
 
   private configurateCors(): CorsOptions {

@@ -1,3 +1,4 @@
+import z from 'zod';
 export class UserEntity {
   constructor(
     public id: string,
@@ -26,4 +27,20 @@ export class UserEntity {
       new Date(data.updatedAt),
     );
   }
+
+  public static parse(data: any): UserEntity {
+    return UserEntitySchema.parse(data);
+  }
 }
+
+const UserEntitySchema = z.object({
+  id: z.string(),
+  firstName: z.string(),
+  lastName: z.string().nullable(),
+  email: z.string().email(),
+  password: z.string(),
+  role: z.union([z.literal('user'), z.literal('admin')]),
+  avatarUrl: z.string(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});

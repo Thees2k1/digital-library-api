@@ -13,4 +13,5 @@ export const config = {
   accessTokenSecret: process.env.ACCESS_TOKEN_SECRET as string,
   refreshTokenSecret: process.env.REFRESH_TOKEN_SECRET as string,
   uploadthingToken: process.env.UPLOADTHING_TOKEN as string,
+  discordWebhookUrl: process.env.DISCORD_WEBHOOK_URL as string,
 };

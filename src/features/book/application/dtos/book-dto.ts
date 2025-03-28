@@ -213,6 +213,23 @@ export type ReadingBook = {
   isLiked: boolean;
 };
 
+export const popularBookItemSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  cover: z.string(),
+  author: z.object({
+    id: z.string(),
+    name: z.string(),
+  }),
+  desscription: z.string().optional(),
+  averageRating: z.number().optional(),
+  createdAt: z.string(),
+});
+export const popularBooksSchema = z.array(popularBookItemSchema);
+
+export type PopularBookItem = z.infer<typeof popularBookItemSchema>;
+export type PopularBookList = z.infer<typeof popularBooksSchema>;
+
 export type ReadingBookList = Array<ReadingBook>;
 
 export type UpdateReadingDto = z.infer<typeof updateReadingSchema>;

@@ -2,16 +2,16 @@ import { DI_TYPES } from '@src/core/di/types';
 import { AppError } from '@src/core/errors/custom-error';
 import { inject, injectable } from 'inversify';
 
+import { Id } from '@src/core/types';
 import logger from '@src/core/utils/logger/logger';
-import { IPublisherService } from './interfaces/publisher-service-interface';
+import { PublisherEntity } from '../../domain/entities/publisher-entity';
 import { PublisherRepository } from '../../domain/repository/publisher-repository';
 import {
   PublisherCreateDto,
   PublisherDetailDto,
   PublisherUpdateDto,
 } from '../dto/publisher-dtos';
-import { Id } from '@src/core/types';
-import { PublisherEntity } from '../../domain/entities/publisher-entity';
+import { IPublisherService } from './interfaces/publisher-service-interface';
 
 @injectable()
 export class PublisherService implements IPublisherService {
@@ -32,10 +32,11 @@ export class PublisherService implements IPublisherService {
 
       return this._convertToResultDto(res);
     } catch (error) {
+      logger.error(error);
       if (error instanceof AppError) {
         throw error;
       }
-      throw new Error(`error: ${error}`);
+      throw AppError.internalServer('Internal server error.');
     }
   }
   async update(id: Id, data: PublisherUpdateDto): Promise<string> {
