@@ -71,7 +71,11 @@ export class UserService implements IUserService {
       };
       return userCreated;
     } catch (error) {
-      logger.error(`Error: ${error}`);
+      if (error instanceof Error) {
+        logger.error(error.message);
+        throw AppError.internalServer('Cannot create user');
+      }
+      logger.error(error);
       throw error;
     }
   }

@@ -46,7 +46,11 @@ export class CategoryService implements ICategoryService {
 
       return this._convertToResultDto(res);
     } catch (error) {
-      throw new Error(`error: ${error}`);
+      logger.error(error);
+      if (error instanceof AppError) {
+        throw error;
+      }
+      throw AppError.internalServer('Internal server error.');
     }
   }
   async update(id: Id, data: CategoryUpdateDto): Promise<string> {

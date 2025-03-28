@@ -1,6 +1,9 @@
+import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
 import { DI_TYPES } from '@src/core/di/types';
 import { AppError } from '@src/core/errors/custom-error';
+import { CacheService } from '@src/core/interfaces/cache-service';
 import { Id } from '@src/core/types';
+import { generateCacheKey } from '@src/core/utils/generate-cache-key';
 import logger from '@src/core/utils/logger/logger';
 import { inject, injectable } from 'inversify';
 import { v7 as uuid } from 'uuid';
@@ -14,9 +17,6 @@ import {
   SerieUpdateDto,
 } from '../dto/serie-dtos';
 import { ISerieService } from './interfaces/serie-service-interface';
-import { CacheService } from '@src/core/interfaces/cache-service';
-import { generateCacheKey } from '@src/core/utils/generate-cache-key';
-import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
 
 @injectable()
 export class SerieService implements ISerieService {
@@ -52,7 +52,11 @@ export class SerieService implements ISerieService {
 
       return this._convertToResultDto(res);
     } catch (error) {
-      throw new Error(`error: ${error}`);
+      logger.error(error);
+      if (error instanceof AppError) {
+        throw error;
+      }
+      throw AppError.internalServer('Internal server error.');
     }
   }
   async update(id: Id, data: SerieUpdateDto): Promise<string> {

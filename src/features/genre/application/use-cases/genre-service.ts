@@ -44,7 +44,11 @@ export class GenreService implements IGenreService {
 
       return this._convertToResultDto(res);
     } catch (error) {
-      throw new Error(`error: ${error}`);
+      logger.error(error);
+      if (error instanceof AppError) {
+        throw error;
+      }
+      throw AppError.internalServer('Internal server error.');
     }
   }
   async update(id: Id, data: GenreUpdateDto): Promise<string> {
@@ -84,7 +88,7 @@ export class GenreService implements IGenreService {
 
       const limit = params.paging?.limit ?? DEFAULT_LIST_LIMIT;
       const hasNextPage = res.length >= limit;
-      const nextCursor = res.length > 0 ? res[res.length - 1].id : '';
+      const nextCursor = hasNextPage ? res[res.length - 1].id : '';
 
       const resultData: GetGenresResult = {
         data: res.map((genre) => {
@@ -132,12 +136,17 @@ export class GenreService implements IGenreService {
     try {
       const existed = await this.repository.getById(id);
       if (!existed) {
+        console.log('Genre not found.');
         throw AppError.notFound('Genre not found.');
       }
 
       await this.repository.delete(id);
       return id;
     } catch (error) {
+      console.log('Error deleting genre:', error);
+      if (error instanceof AppError) {
+        throw error;
+      }
       throw AppError.internalServer('Internal server error.');
     }
   }

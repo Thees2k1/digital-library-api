@@ -1,6 +1,6 @@
 import { Category, PrismaClient } from '@prisma/client';
 import { DI_TYPES } from '@src/core/di/types';
-import { id, inject, injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { GetCategoriesParams } from '../../application/dto/category-dtos';
 import { CategoryEntity } from '../../domain/entities/category';
 import { CategoryRepository } from '../../domain/repository/category-repository';
@@ -103,53 +103,48 @@ export class PersistenceCategoryRepository extends CategoryRepository {
   }
 
   async getAll(): Promise<CategoryEntity[]> {
-    //get all categories, all so information related about books of this category good for analytics like reviews, likes, read count
-    try {
-      const data = await this.prisma.category.findMany({
-        include: {
-          books: {
-            include: {
-              reviews: true,
-              likes: {
-                select: {
-                  id: true,
-                },
-              },
-              readBooks: {
-                select: {
-                  id: true,
-                },
+    const data = await this.prisma.category.findMany({
+      include: {
+        books: {
+          include: {
+            reviews: true,
+            likes: {
+              select: {
+                id: true,
               },
             },
-            select: {
-              id: true,
+            readBooks: {
+              select: {
+                id: true,
+              },
             },
           },
+          select: {
+            id: true,
+          },
         },
+      },
+    });
+    const categories: CategoryEntity[] = data.map((category) => {
+      const books = category.books.map((book) => {
+        return {
+          id: book.id,
+          title: book.title,
+          reviews: book.reviews,
+          likes: book.likes.length,
+          readCount: book.readBooks.length,
+        };
       });
-      const categories: CategoryEntity[] = data.map((category) => {
-        const books = category.books.map((book) => {
-          return {
-            id: book.id,
-            title: book.title,
-            reviews: book.reviews,
-            likes: book.likes.length,
-            readCount: book.readBooks.length,
-          };
-        });
-        return new CategoryEntity(
-          category.id,
-          category.name,
-          category.cover ?? '',
-          category.description ?? '',
-          category.createdAt,
-          category.updatedAt,
-          books,
-        );
-      });
-      return categories;
-    } catch (error) {
-      throw new Error(`error: ${error}`);
-    }
+      return new CategoryEntity(
+        category.id,
+        category.name,
+        category.cover ?? '',
+        category.description ?? '',
+        category.createdAt,
+        category.updatedAt,
+        books,
+      );
+    });
+    return categories;
   }
 }

@@ -1,12 +1,11 @@
-import { Router } from 'express';
-import { AuthController } from '../controller/auth-controller';
-import { RegisterBodySchema } from '../../application/dtos/register-dto';
-import { LoginBodySchema } from '../../application/dtos/login-dto';
-import { container } from '@src/core/di/container';
 import { DI_TYPES } from '@src/core/di/types';
-import { validationMiddleware } from '@src/core/middlewares/validation-middleware';
 import { BaseRouterFactory } from '@src/core/interfaces/base-router-factory';
+import { validationMiddleware } from '@src/core/middlewares/validation-middleware';
+import { Router } from 'express';
 import { inject, injectable } from 'inversify';
+import { LoginBodySchema } from '../../application/dtos/login-dto';
+import { RegisterBodySchema } from '../../application/dtos/register-dto';
+import { AuthController } from '../controller/auth-controller';
 
 class AuthRoutes {
   static login = '/login';
