@@ -225,11 +225,9 @@ export class PersistenceBookRepository extends BookRepository {
         pages: data.pages ?? 0,
         publisherId: data.publisher?.id ? data.publisher.id : undefined,
       };
-
       const book = await prisma.book.create({
         data: mappedBookData,
       });
-
       if (data.genres) {
         await prisma.bookGenre.createMany({
           data: data.genres.map((genre) => {

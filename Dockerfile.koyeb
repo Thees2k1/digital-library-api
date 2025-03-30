@@ -30,6 +30,9 @@ FROM node:20-alpine3.18 AS production
 ENV NODE_ENV=production
 WORKDIR /app
 
+ARG DATABASE_URL
+ENV DATABASE_URL=${DATABASE_URL}
+
 # Copy the package.json, pnpm-lock.yaml, and .npmrc files
 COPY package.json pnpm-lock.yaml* ./
 
@@ -52,4 +55,4 @@ RUN apk add --no-cache curl \
 EXPOSE 8080
 
 # Start the application
-CMD ["node", "dist/index.js"]
+CMD ["sh", "-c", " node dist/index.js"] 
