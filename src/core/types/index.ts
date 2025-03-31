@@ -13,6 +13,13 @@ export const isoDateStringShema = z.string().refine(
     message: 'Invalid ISO date string',
   },
 );
+
+export const responseStatusSchema = z.enum(['success', 'error']);
+export const sortOrderSchema = z.enum(['asc', 'desc']).default('asc');
+
+export type ResponseStatus = z.infer<typeof responseStatusSchema>;
+export type SortOrder = z.infer<typeof sortOrderSchema>;
+
 export type IsoDateString = z.infer<typeof isoDateStringShema>;
 
 export type PagingMetadata = {
@@ -20,13 +27,12 @@ export type PagingMetadata = {
   offset?: number;
   page?: number;
   limit: number;
-  total: number;
-  hasNextPage: boolean;
+  total?: number;
 };
 
-export type SortOptions = {
-  field: string;
-  order: 'asc' | 'desc';
+export type SortOptions<TSortField> = {
+  field: TSortField;
+  order: SortOrder;
 };
 
 export type PagingOptions = {
@@ -34,9 +40,9 @@ export type PagingOptions = {
   limit: number;
 };
 
-export type GetListOptions<T> = {
-  filter?: T;
-  sort?: SortOptions;
+export type GetListOptions<TFilter, TSort> = {
+  filter?: TFilter;
+  sort?: TSort;
   paging?: PagingOptions;
 };
 
@@ -56,7 +62,7 @@ export const apiResponseSchema = z.object({
 });
 
 export type ApiResponse<T> = {
-  status: 'success' | 'error';
+  status: ResponseStatus;
   message?: string;
   data?: T;
   filters?: Record<string, unknown>;

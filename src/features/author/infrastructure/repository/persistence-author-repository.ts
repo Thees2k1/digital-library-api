@@ -1,9 +1,9 @@
 import { Author, PrismaClient } from '@prisma/client';
 import { DI_TYPES } from '@src/core/di/types';
 import { inject, injectable } from 'inversify';
+import { GetAuthorsOptions } from '../../application/dtos/author-dto';
 import { AuthorEntity } from '../../domain/entities/author-entity';
 import { AuthorRepository } from '../../domain/repository/author-repository';
-import { GetListOptions } from '@src/core/types';
 
 @injectable()
 export class PersistenceAuthorRepository implements AuthorRepository {
@@ -12,16 +12,30 @@ export class PersistenceAuthorRepository implements AuthorRepository {
     this.prisma = prisma;
   }
   async count(filter: any): Promise<number> {
-    //NEED TO IMPROVE
-    return await this.prisma.author.count({ where: filter });
+    return await this.prisma.author.count({
+      where: {
+        ...(filter?.name ? { name: { contains: filter.name } } : {}),
+      },
+    });
   }
   async getList({
     paging,
-  }: GetListOptions<AuthorEntity>): Promise<AuthorEntity[]> {
+    filter,
+    sort,
+  }: GetAuthorsOptions): Promise<AuthorEntity[]> {
     const data: Author[] = await this.prisma.author.findMany({
       take: paging?.limit ?? 20,
       skip: paging?.cursor ? 1 : 0,
       ...(paging?.cursor ? { skip: 1, cursor: { id: paging.cursor } } : {}),
+      where: {
+        ...(filter?.name ? { name: { contains: filter.name } } : {}),
+      },
+      orderBy: sort?.field
+        ? [
+            { [sort.field as unknown as string]: sort.order },
+            { id: sort.order },
+          ]
+        : { createdAt: 'asc' },
     });
     return data.map(PersistenceAuthorRepository.convertToAuthorEntity);
   }

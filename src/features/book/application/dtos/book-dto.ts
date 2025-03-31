@@ -1,4 +1,9 @@
-import { GetListOptions, idSchema, isoDateStringShema } from '@src/core/types';
+import {
+  GetListOptions,
+  idSchema,
+  isoDateStringShema,
+  SortOptions,
+} from '@src/core/types';
 import { z } from 'zod';
 import { ItemFormat } from '../../domain/interfaces/models';
 
@@ -103,6 +108,18 @@ export const reviewDetailDtoSchema = z.object({
   createdAt: isoDateStringShema,
 });
 
+export const bookSortFields = z
+  .enum([
+    'id',
+    'title',
+    'releaseDate',
+    'updatedAt',
+    'averageRating',
+    'likeCount',
+    'reviewCount',
+  ])
+  .default('updatedAt');
+
 export const bookQuerySchema = z.object({
   cursor: z.string().optional(),
   limit: z.coerce.number().int().positive().default(20),
@@ -113,16 +130,8 @@ export const bookQuerySchema = z.object({
   publisher: z.string().uuid().optional(),
   release_date_gte: z.coerce.number().int().optional(),
   release_date_lte: z.coerce.number().int().optional(),
-  sort: z
-    .enum([
-      'releaseDate',
-      '-releaseDate',
-      'updatedAt',
-      '-updatedAt',
-      'id',
-      '-id',
-    ])
-    .optional(),
+  sort: bookSortFields.optional(),
+  sortBy: z.enum(['asc', 'desc']).default('desc'),
 });
 
 export const bookListSchema = z.array(bookListItemSchema);
@@ -189,7 +198,10 @@ export type BooksFilter = {
   };
 };
 
-export type GetBooksOptions = GetListOptions<BooksFilter>;
+export type BooksSortField = z.infer<typeof bookSortFields>;
+export type BooksSortOptions = SortOptions<BooksSortField>;
+
+export type GetBooksOptions = GetListOptions<BooksFilter, BooksSortOptions>;
 
 export type ReadingDto = {
   bookId: string;

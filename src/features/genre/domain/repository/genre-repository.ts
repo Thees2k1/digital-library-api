@@ -1,9 +1,15 @@
 import { Repository } from '@src/core/interfaces/base-repository';
 import { GenreEntity } from '../entities/genre-entity';
 import { GetListOptions, Id } from '@src/core/types';
+import {
+  GenreFilters,
+  GetGenresOptions,
+} from '../../application/dto/genre-dtos';
 
-export abstract class GenreRepository implements Repository<Id, GenreEntity> {
-  getList(params: GetListOptions<GenreEntity>): Promise<GenreEntity[]> {
+export abstract class GenreRepository
+  implements Repository<Id, GenreEntity, GetGenresOptions>
+{
+  getList(params: GetGenresOptions): Promise<GenreEntity[]> {
     throw new Error('Method not implemented.');
   }
   getById(id: string): Promise<GenreEntity | null> {
@@ -23,7 +29,7 @@ export abstract class GenreRepository implements Repository<Id, GenreEntity> {
     throw new Error('Method not implemented,');
   }
 
-  count(filter: any): Promise<number> {
+  count(filter: GenreFilters): Promise<number> {
     throw new Error('Method not implemented.');
   }
 }

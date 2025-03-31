@@ -5,6 +5,7 @@ import {
   idSchema,
   PagingOptions,
   SortOptions,
+  sortOrderSchema,
 } from '@src/core/types';
 import { NextFunction, Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
@@ -13,8 +14,11 @@ import {
   AuthorCreateDto,
   AuthorDetailDto,
   AuthorList,
+  AuthorSort,
+  AuthorSortOptions,
+  AuthorsQuerySchema,
   AuthorUpdateDto,
-  GetAuthorsParams,
+  GetAuthorsOptions,
 } from '../../application/dtos/author-dto';
 import { IAuthorService } from '../../application/use-cases/interfaces/author-service-interface';
 import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
@@ -53,21 +57,24 @@ export class AuthorController {
     next: NextFunction,
   ) {
     try {
-      const query = req.query;
-      const filter = {};
+      const query = AuthorsQuerySchema.parse(req.query);
+      const filter = query.q
+        ? {
+            name: query.q,
+          }
+        : undefined;
 
-      const sortOptions: SortOptions = {
-        field: '',
-        order: 'asc',
+      const sortOptions: AuthorSortOptions = {
+        field: AuthorSort.parse(query.sort),
+
+        order: sortOrderSchema.parse(query.order),
       };
 
       const paginOptions: PagingOptions = {
         cursor: query?.cursor as string,
-        limit: query.limit
-          ? parseInt(query.limit as string)
-          : DEFAULT_LIST_LIMIT,
+        limit: query.limit ?? DEFAULT_LIST_LIMIT,
       };
-      const params: GetAuthorsParams = {
+      const params: GetAuthorsOptions = {
         filter,
         sort: sortOptions,
         paging: paginOptions,
@@ -175,7 +182,6 @@ export class AuthorController {
           nextCursor: result.nextCursor,
           limit: result.limit,
           total: result.total || result.data.length,
-          hasNextPage: result.hasNextPage,
         },
         timestamp: Date.now(),
       };

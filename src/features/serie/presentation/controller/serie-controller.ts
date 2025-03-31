@@ -1,24 +1,26 @@
 import { DI_TYPES } from '@src/core/di/types';
+import { NextFunction, Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
-import { Request, Response, NextFunction } from 'express';
 
+import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
 import { AppError } from '@src/core/errors/custom-error';
-import { ZodError } from 'zod';
 import { ValidationError } from '@src/core/errors/validation-error';
 import {
   ApiResponse,
   idSchema,
   PagingOptions,
-  SortOptions,
+  sortOrderSchema,
 } from '@src/core/types';
-import { ISerieService } from '../../application/use-cases/interfaces/serie-service-interface';
+import { ZodError } from 'zod';
 import {
   SerieCreateDto,
   SerieList,
+  serieSortFieldsSchema,
+  SerieSortOptions,
+  seriesQuerySchema,
   SerieUpdateDto,
 } from '../../application/dto/serie-dtos';
-import { GetGenresParams } from '@src/features/genre/application/dto/genre-dtos';
-import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
+import { ISerieService } from '../../application/use-cases/interfaces/serie-service-interface';
 
 @injectable()
 export class SerieController {
@@ -43,26 +45,28 @@ export class SerieController {
 
   async getSeries(req: Request, res: Response, next: NextFunction) {
     try {
-      const query = req.query;
-      const filter = {};
+      const query = seriesQuerySchema.parse(req.query);
 
-      const sortOptions: SortOptions = {
-        field: '',
-        order: 'asc',
+      const filter = {
+        ...(query.q ? { name: query.q } : {}),
+        ...(query.releaseDate ? { releaseDate: query.releaseDate } : {}),
+        status: query.status,
+      };
+      const sortOptions: SerieSortOptions = {
+        field: serieSortFieldsSchema.parse(query.sort),
+        order: sortOrderSchema.parse(query.order),
       };
 
-      const paginOptions: PagingOptions = {
-        cursor: query?.cursor as string,
-        limit: query.limit
-          ? parseInt(query.limit as string)
-          : DEFAULT_LIST_LIMIT,
+      const pagingOptions: PagingOptions = {
+        cursor: query.cursor,
+        limit: query.limit ?? DEFAULT_LIST_LIMIT,
       };
-      const params: GetGenresParams = {
+
+      const result = await this.service.getList({
         filter,
         sort: sortOptions,
-        paging: paginOptions,
-      };
-      const result = await this.service.getList(params);
+        paging: pagingOptions,
+      });
 
       const resBody = {
         message: 'Series fetched successfully',
@@ -71,6 +75,27 @@ export class SerieController {
         pagination: result.paging,
         timestamp: Date.now(),
       } as ApiResponse<SerieList>;
+      res.json(resBody);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getPopularSeries(req: Request, res: Response, next: NextFunction) {
+    try {
+      const limit = parseInt(req.query.limit as string, 10) || 10;
+      const cursor = req.query.cursor as string | undefined;
+
+      const result = await this.service.getPopularSeries(limit, cursor);
+
+      const resBody: ApiResponse<SerieList> = {
+        message: 'Popular authors fetched successfully',
+        status: 'success',
+        data: result.data,
+        pagination: result.paging,
+        timestamp: Date.now(),
+      };
+
       res.json(resBody);
     } catch (error) {
       next(error);

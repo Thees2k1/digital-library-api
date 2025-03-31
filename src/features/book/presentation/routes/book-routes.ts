@@ -6,6 +6,7 @@ import { Router } from 'express';
 import { inject, injectable } from 'inversify';
 import {
   bookCreateDtoSchema,
+  bookQuerySchema,
   bookUpdateDtoSchema,
   reviewCreateDtoSchema,
   updateFavoriteDtoSchema,
@@ -41,6 +42,7 @@ export class BookRouterFactory extends BaseRouterFactory<BookController> {
 
     this._router.get(
       BookRoutes.books,
+      validationMiddleware(bookQuerySchema),
       this.controller.getBooks.bind(this.controller),
     );
     this._router.get(

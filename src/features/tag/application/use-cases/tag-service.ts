@@ -5,7 +5,7 @@ import {
   TagCreateDto,
   TagDetailDto,
   TagUpdateDto,
-  GetTagsParams,
+  GetTagsOptions,
   GetTagsResult,
 } from '../dto/tag-dtos';
 import logger from '@src/core/utils/logger/logger';
@@ -75,7 +75,7 @@ export class TagService implements ITagService {
       throw error;
     }
   }
-  async getList(params: GetTagsParams): Promise<GetTagsResult> {
+  async getList(params: GetTagsOptions): Promise<GetTagsResult> {
     try {
       const cacheKey = generateCacheKey('Tags', params);
       const cacheData = await this.cacheService.get<GetTagsResult>(cacheKey);
@@ -84,10 +84,10 @@ export class TagService implements ITagService {
       }
 
       const res = await this.repository.getList(params);
-      const total = await this.repository.count({});
+      const total = await this.repository.count(params.filter ?? {});
       const limit = params.paging?.limit ?? DEFAULT_LIST_LIMIT;
       const hasNextPage = res.length >= limit;
-      const nextCursor = res.length > 0 ? res[res.length - 1].id : '';
+      const nextCursor = hasNextPage ? res[res.length - 1].id : '';
 
       const resultData: GetTagsResult = {
         data: res.map((Tag) => {
@@ -96,7 +96,6 @@ export class TagService implements ITagService {
         paging: {
           total: total,
           limit,
-          hasNextPage,
           nextCursor,
         },
       };

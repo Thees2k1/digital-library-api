@@ -1,12 +1,15 @@
 import { Repository } from '@src/core/interfaces/base-repository';
-import { GetListOptions } from '@src/core/types';
-import { Id } from '../../application/dto/category-dtos';
+import {
+  CategoryFilter,
+  GetCategoriesOptions,
+  Id,
+} from '../../application/dto/category-dtos';
 import { CategoryEntity } from '../entities/category';
 
 export abstract class CategoryRepository
-  implements Repository<Id, CategoryEntity>
+  implements Repository<Id, CategoryEntity, GetCategoriesOptions>
 {
-  getList(options: GetListOptions<CategoryEntity>): Promise<CategoryEntity[]> {
+  getList(options: GetCategoriesOptions): Promise<CategoryEntity[]> {
     throw new Error('Method not implemented.');
   }
   getById(id: string): Promise<CategoryEntity | null> {
@@ -28,10 +31,15 @@ export abstract class CategoryRepository
 
   abstract getAll(): Promise<CategoryEntity[]>;
 
-  abstract count(filter: any): Promise<number>;
+  abstract count(filter: CategoryFilter): Promise<number>;
 
   abstract updatePopularityPoints(
     categoryId: string,
     points: number,
   ): Promise<void>;
+
+  abstract getPopularCategories(
+    limit: number,
+    cursor?: string,
+  ): Promise<CategoryEntity[]>;
 }

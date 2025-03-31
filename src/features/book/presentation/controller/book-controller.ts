@@ -18,6 +18,8 @@ import {
   BookList,
   bookQuerySchema,
   BooksFilter,
+  bookSortFields,
+  BooksSortOptions,
   BookUpdateDto,
   GetBooksOptions,
   PopularBookList,
@@ -81,9 +83,9 @@ export class BookController {
             : undefined,
       };
 
-      const sortOptions: SortOptions | undefined = query.sort && {
-        field: query.sort.includes('-') ? query.sort.slice(1) : query.sort,
-        order: query.sort.includes('-') ? 'desc' : 'asc',
+      const sortOptions: BooksSortOptions = {
+        field: bookSortFields.parse(query.sort),
+        order: query.sortBy,
       };
 
       const paginOptions: PagingOptions = {
@@ -107,7 +109,6 @@ export class BookController {
         pagination: {
           limit: paginOptions.limit,
           total: result.total,
-          hasNextPage: result.hasNextPage,
           nextCursor: result.nextCursor,
         },
         timestamp: Date.now(),

@@ -1,7 +1,7 @@
 import { BaseUseCase } from '@src/core/interfaces/base-use-case';
 import { Id } from '@src/core/types';
 import {
-  GetSeriesParams,
+  GetSeriesOptions,
   GetSeriesResult,
   SerieCreateDto,
   SerieDetailDto,
@@ -9,8 +9,12 @@ import {
 } from '../../dto/serie-dtos';
 
 export interface ISerieService
-  extends BaseUseCase<GetSeriesParams, SerieDetailDto, Id> {
-  getList(params: GetSeriesParams): Promise<GetSeriesResult>;
+  extends BaseUseCase<GetSeriesOptions, SerieDetailDto, Id> {
+  getList(params: GetSeriesOptions): Promise<GetSeriesResult>;
   create(data: SerieCreateDto): Promise<SerieDetailDto>;
   update(id: Id, data: SerieUpdateDto): Promise<string>;
+  getPopularSeries(
+    limit: number,
+    cursor: string | undefined,
+  ): Promise<GetSeriesResult>;
 }

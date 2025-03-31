@@ -5,7 +5,7 @@ import {
   GenreCreateDto,
   GenreDetailDto,
   GenreUpdateDto,
-  GetGenresParams,
+  GetGenresOptions,
   GetGenresResult,
 } from '../dto/genre-dtos';
 import logger from '@src/core/utils/logger/logger';
@@ -75,7 +75,7 @@ export class GenreService implements IGenreService {
       throw error;
     }
   }
-  async getList(params: GetGenresParams): Promise<GetGenresResult> {
+  async getList(params: GetGenresOptions): Promise<GetGenresResult> {
     try {
       const cacheKey = generateCacheKey('genres', params);
       const cacheData = await this.cacheService.get<GetGenresResult>(cacheKey);
@@ -84,7 +84,7 @@ export class GenreService implements IGenreService {
       }
 
       const res = await this.repository.getList(params);
-      const total = await this.repository.count({});
+      const total = await this.repository.count(params.filter ?? {});
 
       const limit = params.paging?.limit ?? DEFAULT_LIST_LIMIT;
       const hasNextPage = res.length >= limit;
@@ -97,7 +97,6 @@ export class GenreService implements IGenreService {
         paging: {
           total,
           limit,
-          hasNextPage,
           nextCursor,
         },
       };

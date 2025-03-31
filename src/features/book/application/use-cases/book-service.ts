@@ -2,7 +2,7 @@ import { config } from '@src/core/config/config';
 import { DI_TYPES } from '@src/core/di/types';
 import { AppError } from '@src/core/errors/custom-error';
 import { SearchService } from '@src/core/interfaces/search-service';
-import { GetListOptions, Id } from '@src/core/types';
+import { Id } from '@src/core/types';
 import { inject, injectable } from 'inversify';
 import { BookEntity } from '../../domain/entities/book-entity';
 import {
@@ -17,8 +17,8 @@ import {
   BookDetailDto,
   BookIndexRecord,
   bookListSchema,
-  BooksFilter,
   BookUpdateDto,
+  GetBooksOptions,
   GetListResult,
   PopularBookList,
   popularBooksSchema,
@@ -31,11 +31,10 @@ import {
   UserFavoriteBookList,
 } from '../dtos/book-dto';
 // import { BookEntity } from '../mapper/book-mapper';
-import { IBookService } from './interfaces/book-service-interface';
+import { eventEmitter, EVENTS } from '@src/core/events';
 import { CacheService } from '@src/core/interfaces/cache-service';
 import { generateCacheKey } from '@src/core/utils/generate-cache-key';
-import { eventEmitter, EVENTS } from '@src/core/events';
-import { BookReading } from '../../domain/entities/book-reading';
+import { IBookService } from './interfaces/book-service-interface';
 
 @injectable()
 export class BookService implements IBookService {
@@ -223,7 +222,7 @@ export class BookService implements IBookService {
       throw error;
     }
   }
-  async getList(options: GetListOptions<BooksFilter>): Promise<GetListResult> {
+  async getList(options: GetBooksOptions): Promise<GetListResult> {
     const cacheKey = generateCacheKey('books:list', options);
     try {
       const { paging, filter, sort } = options;

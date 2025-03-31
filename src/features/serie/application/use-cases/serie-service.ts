@@ -10,10 +10,11 @@ import { v7 as uuid } from 'uuid';
 import { SerieEntity } from '../../domain/entities/serie-entity';
 import { SerieRepository } from '../../domain/repository/serie-repository';
 import {
-  GetSeriesParams,
+  GetSeriesOptions,
   GetSeriesResult,
   SerieCreateDto,
   SerieDetailDto,
+  SerieSortOptions,
   SerieUpdateDto,
 } from '../dto/serie-dtos';
 import { ISerieService } from './interfaces/serie-service-interface';
@@ -29,12 +30,63 @@ export class SerieService implements ISerieService {
     this.repository = repository;
     this.cacheService = cacheService;
   }
+  async getPopularSeries(
+    limit: number,
+    cursor: string,
+  ): Promise<GetSeriesResult> {
+    try {
+      const popularSort: SerieSortOptions = {
+        field: 'popularityPoints',
+        order: 'desc',
+      };
+      const cacheKey = generateCacheKey('popular_series', {
+        limit,
+        cursor,
+      });
+      const cacheData = await this.cacheService.get<GetSeriesResult>(cacheKey);
+      if (cacheData) {
+        return cacheData;
+      }
+
+      const data = await this.repository.getList({
+        paging: {
+          limit,
+          cursor,
+        },
+        sort: popularSort,
+      });
+      const hasNextPage = data.length >= limit;
+      const nextCursor = hasNextPage ? data[data.length - 1].id : '';
+      const total = await this.repository.count({});
+
+      const result: GetSeriesResult = {
+        data: data.map((item) => this._convertToResultDto(item)),
+        paging: {
+          total,
+          limit,
+          nextCursor,
+        },
+      };
+
+      await this.cacheService.set(cacheKey, result, { EX: 60 });
+
+      return result;
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      logger.error(error);
+      throw AppError.internalServer('Internal server error.');
+    }
+  }
   async create(data: SerieCreateDto): Promise<SerieDetailDto> {
     try {
       const existed = await this.repository.getByNameAsync(data.name);
       if (existed) {
         throw AppError.forbidden('existed Serie.');
       }
+
+      console.log('data', data);
 
       const input: SerieEntity = {
         id: uuid(),
@@ -43,12 +95,21 @@ export class SerieService implements ISerieService {
         status: data.status,
         description: data.description ?? '',
         releaseDate: new Date(data.releaseDate),
-        books: data.books,
+        author: undefined,
+        books: data.books
+          ? data.books.map((id) => ({
+              id: id,
+              title: '',
+              cover: '',
+              popularityPoints: 0,
+            }))
+          : [],
         updatedAt: new Date(),
         createdAt: new Date(),
       };
 
       const res = await this.repository.create(input);
+      this._clearCache(res.id);
 
       return this._convertToResultDto(res);
     } catch (error) {
@@ -78,18 +139,23 @@ export class SerieService implements ISerieService {
         releaseDate: data.releaseDate
           ? new Date(data.releaseDate)
           : existed.releaseDate,
-        books: data.books ?? existed.books,
+        books: data.books
+          ? data.books.map((id) => {
+              return { id: id, title: '', cover: '', popularityPoints: 0 };
+            })
+          : existed.books,
         updatedAt: new Date(),
       };
 
       await this.repository.update(id, updatedDate);
+      this._clearCache(id);
       return existed.id;
     } catch (error) {
       logger.error(error);
       throw error;
     }
   }
-  async getList(params: GetSeriesParams): Promise<GetSeriesResult> {
+  async getList(params: GetSeriesOptions): Promise<GetSeriesResult> {
     try {
       const cacheKey = generateCacheKey('series', params);
       const cacheData = await this.cacheService.get<GetSeriesResult>(cacheKey);
@@ -98,18 +164,17 @@ export class SerieService implements ISerieService {
       }
 
       const data = await this.repository.getList(params);
-      const total = await this.repository.count(params);
+      const total = await this.repository.count(params.filter ?? {});
 
       const limit = params.paging?.limit ?? DEFAULT_LIST_LIMIT;
       const hasNextPage = data.length >= limit;
-      const nextCursor = data.length > 0 ? data[data.length - 1].id : '';
+      const nextCursor = hasNextPage ? data[data.length - 1].id : '';
 
       const result: GetSeriesResult = {
         data: data.map((item) => this._convertToResultDto(item)),
         paging: {
           total,
           limit,
-          hasNextPage,
           nextCursor,
         },
       };
@@ -152,6 +217,7 @@ export class SerieService implements ISerieService {
       }
 
       await this.repository.delete(id);
+      this._clearCache(id);
       return id;
     } catch (error) {
       throw AppError.internalServer('Internal server error.');
@@ -164,10 +230,16 @@ export class SerieService implements ISerieService {
       name: entity.name,
       cover: entity.cover,
       status: entity.status,
+      author: entity.author,
       books: entity.books,
       releaseDate: entity.releaseDate ?? null,
       description: entity.description,
       updatedAt: entity.updatedAt,
     };
+  }
+
+  private _clearCache(id: string): void {
+    const cacheKey = generateCacheKey('serie', { id });
+    this.cacheService.delete(cacheKey);
   }
 }
