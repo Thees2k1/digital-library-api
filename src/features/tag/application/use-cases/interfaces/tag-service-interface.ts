@@ -4,12 +4,13 @@ import {
   TagCreateDto,
   TagDetailDto,
   TagUpdateDto,
-  GetTagsParams,
+  GetTagsOptions,
   GetTagsResult,
 } from '../../dto/tag-dtos';
 
-export interface ITagService extends BaseUseCase<any, TagDetailDto, Id> {
-  getList(params: GetTagsParams): Promise<GetTagsResult>;
+export interface ITagService
+  extends BaseUseCase<GetTagsOptions, TagDetailDto, Id> {
+  getList(params: GetTagsOptions): Promise<GetTagsResult>;
   create(data: TagCreateDto): Promise<TagDetailDto>;
   update(id: Id, data: TagUpdateDto): Promise<string>;
 }

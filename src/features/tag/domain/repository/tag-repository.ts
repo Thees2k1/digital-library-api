@@ -1,9 +1,12 @@
 import { Repository } from '@src/core/interfaces/base-repository';
+import { Id } from '@src/core/types';
+import { GetTagsOptions, TagFilters } from '../../application/dto/tag-dtos';
 import { TagEntity } from '../entities/tag-entity';
-import { GetListOptions, Id } from '@src/core/types';
 
-export abstract class TagRepository implements Repository<Id, TagEntity> {
-  getList(params: GetListOptions<TagEntity>): Promise<TagEntity[]> {
+export abstract class TagRepository
+  implements Repository<Id, TagEntity, GetTagsOptions>
+{
+  getList(params: GetTagsOptions): Promise<TagEntity[]> {
     throw new Error('Method not implemented.');
   }
   getById(id: string): Promise<TagEntity | null> {
@@ -23,7 +26,7 @@ export abstract class TagRepository implements Repository<Id, TagEntity> {
     throw new Error('Method not implemented,');
   }
 
-  count(filter: any): Promise<number> {
+  count(filter: TagFilters): Promise<number> {
     throw new Error('Method not implemented.');
   }
 }

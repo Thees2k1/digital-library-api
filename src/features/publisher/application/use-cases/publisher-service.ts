@@ -7,11 +7,14 @@ import logger from '@src/core/utils/logger/logger';
 import { PublisherEntity } from '../../domain/entities/publisher-entity';
 import { PublisherRepository } from '../../domain/repository/publisher-repository';
 import {
+  GetPublishersOptions,
+  GetPublishersResult,
   PublisherCreateDto,
   PublisherDetailDto,
   PublisherUpdateDto,
 } from '../dto/publisher-dtos';
 import { IPublisherService } from './interfaces/publisher-service-interface';
+import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
 
 @injectable()
 export class PublisherService implements IPublisherService {
@@ -52,11 +55,23 @@ export class PublisherService implements IPublisherService {
       throw error;
     }
   }
-  async getList(): Promise<Array<PublisherDetailDto>> {
+  async getList(options: GetPublishersOptions): Promise<GetPublishersResult> {
     try {
-      const res = await this.repository.getList();
-
-      return res.map((entity) => this._convertToResultDto(entity));
+      const res = await this.repository.getList(options);
+      const total = await this.repository.count(options.filter ?? {});
+      const limit = options.paging?.limit ?? DEFAULT_LIST_LIMIT;
+      const hasNextPage = res.length >= limit;
+      const nextCursor = hasNextPage ? res[res.length - 1].id : '';
+      const publishers = res.map((entity) => this._convertToResultDto(entity));
+      const result: GetPublishersResult = {
+        data: publishers,
+        paging: {
+          total,
+          limit,
+          nextCursor,
+        },
+      };
+      return result;
     } catch (error) {
       logger.error(error);
       throw AppError.internalServer('Internal server error.');

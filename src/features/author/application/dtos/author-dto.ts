@@ -1,4 +1,4 @@
-import { GetListOptions } from '@src/core/types';
+import { GetListOptions, SortOptions, sortOrderSchema } from '@src/core/types';
 import { z } from 'zod';
 
 export const AuthorCreateSchema = z.object({
@@ -26,10 +26,31 @@ export const AuthorCreateResultSchema = AuthorCreateSchema.extend({
   updatedAt: z.date(),
 });
 
+export const AuthorSort = z
+  .enum(['id', 'name', 'createdAt', 'updatedAt', 'popularityPoints'])
+  .default('createdAt');
+
+export const AuthorsQuerySchema = z.object({
+  sort: AuthorSort.optional(),
+  order: sortOrderSchema.optional(),
+  q: z.string().optional(),
+  cursor: z.string().optional(),
+  limit: z.preprocess((arg) => {
+    if (typeof arg === 'string') {
+      const parsed = parseInt(arg, 10);
+      return isNaN(parsed) ? undefined : parsed; // Return `undefined` if parsing fails
+    }
+    return arg;
+  }, z.number().optional()),
+  country: z.string().optional(),
+});
+
 export const AuthorUpdateSchema = AuthorCreateSchema.partial();
 
 export const AuthorIdResultSchema = z.string().uuid();
 
+export type AuthorSortFields = z.infer<typeof AuthorSort>;
+export type AuthorsQuery = z.infer<typeof AuthorsQuerySchema>;
 export interface AuthorCreateDto extends z.infer<typeof AuthorCreateSchema> {}
 export interface AuthorUpdateDto extends z.infer<typeof AuthorUpdateSchema> {}
 
@@ -53,7 +74,12 @@ export interface AuthorDetailDto {
 
 export interface AuthorList extends Array<AuthorDetailDto> {}
 
-export type GetAuthorsParams = GetListOptions<any>;
+export type AuthorFilter = {
+  name?: string;
+  country?: string;
+};
+export type AuthorSortOptions = SortOptions<AuthorSortFields>;
+export type GetAuthorsOptions = GetListOptions<AuthorFilter, AuthorSortOptions>;
 
 export type GetAuthorsResult = {
   data: AuthorList;

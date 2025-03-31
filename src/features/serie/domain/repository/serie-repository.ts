@@ -1,10 +1,15 @@
 import { Repository } from '@src/core/interfaces/base-repository';
 import { Id } from '@src/core/types';
 import { SerieEntity } from '../entities/serie-entity';
-import { GetSeriesParams } from '../../application/dto/serie-dtos';
+import {
+  GetSeriesOptions,
+  SerieFilters,
+} from '../../application/dto/serie-dtos';
 
-export abstract class SerieRepository implements Repository<Id, SerieEntity> {
-  getList(params: GetSeriesParams): Promise<Array<SerieEntity>> {
+export abstract class SerieRepository
+  implements Repository<Id, SerieEntity, GetSeriesOptions>
+{
+  getList(params: GetSeriesOptions): Promise<Array<SerieEntity>> {
     throw new Error('Method not implemented.');
   }
   getById(id: string): Promise<SerieEntity | null> {
@@ -28,5 +33,7 @@ export abstract class SerieRepository implements Repository<Id, SerieEntity> {
     throw new Error('Method not implemented.');
   }
 
-  abstract count(filter: any): Promise<number>;
+  count(filter: SerieFilters): Promise<number> {
+    throw new Error('Method not implemented.');
+  }
 }

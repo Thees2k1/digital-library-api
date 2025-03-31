@@ -25,7 +25,7 @@ export class PublisherRouterFactory extends BaseRouterFactory<PublisherControlle
   setupRoutes(): void {
     this._router.get(
       PublisherRoutes.publishers,
-      this.controller.getCategories.bind(this.controller),
+      this.controller.getPublishers.bind(this.controller),
     );
     this._router.get(
       PublisherRoutes.publisher,

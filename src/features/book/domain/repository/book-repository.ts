@@ -1,6 +1,7 @@
 import { PagingOptions, SortOptions } from '@src/core/types';
 import {
   BooksFilter,
+  BooksSortOptions,
   ReviewCreateDto,
   ReviewListResultDto,
   UpdateReadingDto,
@@ -12,7 +13,7 @@ export abstract class BookRepository {
   abstract getList(
     paging: PagingOptions | undefined,
     filter: BooksFilter | undefined,
-    sort: SortOptions | undefined,
+    sort: BooksSortOptions | undefined,
   ): Promise<Array<BookEntity>>;
   abstract getById(id: string): Promise<BookEntity | null>;
   abstract create(data: Partial<BookEntity>): Promise<BookEntity>;

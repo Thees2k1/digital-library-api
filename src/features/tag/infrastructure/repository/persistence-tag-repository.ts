@@ -3,7 +3,8 @@ import { DI_TYPES } from '@src/core/di/types';
 import { inject, injectable } from 'inversify';
 import { TagRepository } from '../../domain/repository/tag-repository';
 import { TagEntity } from '../../domain/entities/tag-entity';
-import { GetTagsParams } from '../../application/dto/tag-dtos';
+import { GetTagsOptions, TagFilters } from '../../application/dto/tag-dtos';
+import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
 
 @injectable()
 export class PersistenceTagRepository extends TagRepository {
@@ -13,13 +14,30 @@ export class PersistenceTagRepository extends TagRepository {
     this.prisma = prisma;
   }
 
-  count(filter: any): Promise<number> {
-    return this.prisma.tag.count({ where: filter });
+  count(filter: TagFilters): Promise<number> {
+    return this.prisma.tag.count({
+      where: {
+        ...(filter?.name ? { name: { contains: filter.name } } : {}),
+      },
+    });
   }
 
-  async getList({ paging }: GetTagsParams): Promise<TagEntity[]> {
+  async getList({
+    paging,
+    sort,
+    filter,
+  }: GetTagsOptions): Promise<TagEntity[]> {
     const data: Tag[] = await this.prisma.tag.findMany({
-      take: paging?.limit ?? 20,
+      where: {
+        ...(filter?.name ? { name: { contains: filter.name } } : {}),
+      },
+      orderBy: sort?.field
+        ? [
+            { [sort.field as unknown as string]: sort.order },
+            { id: sort.order },
+          ]
+        : { createdAt: 'asc' },
+      take: paging?.limit ?? DEFAULT_LIST_LIMIT,
       skip: paging?.cursor ? 1 : 0,
       ...(paging?.cursor ? { skip: 1, cursor: { id: paging.cursor } } : {}),
     });

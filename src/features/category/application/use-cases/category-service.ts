@@ -4,8 +4,11 @@ import { inject, injectable } from 'inversify';
 import {
   CategoryCreateDto,
   CategoryDetailDto,
+  CategorySortFields,
+  CategorySortOptions,
+  categorySortSchema,
   CategoryUpdateDto,
-  GetCategoriesParams,
+  GetCategoriesOptions,
   GetCategoriesResult,
   Id,
 } from '../dto/category-dtos';
@@ -73,7 +76,7 @@ export class CategoryService implements ICategoryService {
       throw error;
     }
   }
-  async getList(params: GetCategoriesParams): Promise<GetCategoriesResult> {
+  async getList(params: GetCategoriesOptions): Promise<GetCategoriesResult> {
     try {
       const cacheKey = generateCacheKey('category', params);
       const cacheData =
@@ -83,7 +86,7 @@ export class CategoryService implements ICategoryService {
         return cacheData;
       }
       const res = await this.repository.getList(params);
-      const total = await this.repository.count({});
+      const total = await this.repository.count(params.filter ?? {});
 
       const limit = params.paging?.limit ?? DEFAULT_LIST_LIMIT;
 
@@ -138,7 +141,7 @@ export class CategoryService implements ICategoryService {
   }
 
   async getPopularCategories(
-    params: GetCategoriesParams,
+    params: GetCategoriesOptions,
   ): Promise<GetCategoriesResult> {
     try {
       const cacheKey = generateCacheKey('popular_categories', params);
@@ -151,8 +154,16 @@ export class CategoryService implements ICategoryService {
 
       const res = await this.repository.getList({
         ...params,
-        sort: { field: 'popularityPoints', order: 'desc' },
+        sort: {
+          field: 'popularityPoints',
+          order: 'desc',
+        } as CategorySortOptions,
       });
+
+      // const res = await this.repository.getPopularCategories(
+      //   params.paging?.limit ?? DEFAULT_LIST_LIMIT,
+      //   params.paging?.cursor,
+      // );
 
       const limit = params.paging?.limit ?? DEFAULT_LIST_LIMIT;
       const total = await this.repository.count({});

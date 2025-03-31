@@ -3,6 +3,11 @@ import { PublisherRepository } from '../../domain/repository/publisher-repositor
 import { PrismaClient, Publisher } from '@prisma/client';
 import { DI_TYPES } from '@src/core/di/types';
 import { PublisherEntity } from '../../domain/entities/publisher-entity';
+import {
+  GetPublishersOptions,
+  PublisherFilters,
+} from '../../application/dto/publisher-dtos';
+import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
 
 @injectable()
 export class PersistencePublisherRepository extends PublisherRepository {
@@ -12,8 +17,32 @@ export class PersistencePublisherRepository extends PublisherRepository {
     this.prisma = prisma;
   }
 
-  async getList(): Promise<PublisherEntity[]> {
-    const data: Publisher[] = await this.prisma.publisher.findMany();
+  async count(filter: PublisherFilters): Promise<number> {
+    return await this.prisma.publisher.count({
+      where: {
+        ...(filter?.name ? { name: { contains: filter.name } } : {}),
+      },
+    });
+  }
+  async getList({
+    filter,
+    sort,
+    paging,
+  }: GetPublishersOptions): Promise<PublisherEntity[]> {
+    const data: Publisher[] = await this.prisma.publisher.findMany({
+      where: {
+        ...(filter?.name ? { name: { contains: filter.name } } : {}),
+      },
+      orderBy: sort?.field
+        ? [
+            { [sort.field as unknown as string]: sort.order },
+            { id: sort.order },
+          ]
+        : { createdAt: 'asc' },
+      take: paging?.limit ?? DEFAULT_LIST_LIMIT,
+      skip: paging?.cursor ? 1 : 0,
+      ...(paging?.cursor ? { skip: 1, cursor: { id: paging.cursor } } : {}),
+    });
     return data.map((publisher) =>
       PersistencePublisherRepository.convertToEntity(publisher),
     );

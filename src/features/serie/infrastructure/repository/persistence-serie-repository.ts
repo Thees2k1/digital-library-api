@@ -3,7 +3,11 @@ import { DI_TYPES } from '@src/core/di/types';
 import { inject, injectable } from 'inversify';
 import { SerieRepository } from '../../domain/repository/serie-repository';
 import { SerieEntity } from '../../domain/entities/serie-entity';
-import { GetSeriesParams } from '../../application/dto/serie-dtos';
+import {
+  GetSeriesOptions,
+  SerieStatus,
+} from '../../application/dto/serie-dtos';
+import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
 
 @injectable()
 export class PersistenceSerieRepository extends SerieRepository {
@@ -14,12 +18,31 @@ export class PersistenceSerieRepository extends SerieRepository {
   }
 
   count(filter: any): Promise<number> {
-    return this.prisma.serie.count({ where: filter });
+    return this.prisma.serie.count({
+      where: {
+        ...(filter?.name ? { name: { contains: filter.name } } : {}),
+        ...(filter?.status ? { status: filter.status } : {}),
+      },
+    });
   }
-  async getList({ paging }: GetSeriesParams): Promise<SerieEntity[]> {
+  async getList({
+    paging,
+    sort,
+    filter,
+  }: GetSeriesOptions): Promise<SerieEntity[]> {
     const data: Serie[] = await this.prisma.serie.findMany({
       include: { books: true },
-      take: paging?.limit ?? 20,
+      where: {
+        ...(filter?.name ? { name: { contains: filter.name } } : {}),
+        ...(filter?.status ? { status: filter.status as SerieStatus } : {}),
+      },
+      orderBy: sort?.field
+        ? [
+            { [sort.field as unknown as string]: sort.order },
+            { id: sort.order },
+          ]
+        : { createdAt: 'asc' },
+      take: paging?.limit ?? DEFAULT_LIST_LIMIT,
       skip: paging?.cursor ? 1 : 0,
       ...(paging?.cursor ? { skip: 1, cursor: { id: paging.cursor } } : {}),
     });

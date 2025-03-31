@@ -1,9 +1,16 @@
 import { Category, PrismaClient } from '@prisma/client';
 import { DI_TYPES } from '@src/core/di/types';
 import { inject, injectable } from 'inversify';
-import { GetCategoriesParams } from '../../application/dto/category-dtos';
+import {
+  CategoryFilter,
+  GetCategoriesOptions,
+} from '../../application/dto/category-dtos';
 import { CategoryEntity } from '../../domain/entities/category';
 import { CategoryRepository } from '../../domain/repository/category-repository';
+import {
+  DEFAULT_LIST_LIMIT,
+  DEFAULT_LIST_OFFSET,
+} from '@src/core/constants/constants';
 
 @injectable()
 export class PersistenceCategoryRepository extends CategoryRepository {
@@ -13,19 +20,52 @@ export class PersistenceCategoryRepository extends CategoryRepository {
     this.prisma = prisma;
   }
 
-  async count(filter: any): Promise<number> {
-    //NEED TO IMPROVE
-    return await this.prisma.category.count({ where: filter });
+  async count(filter?: CategoryFilter): Promise<number> {
+    return await this.prisma.category.count({
+      where: {
+        ...(filter?.name ? { name: { contains: filter.name } } : {}),
+      },
+    });
   }
 
-  async getList(options: GetCategoriesParams): Promise<CategoryEntity[]> {
+  async getList(options: GetCategoriesOptions): Promise<CategoryEntity[]> {
     const { paging, sort } = options;
+
     const data: Category[] = await this.prisma.category.findMany({
-      take: paging?.limit ?? 20,
-      skip: paging?.cursor ? 1 : 0,
+      where: {
+        ...(options.filter?.name
+          ? { name: { contains: options.filter.name } }
+          : {}),
+      },
+      orderBy: sort?.field
+        ? [
+            { [sort.field as unknown as string]: sort.order },
+            { id: sort.order },
+          ]
+        : { createdAt: 'asc' },
+      take: paging?.limit ?? DEFAULT_LIST_LIMIT,
+      skip: paging?.cursor ? 1 : DEFAULT_LIST_OFFSET,
       ...(paging?.cursor ? { cursor: { id: paging.cursor } } : {}),
-      orderBy: sort ? { [sort.field]: sort.order } : undefined,
     });
+    return data.map((category) =>
+      PersistenceCategoryRepository.convertToEntity(category),
+    );
+  }
+
+  async getPopularCategories(
+    limit: number,
+    cursor?: string,
+  ): Promise<CategoryEntity[]> {
+    const data: Category[] = await this.prisma.category.findMany({
+      take: limit + 1,
+      skip: cursor ? 1 : 0,
+      ...(cursor ? { cursor: { id: cursor } } : {}),
+      orderBy: {
+        popularityPoints: 'desc',
+      },
+    });
+
+    console.log('data', data);
     return data.map((category) =>
       PersistenceCategoryRepository.convertToEntity(category),
     );

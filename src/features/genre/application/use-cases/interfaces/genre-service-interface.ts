@@ -4,12 +4,12 @@ import {
   GenreCreateDto,
   GenreDetailDto,
   GenreUpdateDto,
-  GetGenresParams,
+  GetGenresOptions,
   GetGenresResult,
 } from '../../dto/genre-dtos';
 
 export interface IGenreService extends BaseUseCase<any, GenreDetailDto, Id> {
-  getList(params: GetGenresParams): Promise<GetGenresResult>;
+  getList(params: GetGenresOptions): Promise<GetGenresResult>;
   create(data: GenreCreateDto): Promise<GenreDetailDto>;
   update(id: Id, data: GenreUpdateDto): Promise<string>;
 }

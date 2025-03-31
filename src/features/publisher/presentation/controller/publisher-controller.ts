@@ -7,9 +7,18 @@ import { ValidationError } from '@src/core/errors/validation-error';
 import { IPublisherService } from '../../application/use-cases/interfaces/publisher-service-interface';
 import {
   PublisherCreateDto,
+  publisherSortFieldsSchema,
+  PublisherSortOptions,
+  publishersQuerySchema,
   PublisherUpdateDto,
 } from '../../application/dto/publisher-dtos';
-import { idSchema } from '@src/core/types';
+import {
+  idSchema,
+  PagingOptions,
+  SortOrder,
+  sortOrderSchema,
+} from '@src/core/types';
+import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
 
 @injectable()
 export class PublisherController {
@@ -32,10 +41,30 @@ export class PublisherController {
     }
   }
 
-  async getCategories(req: Request, res: Response, next: NextFunction) {
+  async getPublishers(req: Request, res: Response, next: NextFunction) {
     try {
-      const query = req.query;
-      const result = await this.service.getList(query);
+      const query = publishersQuerySchema.parse(req.query);
+      const filter = query.q
+        ? {
+            name: query.q,
+          }
+        : undefined;
+
+      const sortOptions: PublisherSortOptions = {
+        field: publisherSortFieldsSchema.parse(query.sort),
+        order: sortOrderSchema.parse(query.order),
+      };
+
+      const paginOptions: PagingOptions = {
+        cursor: query.cursor as string,
+        limit: query.limit ?? DEFAULT_LIST_LIMIT,
+      };
+
+      const result = await this.service.getList({
+        filter,
+        sort: sortOptions,
+        paging: paginOptions,
+      });
       res.json({ data: result, message: 'Publishers fetched successfully' });
     } catch (error) {
       next(error);

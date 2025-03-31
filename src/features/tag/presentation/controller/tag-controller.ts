@@ -10,13 +10,17 @@ import {
   TagCreateDto,
   TagList,
   TagUpdateDto,
-  GetTagsParams,
+  GetTagsOptions,
+  tagsQuerySchema,
+  TagSortOptions,
+  tagSortFieldsSchema,
 } from '../../application/dto/tag-dtos';
 import {
   ApiResponse,
   idSchema,
   PagingOptions,
   SortOptions,
+  SortOrder,
 } from '@src/core/types';
 import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
 
@@ -43,21 +47,23 @@ export class TagController {
 
   async getTags(req: Request, res: Response, next: NextFunction) {
     try {
-      const query = req.query;
-      const filter = {};
+      const query = tagsQuerySchema.parse(req.query);
+      const filter = query.q
+        ? {
+            name: query.q,
+          }
+        : undefined;
 
-      const sortOptions: SortOptions = {
-        field: '',
-        order: 'asc',
+      const sortOptions: TagSortOptions = {
+        field: tagSortFieldsSchema.parse(query.sort),
+        order: query.order as SortOrder,
       };
 
       const paginOptions: PagingOptions = {
         cursor: query?.cursor as string,
-        limit: query.limit
-          ? parseInt(query.limit as string)
-          : DEFAULT_LIST_LIMIT,
+        limit: query.limit ?? DEFAULT_LIST_LIMIT,
       };
-      const params: GetTagsParams = {
+      const params: GetTagsOptions = {
         filter,
         sort: sortOptions,
         paging: paginOptions,

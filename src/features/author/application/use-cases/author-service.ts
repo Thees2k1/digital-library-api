@@ -11,7 +11,7 @@ import {
   AuthorIdResultDto,
   AuthorList,
   AuthorUpdateDto,
-  GetAuthorsParams,
+  GetAuthorsOptions,
   GetAuthorsResult,
 } from '../dtos/author-dto';
 import { AuthorMapper } from '../mapper/author-mapper';
@@ -29,29 +29,29 @@ export class AuthorService implements IAuthorService {
     this.repository = repository;
   }
 
-  async getList(params: GetAuthorsParams): Promise<GetAuthorsResult> {
-    const cachekey = generateCacheKey('authors', params);
+  async getList(options: GetAuthorsOptions): Promise<GetAuthorsResult> {
+    const cachekey = generateCacheKey('authors', options);
 
     const cacheData = await this.cacheService.get<GetAuthorsResult>(cachekey);
     if (cacheData) {
       return cacheData;
     }
 
-    const res = await this.repository.getList(params);
-    const total = await this.repository.count({});
+    const res = await this.repository.getList(options);
+    const total = await this.repository.count(options.filter ?? {});
 
     const data: AuthorList = res.map((author) => {
       return AuthorMapper.toAuthorDetailDto(author);
     });
 
-    const hasNextPage = params.paging
-      ? res.length >= params.paging.limit
+    const hasNextPage = options.paging
+      ? res.length >= options.paging.limit
       : false;
     const nextCursor = hasNextPage ? res[res.length - 1].id : '';
 
     const returnData: GetAuthorsResult = {
       data,
-      limit: params.paging?.limit ?? 20,
+      limit: options.paging?.limit ?? 20,
       hasNextPage,
       nextCursor,
       total,

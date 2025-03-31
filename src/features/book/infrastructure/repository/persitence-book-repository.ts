@@ -1,13 +1,16 @@
 import { Book, item_format, LikeStatus, PrismaClient } from '@prisma/client';
 import { DI_TYPES } from '@src/core/di/types';
+import { PagingOptions } from '@src/core/types';
 import { inject, injectable } from 'inversify';
 import {
   BooksFilter,
+  BooksSortOptions,
   ReviewCreateDto,
   ReviewListResultDto,
   UpdateReadingDto,
 } from '../../application/dtos/book-dto';
 import { BookEntity } from '../../domain/entities/book-entity';
+import { BookReading } from '../../domain/entities/book-reading';
 import {
   Author,
   DigitalItemData,
@@ -15,8 +18,6 @@ import {
   Review,
 } from '../../domain/interfaces/models';
 import { BookRepository } from '../../domain/repository/book-repository';
-import { PagingOptions, SortOptions } from '@src/core/types';
-import { BookReading } from '../../domain/entities/book-reading';
 
 @injectable()
 export class PersistenceBookRepository extends BookRepository {
@@ -143,7 +144,7 @@ export class PersistenceBookRepository extends BookRepository {
   async getList(
     paging: PagingOptions | undefined,
     filter: BooksFilter | undefined,
-    sort: SortOptions | undefined,
+    sort: BooksSortOptions | undefined,
   ): Promise<BookEntity[]> {
     const query = this._setupQuery(filter);
     const bookData = await this.prisma.book.findMany({
@@ -173,7 +174,7 @@ export class PersistenceBookRepository extends BookRepository {
       ...(paging?.cursor ? { skip: 1, cursor: { id: paging.cursor } } : {}), // Skip the cursor itself
       orderBy: sort?.field
         ? [{ [sort?.field]: sort.order }, { id: sort.order }]
-        : [{ id: 'asc' }],
+        : { createdAt: 'asc' },
     });
 
     return bookData.map((book) => {

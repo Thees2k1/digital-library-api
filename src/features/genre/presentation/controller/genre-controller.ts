@@ -9,14 +9,20 @@ import { IGenreService } from '../../application/use-cases/interfaces/genre-serv
 import {
   GenreCreateDto,
   GenreList,
+  GenreSortFields,
+  genreSortFieldsSchema,
+  GenreSortOptions,
+  GenresQuery,
+  genresQuerySchema,
   GenreUpdateDto,
-  GetGenresParams,
+  GetGenresOptions,
 } from '../../application/dto/genre-dtos';
 import {
   ApiResponse,
   idSchema,
   PagingOptions,
   SortOptions,
+  SortOrder,
 } from '@src/core/types';
 import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
 
@@ -43,21 +49,23 @@ export class GenreController {
 
   async getGenres(req: Request, res: Response, next: NextFunction) {
     try {
-      const query = req.query;
-      const filter = {};
+      const query = genresQuerySchema.parse(req.query);
+      const filter = query.q
+        ? {
+            name: query.q,
+          }
+        : undefined;
 
-      const sortOptions: SortOptions = {
-        field: '',
-        order: 'asc',
+      const sortOptions: GenreSortOptions = {
+        field: genreSortFieldsSchema.parse(query.sort) as GenreSortFields,
+        order: query.order as SortOrder,
       };
 
       const paginOptions: PagingOptions = {
-        cursor: query?.cursor as string,
-        limit: query.limit
-          ? parseInt(query.limit as string)
-          : DEFAULT_LIST_LIMIT,
+        cursor: query.cursor as string,
+        limit: query.limit ?? DEFAULT_LIST_LIMIT,
       };
-      const params: GetGenresParams = {
+      const params: GetGenresOptions = {
         filter,
         sort: sortOptions,
         paging: paginOptions,

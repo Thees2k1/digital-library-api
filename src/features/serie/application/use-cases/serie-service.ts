@@ -10,7 +10,7 @@ import { v7 as uuid } from 'uuid';
 import { SerieEntity } from '../../domain/entities/serie-entity';
 import { SerieRepository } from '../../domain/repository/serie-repository';
 import {
-  GetSeriesParams,
+  GetSeriesOptions,
   GetSeriesResult,
   SerieCreateDto,
   SerieDetailDto,
@@ -89,7 +89,7 @@ export class SerieService implements ISerieService {
       throw error;
     }
   }
-  async getList(params: GetSeriesParams): Promise<GetSeriesResult> {
+  async getList(params: GetSeriesOptions): Promise<GetSeriesResult> {
     try {
       const cacheKey = generateCacheKey('series', params);
       const cacheData = await this.cacheService.get<GetSeriesResult>(cacheKey);
@@ -98,18 +98,17 @@ export class SerieService implements ISerieService {
       }
 
       const data = await this.repository.getList(params);
-      const total = await this.repository.count(params);
+      const total = await this.repository.count(params.filter ?? {});
 
       const limit = params.paging?.limit ?? DEFAULT_LIST_LIMIT;
       const hasNextPage = data.length >= limit;
-      const nextCursor = data.length > 0 ? data[data.length - 1].id : '';
+      const nextCursor = hasNextPage ? data[data.length - 1].id : '';
 
       const result: GetSeriesResult = {
         data: data.map((item) => this._convertToResultDto(item)),
         paging: {
           total,
           limit,
-          hasNextPage,
           nextCursor,
         },
       };

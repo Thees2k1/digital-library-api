@@ -1,25 +1,22 @@
+import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
 import { DI_TYPES } from '@src/core/di/types';
+import { AppError } from '@src/core/errors/custom-error';
+import { ValidationError } from '@src/core/errors/validation-error';
+import { ApiResponse, PagingOptions, sortOrderSchema } from '@src/core/types';
+import { NextFunction, Request, Response } from 'express';
 import { inject, injectable } from 'inversify';
-import { ICategoryService } from '../../application/use-cases/interfaces/category-service-interface';
-import { Request, Response, NextFunction } from 'express';
+import { ZodError } from 'zod';
 import {
   CategoryCreateDto,
   CategoryDetailDto,
+  categoryQuerySchema,
+  CategorySortOptions,
+  categorySortSchema,
   CategoryUpdateDto,
-  GetCategoriesParams,
+  GetCategoriesOptions,
   idSchema,
 } from '../../application/dto/category-dtos';
-import { AppError } from '@src/core/errors/custom-error';
-import { ZodError } from 'zod';
-import { ValidationError } from '@src/core/errors/validation-error';
-import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
-import { ApiResponse, PagingOptions, SortOptions } from '@src/core/types';
-
-//handel pagination.
-/*
- follow only cursor base pagination. lost of coutling total. we may not need total calculation.
- 
-*/
+import { ICategoryService } from '../../application/use-cases/interfaces/category-service-interface';
 
 @injectable()
 export class CategoryController {
@@ -44,26 +41,27 @@ export class CategoryController {
 
   async getCategories(req: Request, res: Response, next: NextFunction) {
     try {
-      const query = req.query;
+      const query = categoryQuerySchema.parse(req.query);
+      const filter = query.q
+        ? {
+            name: query.q,
+          }
+        : undefined;
 
-      const filters = {};
+      const sortOptions: CategorySortOptions = {
+        field: categorySortSchema.parse(query.sort),
 
-      const sortOptions: SortOptions = {
-        field: '',
-        order: 'asc',
+        order: sortOrderSchema.parse(query.order),
       };
 
       const paginOptions: PagingOptions = {
         cursor: query?.cursor as string,
-        limit: query.limit
-          ? parseInt(query.limit as string)
-          : DEFAULT_LIST_LIMIT,
+        limit: query.limit ?? DEFAULT_LIST_LIMIT,
       };
-
-      const params: GetCategoriesParams = {
-        filter: filters,
-        paging: paginOptions,
+      const params: GetCategoriesOptions = {
+        filter,
         sort: sortOptions,
+        paging: paginOptions,
       };
 
       const result = await this.service.getList(params);
@@ -74,7 +72,6 @@ export class CategoryController {
         status: 'success',
         pagination: {
           limit: result.limit,
-          hasNextPage: result.hasNextPage,
           nextCursor: result.nextCursor,
           total: result.total || 0,
         },
@@ -160,7 +157,7 @@ export class CategoryController {
 
       const filters = {};
 
-      const sortOptions: SortOptions = {
+      const sortOptions: CategorySortOptions = {
         field: 'popularityPoints',
         order: 'desc',
       };
@@ -172,7 +169,7 @@ export class CategoryController {
           : DEFAULT_LIST_LIMIT,
       };
 
-      const params: GetCategoriesParams = {
+      const params: GetCategoriesOptions = {
         filter: filters,
         paging: paginOptions,
         sort: sortOptions,
@@ -186,7 +183,6 @@ export class CategoryController {
         status: 'success',
         pagination: {
           limit: result.limit,
-          hasNextPage: result.hasNextPage,
           nextCursor: result.nextCursor,
           total: result.total || 0,
         },
