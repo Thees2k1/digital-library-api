@@ -1,13 +1,13 @@
-import { Serie, PrismaClient } from '@prisma/client';
+import { PrismaClient, Serie } from '@prisma/client';
+import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
 import { DI_TYPES } from '@src/core/di/types';
 import { inject, injectable } from 'inversify';
-import { SerieRepository } from '../../domain/repository/serie-repository';
-import { SerieEntity } from '../../domain/entities/serie-entity';
 import {
   GetSeriesOptions,
   SerieStatus,
 } from '../../application/dto/serie-dtos';
-import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
+import { SerieEntity } from '../../domain/entities/serie-entity';
+import { SerieRepository } from '../../domain/repository/serie-repository';
 
 @injectable()
 export class PersistenceSerieRepository extends SerieRepository {
@@ -30,8 +30,24 @@ export class PersistenceSerieRepository extends SerieRepository {
     sort,
     filter,
   }: GetSeriesOptions): Promise<SerieEntity[]> {
-    const data: Serie[] = await this.prisma.serie.findMany({
-      include: { books: true },
+    const data = await this.prisma.serie.findMany({
+      include: {
+        books: {
+          select: {
+            id: true,
+            title: true,
+            cover: true,
+            popularityPoints: true,
+            author: {
+              select: {
+                id: true,
+                name: true,
+                avatar: true,
+              },
+            },
+          },
+        },
+      },
       where: {
         ...(filter?.name ? { name: { contains: filter.name } } : {}),
         ...(filter?.status ? { status: filter.status as SerieStatus } : {}),
@@ -49,6 +65,54 @@ export class PersistenceSerieRepository extends SerieRepository {
     return data.map((Serie) =>
       PersistenceSerieRepository.convertToEntity(Serie),
     );
+  }
+
+  async updatePopularityPoints(
+    id: string,
+    popularityPoints: number,
+  ): Promise<void> {
+    await this.prisma.serie.update({
+      where: { id },
+      data: { popularityPoints },
+    });
+  }
+
+  async getAll(): Promise<SerieEntity[]> {
+    const data = await this.prisma.serie.findMany({
+      select: {
+        id: true,
+        name: true,
+        cover: true,
+        description: true,
+        status: true,
+        releaseDate: true,
+        createdAt: true,
+        updatedAt: true,
+        books: {
+          select: {
+            id: true,
+            title: true,
+            cover: true,
+            description: true,
+            status: true,
+            popularityPoints: true,
+            releaseDate: true,
+          },
+        },
+      },
+    });
+    const series = data.map((Serie) => {
+      const newSerie = PersistenceSerieRepository.convertToEntity(Serie);
+      newSerie.books = Serie.books.map((book) => ({
+        id: book.id,
+        title: book.title,
+        cover: book.cover,
+        popularityPoints: book.popularityPoints ?? 0,
+      }));
+      return newSerie;
+    });
+
+    return series;
   }
 
   async getById(id: string): Promise<SerieEntity | null> {
@@ -83,6 +147,12 @@ export class PersistenceSerieRepository extends SerieRepository {
     const Serie: Serie = await this.prisma.serie.create({
       data: mappedData,
     });
+    if (data.books) {
+      await this.prisma.book.updateMany({
+        where: { id: { in: data.books.map((book) => book.id) } },
+        data: { serieId: Serie.id },
+      });
+    }
 
     return PersistenceSerieRepository.convertToEntity(Serie);
   }
@@ -101,6 +171,13 @@ export class PersistenceSerieRepository extends SerieRepository {
       where: { id: id },
       data: mappedData,
     });
+
+    if (data.books) {
+      await this.prisma.book.updateMany({
+        where: { id: { in: data.books.map((book) => book.id) } },
+        data: { serieId: id },
+      });
+    }
   }
 
   async delete(id: string): Promise<void> {
@@ -115,14 +192,32 @@ export class PersistenceSerieRepository extends SerieRepository {
     return data.map((book) => book.id);
   }
 
-  static convertToEntity(data: Serie): SerieEntity {
+  static convertToEntity(data: any): SerieEntity {
+    const author = data.books
+      ? {
+          id: data.books[0]?.author.id ?? '',
+          name: data.books[0]?.author.name ?? '',
+          avatar: data.books[0]?.author.avatar ?? null,
+        }
+      : undefined;
+
+    const books = data.books
+      ? data.books.map((book: any) => ({
+          id: book.id,
+          title: book.title,
+          cover: book.cover,
+          popularityPoints: book.popularityPoints ?? 0,
+        }))
+      : [];
+
     return new SerieEntity(
       data.id,
       data.name,
       data.cover ?? '',
       data.description ?? '',
       data.status,
-      undefined,
+      author,
+      books,
       data.releaseDate,
       data.createdAt,
       data.updatedAt,

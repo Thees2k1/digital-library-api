@@ -3,7 +3,8 @@ export class SerieEntity {
   name: string;
   cover: string;
   description: string;
-  books: string[];
+  author: Author | undefined;
+  books: Book[];
   status: SerieStatus;
   releaseDate: Date | undefined;
   createdAt: Date;
@@ -15,7 +16,8 @@ export class SerieEntity {
     cover: string,
     description: string,
     status: SerieStatus,
-    books: string[] | undefined,
+    author: Author | undefined,
+    books: Book[],
     releaseDate: Date | undefined,
     createdAt: Date | undefined,
     updatedAt: Date | undefined,
@@ -25,11 +27,25 @@ export class SerieEntity {
     this.cover = cover;
     this.status = status;
     this.books = books ?? [];
+    this.author = author;
     this.releaseDate = releaseDate;
     this.description = description;
     this.createdAt = createdAt ?? new Date();
     this.updatedAt = updatedAt ?? new Date();
   }
+}
+
+interface Book {
+  id: string;
+  title: string;
+  cover: string;
+  popularityPoints: number;
+}
+
+interface Author {
+  id: string;
+  name: string;
+  avatar: string;
 }
 
 type SerieStatus = 'completed' | 'ongoing' | 'archived' | 'planned' | 'deleted';

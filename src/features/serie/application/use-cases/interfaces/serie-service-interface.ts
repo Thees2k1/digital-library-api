@@ -13,4 +13,8 @@ export interface ISerieService
   getList(params: GetSeriesOptions): Promise<GetSeriesResult>;
   create(data: SerieCreateDto): Promise<SerieDetailDto>;
   update(id: Id, data: SerieUpdateDto): Promise<string>;
+  getPopularSeries(
+    limit: number,
+    cursor: string | undefined,
+  ): Promise<GetSeriesResult>;
 }

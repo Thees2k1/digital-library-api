@@ -1,19 +1,19 @@
-import { container } from '@src/core/di/container';
 import { DI_TYPES } from '@src/core/di/types';
+import { BaseRouterFactory } from '@src/core/interfaces/base-router-factory';
 import { authMiddleware } from '@src/core/middlewares/auth-middleware';
-import { Router } from 'express';
 import { validationMiddleware } from '@src/core/middlewares/validation-middleware';
-import { SerieController } from '../controller/serie-controller';
+import { Router } from 'express';
+import { inject, injectable } from 'inversify';
 import {
   serieCreateSchema,
   serieUpdateSchema,
 } from '../../application/dto/serie-dtos';
-import { inject, injectable } from 'inversify';
-import { BaseRouterFactory } from '@src/core/interfaces/base-router-factory';
+import { SerieController } from '../controller/serie-controller';
 
 export class SerieRoutes {
   static readonly series = '/series';
   static readonly serie = '/series/:id';
+  static readonly popularSeries = '/series/popular';
 }
 @injectable()
 export class SerieRouterFactory extends BaseRouterFactory<SerieController> {
@@ -24,6 +24,10 @@ export class SerieRouterFactory extends BaseRouterFactory<SerieController> {
     this._router.get(
       SerieRoutes.series,
       this.controller.getSeries.bind(this.controller),
+    );
+    this._router.get(
+      SerieRoutes.popularSeries,
+      this.controller.getPopularSeries.bind(this.controller),
     );
     this._router.get(
       SerieRoutes.serie,

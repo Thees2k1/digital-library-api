@@ -1,10 +1,10 @@
 import { Repository } from '@src/core/interfaces/base-repository';
 import { Id } from '@src/core/types';
-import { SerieEntity } from '../entities/serie-entity';
 import {
   GetSeriesOptions,
   SerieFilters,
 } from '../../application/dto/serie-dtos';
+import { SerieEntity } from '../entities/serie-entity';
 
 export abstract class SerieRepository
   implements Repository<Id, SerieEntity, GetSeriesOptions>
@@ -36,4 +36,11 @@ export abstract class SerieRepository
   count(filter: SerieFilters): Promise<number> {
     throw new Error('Method not implemented.');
   }
+
+  abstract getAll(): Promise<SerieEntity[]>;
+
+  abstract updatePopularityPoints(
+    id: string,
+    popularityPoints: number,
+  ): Promise<void>;
 }

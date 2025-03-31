@@ -123,17 +123,33 @@ export class AuthorService implements IAuthorService {
     limit: number,
     cursor?: string,
   ): Promise<GetAuthorsResult> {
-    const { authors, nextCursor } = await this.repository.getPopularAuthors(
-      limit,
-      cursor,
-    );
+    try {
+      const cacheKey = generateCacheKey('popular-authors', { limit, cursor });
 
-    return {
-      data: authors.map(AuthorMapper.toAuthorDetailDto),
-      limit,
-      total: authors.length,
-      nextCursor: nextCursor || '',
-      hasNextPage: !!nextCursor,
-    };
+      const cacheData = await this.cacheService.get<GetAuthorsResult>(cacheKey);
+      if (cacheData) {
+        return cacheData;
+      }
+      const { authors, nextCursor } = await this.repository.getPopularAuthors(
+        limit,
+        cursor,
+      );
+
+      const res = {
+        data: authors.map(AuthorMapper.toAuthorDetailDto),
+        limit,
+        total: authors.length,
+        nextCursor: nextCursor || '',
+        hasNextPage: !!nextCursor,
+      };
+
+      await this.cacheService.set(cacheKey, res, { EX: 60 });
+      return res;
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      throw AppError.internalServer('Internal server error.');
+    }
   }
 }

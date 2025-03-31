@@ -15,14 +15,20 @@ import {
 } from '../dto/publisher-dtos';
 import { IPublisherService } from './interfaces/publisher-service-interface';
 import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
+import { CacheService } from '@src/core/interfaces/cache-service';
+import { generateCacheKey } from '@src/core/utils/generate-cache-key';
 
 @injectable()
 export class PublisherService implements IPublisherService {
   private readonly repository: PublisherRepository;
+  private readonly cacheService: CacheService;
+
   constructor(
     @inject(DI_TYPES.PublisherRepository) repository: PublisherRepository,
+    @inject(DI_TYPES.CacheService) cacheService: CacheService,
   ) {
     this.repository = repository;
+    this.cacheService = cacheService;
   }
   async create(data: PublisherCreateDto): Promise<PublisherDetailDto> {
     try {
@@ -57,6 +63,13 @@ export class PublisherService implements IPublisherService {
   }
   async getList(options: GetPublishersOptions): Promise<GetPublishersResult> {
     try {
+      const cacheKey = generateCacheKey('publishers', options);
+      const cacheData =
+        await this.cacheService.get<GetPublishersResult>(cacheKey);
+      if (cacheData) {
+        return cacheData;
+      }
+      const cacheExpire = 60; // seconds
       const res = await this.repository.getList(options);
       const total = await this.repository.count(options.filter ?? {});
       const limit = options.paging?.limit ?? DEFAULT_LIST_LIMIT;
@@ -71,6 +84,11 @@ export class PublisherService implements IPublisherService {
           nextCursor,
         },
       };
+
+      await this.cacheService.set(cacheKey, result, {
+        EX: cacheExpire,
+      });
+
       return result;
     } catch (error) {
       logger.error(error);
@@ -79,13 +97,24 @@ export class PublisherService implements IPublisherService {
   }
   async getById(id: string): Promise<PublisherDetailDto | null> {
     try {
-      const res = await this.repository.getById(id);
+      const cacheKey = generateCacheKey('publisher', { id });
+      const cacheData =
+        await this.cacheService.get<PublisherDetailDto>(cacheKey);
+      if (cacheData) {
+        return cacheData;
+      }
+      const cacheExpire = 60; // seconds
+      const data = await this.repository.getById(id);
 
-      if (!res) {
+      if (!data) {
         return null;
       }
 
-      return this._convertToResultDto(res);
+      const res = this._convertToResultDto(data);
+      await this.cacheService.set(cacheKey, res, {
+        EX: cacheExpire,
+      });
+      return res;
     } catch (error) {
       logger.error(error);
       throw AppError.internalServer('Internal server error.');

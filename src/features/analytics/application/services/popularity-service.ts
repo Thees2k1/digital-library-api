@@ -1,6 +1,7 @@
 import { DI_TYPES } from '@src/core/di/types';
 import { AuthorRepository } from '@src/features/author/domain/repository/author-repository';
 import { CategoryRepository } from '@src/features/category/domain/repository/category-repository';
+import { SerieRepository } from '@src/features/serie/domain/repository/serie-repository';
 import { inject, injectable } from 'inversify';
 
 @injectable()
@@ -9,6 +10,8 @@ export class PopularityService {
     @inject(DI_TYPES.AuthorRepository) private authorRepo: AuthorRepository,
     @inject(DI_TYPES.CategoryRepository)
     private categoryRepo: CategoryRepository,
+    @inject(DI_TYPES.SerieRepository)
+    private serieRepo: SerieRepository,
   ) {}
 
   async calculateAuthorPopularity(): Promise<void> {
@@ -28,6 +31,14 @@ export class PopularityService {
         category.id,
         popularityPoints,
       );
+    }
+  }
+
+  async calculateSeriePopularity(): Promise<void> {
+    const series = await this.serieRepo.getAll();
+    for (const serie of series) {
+      const popularityPoints = serie.books.length * 8; // Example logic
+      await this.serieRepo.updatePopularityPoints(serie.id, popularityPoints);
     }
   }
 }

@@ -81,6 +81,27 @@ export class SerieController {
     }
   }
 
+  async getPopularSeries(req: Request, res: Response, next: NextFunction) {
+    try {
+      const limit = parseInt(req.query.limit as string, 10) || 10;
+      const cursor = req.query.cursor as string | undefined;
+
+      const result = await this.service.getPopularSeries(limit, cursor);
+
+      const resBody: ApiResponse<SerieList> = {
+        message: 'Popular authors fetched successfully',
+        status: 'success',
+        data: result.data,
+        pagination: result.paging,
+        timestamp: Date.now(),
+      };
+
+      res.json(resBody);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getSerie(req: Request, res: Response, next: NextFunction) {
     try {
       const id = idSchema.parse(req.params.id);

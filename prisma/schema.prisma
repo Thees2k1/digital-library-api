@@ -97,6 +97,7 @@ model Serie {
   books Book[]
   status SerieStatus @default(planned)
   releaseDate DateTime @map("release_date") @db.Date
+  popularityPoints Int? @default(0) @map("popularity_points")
   createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt     DateTime          @default(now()) @map("updated_at") @db.Timestamp(0)
 

@@ -64,8 +64,6 @@ export class PersistenceCategoryRepository extends CategoryRepository {
         popularityPoints: 'desc',
       },
     });
-
-    console.log('data', data);
     return data.map((category) =>
       PersistenceCategoryRepository.convertToEntity(category),
     );

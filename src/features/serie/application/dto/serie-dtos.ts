@@ -19,7 +19,7 @@ export const serieCreateSchema = z.object({
   name: z.string(),
   description: z.string().optional().nullable(),
   cover: z.string().optional().nullable(),
-  books: z.array(idSchema),
+  books: z.array(idSchema).default([]),
   status: serieStatusSchema,
   releaseDate: isoDateStringShema,
 });
@@ -31,7 +31,22 @@ export const serieDetailSchema = z.object({
   name: z.string(),
   description: z.string().nullable(),
   cover: z.string().nullable(),
-  books: z.array(idSchema),
+  author: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+      avatar: z.string().nullable(),
+    })
+    .optional(),
+  books: z
+    .array(
+      z.object({
+        id: z.string(),
+        title: z.string(),
+        cover: z.string().nullable(),
+      }),
+    )
+    .optional(),
   status: serieStatusSchema,
   releaseDate: z.date().nullable(),
   updatedAt: z.date(),
@@ -46,7 +61,7 @@ export const serieStatus = z.enum([
 ]);
 
 export const serieSortFieldsSchema = z
-  .enum(['name', 'createdAt', 'updatedAt'])
+  .enum(['name', 'createdAt', 'updatedAt', 'popularityPoints'])
   .default('createdAt');
 export const seriesQuerySchema = z.object({
   q: z.string().optional(),
@@ -57,7 +72,7 @@ export const seriesQuerySchema = z.object({
     }
     return arg;
   }, z.number().optional()),
-  status: serieStatus.default('ongoing'),
+  status: serieStatus.optional(),
   releaseDate: z.string().optional(),
   cursor: z.string().optional(),
   sort: serieSortFieldsSchema.optional(),
@@ -80,7 +95,6 @@ export type SerieFilters = {
   name?: string;
   releaseDate?: string;
   status?: string;
-  popularityPoints?: number;
 };
 
 export type SerieSortOptions = SortOptions<SerieSortFields>;
