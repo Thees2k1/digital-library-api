@@ -26,9 +26,13 @@ export const authMiddleware = async (
       next(AppError.unauthorized('Unauthorized'));
       return;
     }
-    const payload = decoded as { userId: string };
-    const newBody = { ...req.body, userId: payload.userId };
-    req.body = newBody;
+    const payload = decoded as { userId: string; role: string };
+    const user = {
+      id: payload.userId,
+      role: payload.role,
+    };
+
+    req.user = user;
   });
 
   next();

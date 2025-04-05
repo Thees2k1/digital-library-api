@@ -86,8 +86,6 @@ export class SerieService implements ISerieService {
         throw AppError.forbidden('existed Serie.');
       }
 
-      console.log('data', data);
-
       const input: SerieEntity = {
         id: uuid(),
         name: data.name,

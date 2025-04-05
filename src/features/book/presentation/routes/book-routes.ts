@@ -12,6 +12,7 @@ import {
   updateFavoriteDtoSchema,
 } from '../../application/dtos/book-dto';
 import { BookController } from '../controller/book-controller';
+import { authorizeRole } from '@src/core/middlewares/authorize_role';
 
 export class BookRoutes {
   static readonly books = '/books';
@@ -77,12 +78,14 @@ export class BookRouterFactory extends BaseRouterFactory<BookController> {
     this._router.post(
       BookRoutes.books,
       authMiddleware,
+      authorizeRole('admin'),
       validationMiddleware(bookCreateDtoSchema),
       this.controller.createBook.bind(this.controller),
     );
     this._router.patch(
       BookRoutes.book,
       authMiddleware,
+      authorizeRole('admin'),
       validationMiddleware(bookUpdateDtoSchema),
       this.controller.updateBook.bind(this.controller),
     );
@@ -90,6 +93,7 @@ export class BookRouterFactory extends BaseRouterFactory<BookController> {
     this._router.delete(
       BookRoutes.book,
       authMiddleware,
+      authorizeRole('admin'),
       this.controller.deleteBook.bind(this.controller),
     );
     //reviews

@@ -10,6 +10,7 @@ import {
 } from '../../application/dto/tag-dtos';
 import { inject, injectable } from 'inversify';
 import { BaseRouterFactory } from '@src/core/interfaces/base-router-factory';
+import { authorizeRole } from '@src/core/middlewares/authorize_role';
 
 export class TagRoutes {
   static readonly tags = '/tags';
@@ -33,18 +34,21 @@ export class TagRouterFactory extends BaseRouterFactory<TagController> {
     this._router.post(
       TagRoutes.tags,
       authMiddleware,
+      authorizeRole('admin'),
       validationMiddleware(TagCreateSchema),
       this.controller.createTag.bind(this.controller),
     );
     this._router.patch(
       TagRoutes.tag,
       authMiddleware,
+      authorizeRole('admin'),
       validationMiddleware(TagUpdateSchema),
       this.controller.updateTag.bind(this.controller),
     );
     this._router.delete(
       TagRoutes.tag,
       authMiddleware,
+      authorizeRole('admin'),
       this.controller.deleteTag.bind(this.controller),
     );
   }

@@ -9,6 +9,7 @@ import {
   serieUpdateSchema,
 } from '../../application/dto/serie-dtos';
 import { SerieController } from '../controller/serie-controller';
+import { authorizeRole } from '@src/core/middlewares/authorize_role';
 
 export class SerieRoutes {
   static readonly series = '/series';
@@ -36,18 +37,21 @@ export class SerieRouterFactory extends BaseRouterFactory<SerieController> {
     this._router.post(
       SerieRoutes.series,
       authMiddleware,
+      authorizeRole('admin'),
       validationMiddleware(serieCreateSchema),
       this.controller.createSerie.bind(this.controller),
     );
     this._router.patch(
       SerieRoutes.serie,
       authMiddleware,
+      authorizeRole('admin'),
       validationMiddleware(serieUpdateSchema),
       this.controller.updateSerie.bind(this.controller),
     );
     this._router.delete(
       SerieRoutes.serie,
       authMiddleware,
+      authorizeRole('admin'),
       this.controller.deleteSerie.bind(this.controller),
     );
   }

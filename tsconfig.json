@@ -15,8 +15,12 @@
     "declaration": true, // generate .d.ts files
     "outDir": "./dist", // specify the output directory for compiled files
     "sourceMap": true, // generate source maps
-    "types": ["jest", "node"] // include type definitions for Jest and Node.js
+    "typeRoots": ["./node_modules/@types", "./src/core/types"]
   },
-  "include": ["src/**/*", "../digital-library/src/routes/v2"], // include all files under src/
+  "include": [
+    "src/**/*",
+    "src/core/types/**/*",
+    "../digital-library/src/routes/v2"
+  ], // include all files under src/
   "exclude": ["node_modules", "dist"] // exclude node_modules and dist folder from compilation
 }

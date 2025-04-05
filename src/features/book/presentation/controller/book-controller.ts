@@ -220,10 +220,16 @@ export class BookController {
     next: NextFunction,
   ) {
     try {
+      const user = req.user;
+      if (!user) {
+        next(AppError.unauthorized('User not found'));
+        return;
+      }
+
       const data = req.body;
       const input: ReviewCreateDto = {
         ...data,
-        userId: req.body.userId,
+        userId: user.id,
         bookId: req.params.id,
       };
       await this.service.addReview(input);
@@ -315,7 +321,7 @@ export class BookController {
   async getReading(req: Request, res: Response, next: NextFunction) {
     try {
       const bookId = idSchema.parse(req.params.id);
-      const userId: string | undefined = req.body.userId;
+      const userId = req.user?.id;
 
       if (!userId) {
         next(AppError.badRequest('User id is required.'));
@@ -347,7 +353,7 @@ export class BookController {
 
   async getReadingList(req: Request, res: Response, next: NextFunction) {
     try {
-      const userId: string | undefined = req.body.userId;
+      const userId = req.user?.id;
 
       if (!userId) {
         next(AppError.badRequest('User id is required.'));
@@ -383,7 +389,7 @@ export class BookController {
   async updateReading(req: Request, res: Response, next: NextFunction) {
     try {
       const bookId = idSchema.parse(req.params.id);
-      const userId: string | undefined = req.body.userId;
+      const userId = req.user?.id;
 
       if (!userId) {
         next(AppError.badRequest('User id is required.'));
