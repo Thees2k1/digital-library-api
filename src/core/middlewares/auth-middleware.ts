@@ -3,6 +3,7 @@ import { AppError } from '@src/core/errors/custom-error';
 import { type NextFunction, type Request, type Response } from 'express';
 import jwt from 'jsonwebtoken';
 import logger from '../utils/logger/logger';
+import { user_role } from '@prisma/client';
 
 export const authMiddleware = async (
   req: Request,
@@ -26,7 +27,7 @@ export const authMiddleware = async (
       next(AppError.unauthorized('Unauthorized'));
       return;
     }
-    const payload = decoded as { userId: string; role: string };
+    const payload = decoded as { userId: string; role: user_role };
     const user = {
       id: payload.userId,
       role: payload.role,
