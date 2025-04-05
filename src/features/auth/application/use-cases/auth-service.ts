@@ -68,6 +68,7 @@ export class AuthService implements IAuthService {
 
       const payload: JwtPayload = {
         userId: user.id,
+        role: user.role,
       };
       const accessToken = await this.jwtService.generate(payload, {
         audience: rest.userAgent,
@@ -178,7 +179,7 @@ export class AuthService implements IAuthService {
       throw AppError.internalServer('Payload is null');
     }
 
-    const { userId, aud } = payload;
+    const { userId, role, aud } = payload;
     const cacheKey = generateCacheKey('auth', {
       userId,
       userAgent: params.userAgent,
@@ -191,6 +192,7 @@ export class AuthService implements IAuthService {
     if (isCachedSession) {
       const newPayload: JwtPayload = {
         userId,
+        role,
       };
 
       await this.authRepository.enforceSessionLimit(userId, SESSION_LIMIT);

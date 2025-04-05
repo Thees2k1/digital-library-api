@@ -1,10 +1,11 @@
-import { Like, LikeStatus, PrismaClient } from '@prisma/client';
+import { Like, LikeStatus, Prisma, PrismaClient } from '@prisma/client';
 import { DI_TYPES } from '@src/core/di/types';
 import { AppError } from '@src/core/errors/custom-error';
 import { inject, injectable } from 'inversify';
 import { CreateUserDto } from '../../application/dtos/user-dto';
 import { UserEntity } from '../../domain/entities/user';
 import { UserRepository } from '../../domain/repository/user-repository';
+import { user_role } from '@Prisma/client';
 
 @injectable()
 export class PersistenceUserRepository extends UserRepository {
@@ -114,6 +115,7 @@ export class PersistenceUserRepository extends UserRepository {
   async create(data: CreateUserDto): Promise<UserEntity> {
     const newUser = await this.prismaClient.$transaction(async (prisma) => {
       // Create the User first
+      const userRole: user_role = data.role === 'admin' ? 'admin' : 'user'; // Default to 'user' if not provided
       const userInfo = {
         firstName: data.firstName,
         lastName: data.lastName || '',
@@ -128,6 +130,7 @@ export class PersistenceUserRepository extends UserRepository {
         data: {
           email: data.email,
           password: data.password, // Make sure to hash the password properly
+          role: userRole,
           user: {
             connect: { id: user.id }, // Connect to the user created above
           },
@@ -242,6 +245,21 @@ export class PersistenceUserRepository extends UserRepository {
       });
 
       // Then, delete the User
+      await prisma.userSession.deleteMany({
+        where: { userId: userId },
+      });
+      await prisma.like.deleteMany({
+        where: { userId: userId },
+      });
+      await prisma.userFavoriteBook.deleteMany({
+        where: { userId: userId },
+      });
+      await prisma.userPreference.deleteMany({
+        where: { userId: userId },
+      });
+      await prisma.review.deleteMany({
+        where: { userId: userId },
+      });
       const user = await prisma.user.delete({
         where: { id: userId },
       });

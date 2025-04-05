@@ -10,6 +10,7 @@ import {
 } from '../../application/dto/genre-dtos';
 import { inject, injectable } from 'inversify';
 import { BaseRouterFactory } from '@src/core/interfaces/base-router-factory';
+import { authorizeRole } from '@src/core/middlewares/authorize_role';
 
 export class GenreRoutes {
   static readonly genres = '/genres';
@@ -33,18 +34,21 @@ export class GenreRouterFactory extends BaseRouterFactory<GenreController> {
     this._router.post(
       GenreRoutes.genres,
       authMiddleware,
+      authorizeRole('admin'),
       validationMiddleware(genreCreateSchema),
       this.controller.createGenre.bind(this.controller),
     );
     this._router.patch(
       GenreRoutes.genre,
       authMiddleware,
+      authorizeRole('admin'),
       validationMiddleware(genreUpdateSchema),
       this.controller.updateGenre.bind(this.controller),
     );
     this._router.delete(
       GenreRoutes.genre,
       authMiddleware,
+      authorizeRole('admin'),
       this.controller.deleteGenre.bind(this.controller),
     );
   }

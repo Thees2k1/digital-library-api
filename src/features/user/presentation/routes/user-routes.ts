@@ -9,6 +9,8 @@ import {
   UpdateUserSchema,
 } from '../../application/dtos/user-dto';
 import { UserController } from '../controller/user-controller';
+import { authorizeRole } from '@src/core/middlewares/authorize_role';
+import { allowAdminOrOwner } from '@src/core/middlewares/allow-admin-or-owner';
 
 export class UserRoutes {
   static readonly userByEmail = '/user';
@@ -30,11 +32,13 @@ export class UserRouterFactory extends BaseRouterFactory<UserController> {
     this._router.get(
       UserRoutes.userByEmail,
       authMiddleware,
+      authorizeRole('admin'),
       this.controller.getUserByEmail.bind(this.controller),
     );
     this._router.get(
       UserRoutes.users,
       authMiddleware,
+      authorizeRole('admin'),
       this.controller.getAllUsers.bind(this.controller),
     );
     this._router.get(
@@ -59,23 +63,28 @@ export class UserRouterFactory extends BaseRouterFactory<UserController> {
     );
     this._router.get(
       UserRoutes.user,
+      authMiddleware,
+      authorizeRole('admin'),
       this.controller.getUserById.bind(this.controller),
     );
     this._router.post(
       UserRoutes.users,
       authMiddleware,
+      allowAdminOrOwner(),
       validationMiddleware(CreateUserSchema),
       this.controller.createUser.bind(this.controller),
     );
     this._router.patch(
       UserRoutes.user,
       authMiddleware,
+      allowAdminOrOwner(),
       validationMiddleware(UpdateUserSchema),
       this.controller.updateUser.bind(this.controller),
     );
     this._router.delete(
       UserRoutes.user,
       authMiddleware,
+      allowAdminOrOwner(),
       this.controller.deleteUser.bind(this.controller),
     );
 

@@ -9,6 +9,7 @@ import {
   publisherUpdateSchema,
 } from '../../application/dto/publisher-dtos';
 import { PublisherController } from '../controller/publisher-controller';
+import { authorizeRole } from '@src/core/middlewares/authorize_role';
 
 export class PublisherRoutes {
   static readonly publishers = '/publishers';
@@ -34,18 +35,21 @@ export class PublisherRouterFactory extends BaseRouterFactory<PublisherControlle
     this._router.post(
       PublisherRoutes.publishers,
       authMiddleware,
+      authorizeRole('admin'),
       validationMiddleware(publisherCreateSchema),
       this.controller.createPublisher.bind(this.controller),
     );
     this._router.patch(
       PublisherRoutes.publisher,
       authMiddleware,
+      authorizeRole('admin'),
       validationMiddleware(publisherUpdateSchema),
       this.controller.updatePublisher.bind(this.controller),
     );
     this._router.delete(
       PublisherRoutes.publisher,
       authMiddleware,
+      authorizeRole('admin'),
       this.controller.deletePublisher.bind(this.controller),
     );
   }

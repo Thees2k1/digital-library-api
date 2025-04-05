@@ -95,7 +95,7 @@ export class UserController {
     next: NextFunction,
   ) {
     try {
-      const id = idSchema.parse(req.body.userId);
+      const id = idSchema.parse(req.user?.id);
       const user = await this.service.getUserById(id);
       if (!user) {
         logger.error('Cannot get current user');
@@ -175,7 +175,7 @@ export class UserController {
 
   async getBookLikes(req: Request, res: Response<any>, next: NextFunction) {
     try {
-      const userId = req.body.userId;
+      const userId = req.user?.id;
 
       if (!userId) {
         next(AppError.badRequest('User id is required.'));
@@ -195,7 +195,11 @@ export class UserController {
 
   async getUserPreferences(req: Request, res: Response, next: NextFunction) {
     try {
-      const userId = req.params.id ?? req.body.userId;
+      const userId: string | undefined = req.params.id ?? req.user?.id;
+      if (!userId) {
+        next(AppError.badRequest('User id is required.'));
+        return;
+      }
       const preferences = await this.service.getUserPreferences(userId);
       res.status(200).json({ data: preferences, message: SUCCESSFUL });
     } catch (error) {
@@ -206,8 +210,12 @@ export class UserController {
 
   async addUserPreference(req: Request, res: Response, next: NextFunction) {
     try {
-      const userId = req.params.id ?? req.body.userId;
+      const userId: string | undefined = ({} = req.params.id ?? req.user?.id);
 
+      if (!userId) {
+        next(AppError.badRequest('User id is required.'));
+        return;
+      }
       const { key, value } = req.body;
       await this.service.addUserPreference(userId, key, value);
       res.status(201).json({ message: SUCCESSFUL });
@@ -223,7 +231,7 @@ export class UserController {
       if (paramId.success) {
         var userId = paramId.data;
       } else {
-        var userId = idSchema.parse(req.body.userId);
+        var userId = idSchema.parse(req.user?.id);
       }
 
       const key = req.params.key;

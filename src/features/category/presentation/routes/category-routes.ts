@@ -10,6 +10,7 @@ import {
 } from '../../application/dto/category-dtos';
 import { inject, injectable } from 'inversify';
 import { BaseRouterFactory } from '@src/core/interfaces/base-router-factory';
+import { authorizeRole } from '@src/core/middlewares/authorize_role';
 
 export class CategoryRoutes {
   static readonly categories = '/categories';
@@ -41,18 +42,21 @@ export class CategoryRouterFactory extends BaseRouterFactory<CategoryController>
     this._router.post(
       CategoryRoutes.categories,
       authMiddleware,
+      authorizeRole('admin'),
       validationMiddleware(categoryCreateSchema),
       this.controller.createCategory.bind(this.controller),
     );
     this._router.patch(
       CategoryRoutes.category,
       authMiddleware,
+      authorizeRole('admin'),
       validationMiddleware(categoryUpdateSchema),
       this.controller.updateCategory.bind(this.controller),
     );
     this._router.delete(
       CategoryRoutes.category,
       authMiddleware,
+      authorizeRole('admin'),
       this.controller.deleteCategory.bind(this.controller),
     );
   }

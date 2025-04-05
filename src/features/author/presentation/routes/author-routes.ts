@@ -9,6 +9,7 @@ import {
   AuthorUpdateSchema,
 } from '../../application/dtos/author-dto';
 import { AuthorController } from '../controller/author-controller';
+import { authorizeRole } from '@src/core/middlewares/authorize_role';
 
 export class AuthorRoutes {
   static authors = '/authors';
@@ -37,18 +38,21 @@ export class AuthorRouterFactory extends BaseRouterFactory<AuthorController> {
     this._router.post(
       AuthorRoutes.authors,
       authMiddleware,
+      authorizeRole('admin'),
       validationMiddleware(AuthorCreateSchema),
       this.controller.createAuthor.bind(this.controller),
     );
     this._router.patch(
       AuthorRoutes.author,
       authMiddleware,
+      authorizeRole('admin'),
       validationMiddleware(AuthorUpdateSchema),
       this.controller.updateAuthor.bind(this.controller),
     );
     this._router.delete(
       AuthorRoutes.author,
       authMiddleware,
+      authorizeRole('admin'),
       this.controller.deleteAuthor.bind(this.controller),
     );
   }
