@@ -464,12 +464,12 @@ export class BookService implements IBookService {
 
   async getPopularBooks(limit: number = 5): Promise<PopularBookList> {
     try {
-      const cacheKey = `popular-books:${limit}`;
+      // const cacheKey = `popular-books:${limit}`;
 
-      const cachedData = await this.cacheService.get<PopularBookList>(cacheKey);
-      if (cachedData) {
-        return cachedData;
-      }
+      // const cachedData = await this.cacheService.get<PopularBookList>(cacheKey);
+      // if (cachedData) {
+      //   return cachedData;
+      // }
 
       const books = await this.repository.getPopularBooks(limit);
 
@@ -489,7 +489,7 @@ export class BookService implements IBookService {
       const result = popularBooksSchema.parse(data);
 
       // set cache in 1 hour
-      await this.cacheService.set(cacheKey, data, { EX: 60 * 60 });
+      // await this.cacheService.set(cacheKey, data, { EX: 60 * 60 });
 
       return result;
     } catch (error) {
