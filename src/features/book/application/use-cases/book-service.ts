@@ -404,10 +404,10 @@ export class BookService implements IBookService {
   async getReadingList(userId: string): Promise<ReadingBookList> {
     const cacheKey = `readings:user:${userId}`;
     try {
-      const cachedData = await this.cacheService.get<ReadingBookList>(cacheKey);
-      if (cachedData) {
-        return cachedData;
-      }
+      // const cachedData = await this.cacheService.get<ReadingBookList>(cacheKey);
+      // if (cachedData) {
+      //   return cachedData;
+      // }
 
       const data = await this.repository.getReadingList(userId);
 
@@ -437,7 +437,7 @@ export class BookService implements IBookService {
         }),
       );
 
-      await this.cacheService.set(cacheKey, readingList, { EX: 60 * 5 }); // Cache for 5 minutes
+      // await this.cacheService.set(cacheKey, readingList, { EX: 60 * 5 }); // Cache for 5 minutes
 
       return readingList;
     } catch (error) {
