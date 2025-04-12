@@ -255,15 +255,15 @@ export class BookController {
     }
   }
 
-  async toggleLike(
-    req: Request<any, any, { userId: string }>,
-    res: Response,
-    next: NextFunction,
-  ) {
+  async toggleLike(req: Request, res: Response, next: NextFunction) {
     try {
+      const user = req.user;
       const bookId = idSchema.parse(req.params.id);
-      const userId = req.body.userId;
-      await this.service.toggleLike(userId, bookId);
+      if (!user) {
+        next(AppError.unauthorized('User not found'));
+        return;
+      }
+      await this.service.toggleLike(user.id, bookId);
       res.json({
         message: 'Like status toggled successfully',
         status: 'success',
