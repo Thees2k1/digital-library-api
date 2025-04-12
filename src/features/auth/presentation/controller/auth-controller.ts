@@ -19,6 +19,7 @@ import {
   RegisterResultDTO,
 } from '../../application/dtos/register-dto';
 import { IAuthService } from '../../application/use-cases/interfaces/auth-service-interface';
+import logger from '@src/core/utils/logger/logger';
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
@@ -80,6 +81,7 @@ export class AuthController {
         refreshToken: verifiedResult.refreshToken,
       });
     } catch (error) {
+      logger.error(error);
       next(AppError.unauthorized('Login failed'));
     }
   }
