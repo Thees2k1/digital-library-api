@@ -28,8 +28,15 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             set -e
-            cd ~/chyra-library/digital-library-api
-            git pull origin main
+
+            if [ ! -d ~/chyra-library/digital-library-api ]; then
+              mkdir -p ~/chyra-library
+              cd ~/chyra-library
+              git clone git@github.com:your-username/digital-library-api.git
+            else
+              cd ~/chyra-library/digital-library-api
+              git pull origin main
+            fi
 
             echo "PORT=8080" > .env
             echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env

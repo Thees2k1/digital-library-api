@@ -109,7 +109,7 @@ export class BookController {
         pagination: {
           limit: paginOptions.limit,
           total: result.total,
-          nextCursor: result.nextCursor,
+          nextCursor: result.nextCursor ?? undefined,
         },
         timestamp: Date.now(),
       };
@@ -304,7 +304,7 @@ export class BookController {
 
       const userId = parseRes.data;
 
-      const result: Array<string> = await this.service.getUserLikeList(userId);
+      const result = await this.service.getUserLikeList(userId);
 
       const reponseBody: ApiResponse<Array<string>> = {
         status: 'success',
@@ -312,7 +312,6 @@ export class BookController {
         timestamp: Date.now(),
       };
       res.json(reponseBody);
-      res.json(result);
     } catch (error) {
       next(error);
     }

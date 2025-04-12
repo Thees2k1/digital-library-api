@@ -149,7 +149,7 @@ export type BookList = z.infer<typeof bookListSchema>;
 
 export type GetListResult = {
   data: BookList;
-  nextCursor: string;
+  nextCursor: string | null;
   total: number;
   hasNextPage: boolean;
 };
