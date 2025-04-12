@@ -233,15 +233,12 @@ export class BookService implements IBookService {
         return cachedData;
       }
 
-      const [books, total] = await Promise.all([
+      const [{ books, hasNextPage, nextCursor }, total] = await Promise.all([
         this.repository.getList(paging, filter, sort),
         this.repository.count(filter),
       ]);
 
       const data = BookEntity.toBooks(books);
-
-      const hasNextPage = books.length === (paging?.limit ?? 20);
-      const nextCursor = hasNextPage ? books[books.length - 1].id : null;
 
       const bookList = bookListSchema.safeParse(data);
 
@@ -252,7 +249,7 @@ export class BookService implements IBookService {
 
       const returnData: GetListResult = {
         data: bookList.data,
-        nextCursor: nextCursor || '',
+        nextCursor: nextCursor,
         total,
         hasNextPage,
       };

@@ -1,4 +1,5 @@
 import { Book, item_format, LikeStatus, PrismaClient } from '@prisma/client';
+import { DEFAULT_LIST_LIMIT } from '@src/core/constants/constants';
 import { DI_TYPES } from '@src/core/di/types';
 import { PagingOptions } from '@src/core/types';
 import { inject, injectable } from 'inversify';
@@ -17,7 +18,10 @@ import {
   Genre,
   Review,
 } from '../../domain/interfaces/models';
-import { BookRepository } from '../../domain/repository/book-repository';
+import {
+  BookRepository,
+  GetListResult,
+} from '../../domain/repository/book-repository';
 
 @injectable()
 export class PersistenceBookRepository extends BookRepository {
@@ -145,8 +149,9 @@ export class PersistenceBookRepository extends BookRepository {
     paging: PagingOptions | undefined,
     filter: BooksFilter | undefined,
     sort: BooksSortOptions | undefined,
-  ): Promise<BookEntity[]> {
+  ): Promise<GetListResult> {
     const query = this._setupQuery(filter);
+    const limit = paging?.limit ?? DEFAULT_LIST_LIMIT;
     const bookData = await this.prisma.book.findMany({
       select: {
         id: true,
@@ -169,15 +174,19 @@ export class PersistenceBookRepository extends BookRepository {
         },
       },
       where: { ...query },
-      take: paging?.limit ?? 20,
-      skip: paging?.cursor ? 1 : 0,
-      ...(paging?.cursor ? { skip: 1, cursor: { id: paging.cursor } } : {}), // Skip the cursor itself
+      take: limit + 1,
+      ...(paging?.cursor ? { skip: 1, cursor: { id: paging.cursor } } : {}),
       orderBy: sort?.field
         ? [{ [sort?.field]: sort.order }, { id: sort.order }]
         : { createdAt: 'asc' },
     });
 
-    return bookData.map((book) => {
+    const hasNextPage = bookData.length > limit;
+    if (hasNextPage) bookData.pop(); // Remove the extra record
+
+    const nextCursor = hasNextPage ? bookData[bookData.length - 1].id : null;
+
+    const books = bookData.map((book) => {
       const bookAuthor = {
         id: book.author.id,
         name: book.author.name,
@@ -201,6 +210,12 @@ export class PersistenceBookRepository extends BookRepository {
         book.description ?? '',
       );
     });
+
+    return {
+      books,
+      nextCursor,
+      hasNextPage,
+    };
   }
 
   count(filter: BooksFilter | undefined): Promise<number> {

@@ -1,4 +1,4 @@
-import { PagingOptions, SortOptions } from '@src/core/types';
+import { PagingOptions } from '@src/core/types';
 import {
   BooksFilter,
   BooksSortOptions,
@@ -9,12 +9,18 @@ import {
 import { BookEntity } from '../entities/book-entity';
 import { BookReading } from '../entities/book-reading';
 
+export interface GetListResult {
+  books: Array<BookEntity>;
+  nextCursor: string | null;
+  hasNextPage: boolean;
+}
+
 export abstract class BookRepository {
   abstract getList(
     paging: PagingOptions | undefined,
     filter: BooksFilter | undefined,
     sort: BooksSortOptions | undefined,
-  ): Promise<Array<BookEntity>>;
+  ): Promise<GetListResult>;
   abstract getById(id: string): Promise<BookEntity | null>;
   abstract create(data: Partial<BookEntity>): Promise<BookEntity>;
   abstract update(id: string, data: Partial<BookEntity>): Promise<void>;
